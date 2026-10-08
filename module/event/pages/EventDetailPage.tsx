@@ -9,14 +9,11 @@ import type { EventData } from "@/types/event";
 import EventInfoCard from "../components/EventInfoCard";
 import EventDescription3 from "../components/EventDescription3";
 import ShareButtons from "../components/ShareButtons";
+import TicketOptions from "../components/TicketOptions";
 import { formatEventTime, formatEventTimeUTC } from "@/utils/date";
 import { ViewContentTracker } from "@/components/tracking/ViewContentTracker";
 
 // Dynamic imports for non-critical components
-const TicketSelector = dynamic(() => import("../components/TicketSelector"), {
-  loading: () => <TicketSelectorSkeleton />,
-});
-
 const CountdownTimer = dynamic(() => import("../components/CountdownTimer"), {
   loading: () => <div className="h-24 bg-gray-100 animate-pulse rounded-xl" />,
 });
@@ -185,6 +182,12 @@ const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
               <CountdownTimer targetDate={new Date(event.date)} />
             </Suspense>
 
+            <TicketOptions
+              packages={event.packages}
+              eventId={event.id}
+              eventStatus={event.status}
+            />
+
             <EventInfoCard
               status={event.status}
               date={formattedDate}
@@ -193,14 +196,6 @@ const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
               eventType={event.eventType}
               organizer={event.organizer}
             />
-
-            <Suspense fallback={<TicketSelectorSkeleton />}>
-              <TicketSelector
-                packages={event.packages}
-                eventSlug={event.slug}
-                eventId={event.id}
-              />
-            </Suspense>
 
             {event.status !== "COMPLETED" && event.status !== "CANCELLED" && (
               <ShareButtons
@@ -240,18 +235,6 @@ const StatusRibbon = ({ status }: { status: string }) => (
 );
 
 // Skeleton components
-const TicketSelectorSkeleton = () => (
-  <div className="bg-white rounded-xl p-6 shadow-sm border animate-pulse">
-    <div className="h-6 bg-gray-200 rounded w-1/3 mb-4" />
-    <div className="space-y-3">
-      <div className="h-12 bg-gray-200 rounded" />
-      <div className="h-12 bg-gray-200 rounded" />
-      <div className="h-12 bg-gray-200 rounded" />
-    </div>
-    <div className="h-12 bg-gray-200 rounded mt-4" />
-  </div>
-);
-
 const DescriptionSkeleton = () => (
   <div className="space-y-4 animate-pulse">
     <div className="h-4 bg-gray-200 rounded w-full" />
