@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { getAuthUser, requireAdmin } from "@/lib/auth/require-admin";
 import { getRequestId } from "@/utils/requestUtils";
-import type { Prisma } from "@/lib/generated/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
 
 export type AuditEntityType =
   | "event"

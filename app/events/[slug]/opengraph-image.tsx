@@ -3,8 +3,6 @@ import { ImageResponse } from "next/og";
 import { loadGoogleFont } from "@/lib/og-fonts";
 import { prisma } from "@/lib/prisma";
 
-export const runtime = "nodejs";
-
 export const alt = "Event";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";

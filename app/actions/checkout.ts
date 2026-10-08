@@ -15,7 +15,7 @@
 "use server";
 
 import { syncUser } from "@/lib/auth/syncUser"; // ← NEW
-import { Prisma } from "@/lib/generated/prisma"; // ← NEW: for the P2002 race check
+import { Prisma } from "@/lib/generated/prisma/client"; // ← NEW: for the P2002 race check
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";

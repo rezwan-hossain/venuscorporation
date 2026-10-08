@@ -49,7 +49,6 @@ const SiteFooter = () => {
               width={72}
               height={72}
               className="rounded-full object-cover relative z-10 transition-transform duration-300 group-hover:scale-105"
-              priority
             />
           </Link>
           <p className="text-gray-400 text-sm leading-relaxed mt-4 max-w-xs">
@@ -87,7 +86,6 @@ const SiteFooter = () => {
                 width={72}
                 height={72}
                 className="rounded-full object-cover relative z-10 transition-transform duration-300 group-hover:scale-105"
-                priority
               />
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed mt-3">

@@ -5,7 +5,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/require-admin";
-import type { Prisma } from "@/lib/generated/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import type {
   AuditCategory,
   AuditEntry,

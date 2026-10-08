@@ -14,7 +14,7 @@
 
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
-import { Prisma } from "@/lib/generated/prisma"; // ← matches your generator output path
+import { Prisma } from "@/lib/generated/prisma/client"; // ← matches your generator output path
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 

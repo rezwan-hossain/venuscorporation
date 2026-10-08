@@ -19,7 +19,7 @@
 // only be called from server code, never exposed as public actions.
 
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@/lib/generated/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { audit, SYSTEM } from "@/lib/audit";
 
 export const SLOT_HOLD_MS = 24 * 60 * 60 * 1000; //60 * 60 * 1000; // 1 hour

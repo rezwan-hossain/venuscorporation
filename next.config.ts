@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 // import { withAxiom } from "next-axiom";
 
+const isDev = process.env.NODE_ENV !== "production";
+
 const nextConfig: NextConfig = {
   /* config options here */
   compress: true,
@@ -10,7 +12,20 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   images: {
+    // Local Supabase (`npx supabase start`) serves uploads from 127.0.0.1,
+    // which next/image blocks by default. Development only.
+    dangerouslyAllowLocalIP: isDev,
     remotePatterns: [
+      ...(isDev
+        ? [
+            {
+              protocol: "http" as const,
+              hostname: "127.0.0.1",
+              port: "54321",
+              pathname: "/storage/v1/object/public/**",
+            },
+          ]
+        : []),
       {
         protocol: "https",
         hostname: "hxkzggziycqzsfaprcno.supabase.co",

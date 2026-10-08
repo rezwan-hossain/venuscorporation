@@ -7,7 +7,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { audit } from "@/lib/audit";
-import { Prisma } from "@/lib/generated/prisma";
+import { Prisma } from "@/lib/generated/prisma/client";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { logger } from "@/lib/logger";
 import { getRequestId } from "@/utils/requestUtils";

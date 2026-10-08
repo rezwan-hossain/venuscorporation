@@ -5,7 +5,7 @@
 // public endpoint, so every one starts with requireAdmin().
 
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/lib/generated/prisma";
+import { Prisma } from "@/lib/generated/prisma/client";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { audit } from "@/lib/audit";
 import { sendPaymentConfirmationEmail } from "@/lib/email/send-payment-confirmation";
