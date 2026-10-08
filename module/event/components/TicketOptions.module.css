@@ -1,0 +1,36 @@
+/* Ticket shine: a soft band of light sweeps across, three times, then stops.
+   A quiet hint that the ticket is interactive. It waits for .play, which
+   PlayWhenVisible adds when the tickets scroll into view. Delay is set per
+   ticket inline so they shine one after another. Off for reduced motion. */
+.shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 42%,
+    rgb(255 255 255 / 0.22) 50%,
+    transparent 58%
+  );
+  transform: translateX(-120%);
+}
+
+.play .shine {
+  animation: shine 1.4s ease-in-out 3 backwards;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-120%);
+  }
+  70%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shine {
+    display: none;
+  }
+}

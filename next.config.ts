@@ -71,7 +71,7 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
-    return [
+    const rules = [
       // Security headers for all routes
       {
         source: "/:path*",
@@ -212,6 +212,15 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
+
+    // Long-lived caching is for production only. In development the file
+    // names don't change between edits, so an immutable cache makes the
+    // browser keep serving old CSS/JS.
+    return isDev
+      ? rules.filter(
+          (rule) => !rule.headers.some((h) => h.key === "Cache-Control"),
+        )
+      : rules;
   },
 };
 

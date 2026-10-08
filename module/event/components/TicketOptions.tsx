@@ -6,6 +6,8 @@
 
 import Link from "next/link";
 import type { EventPackage } from "@/types/event";
+import styles from "./TicketOptions.module.css";
+import PlayWhenVisible from "./PlayWhenVisible";
 
 type TicketOptionsProps = {
   packages: EventPackage[];
@@ -66,13 +68,20 @@ export default function TicketOptions({
           Tickets for this event aren&apos;t on sale yet.
         </p>
       ) : (
-        <ul className="space-y-3">
-          {tickets.map((pkg) => (
-            <li key={pkg.id}>
-              <TicketCard pkg={pkg} eventId={eventId} closed={isClosed} />
-            </li>
-          ))}
-        </ul>
+        <PlayWhenVisible playClassName={styles.play}>
+          <ul className="space-y-3">
+            {tickets.map((pkg, i) => (
+              <li key={pkg.id}>
+                <TicketCard
+                  pkg={pkg}
+                  eventId={eventId}
+                  closed={isClosed}
+                  index={i}
+                />
+              </li>
+            ))}
+          </ul>
+        </PlayWhenVisible>
       )}
 
       {tickets.length > 0 && (
@@ -90,10 +99,12 @@ function TicketCard({
   pkg,
   eventId,
   closed,
+  index,
 }: {
   pkg: EventPackage;
   eventId: string;
   closed: boolean;
+  index: number;
 }) {
   const slotsLeft = Math.max(0, pkg.availableSlots - pkg.usedSlots);
   const soldOut = slotsLeft === 0;
@@ -108,7 +119,7 @@ function TicketCard({
 
   const body = (
     <div
-      className={`flex min-h-[7.5rem] overflow-hidden rounded-xl ${
+      className={`relative flex min-h-[7.5rem] overflow-hidden rounded-xl ${
         unavailable ? "bg-neutral-200" : "bg-[#1a1a1a]"
       }`}
       style={{ mask: notchMask, WebkitMask: notchMask }}
@@ -164,6 +175,15 @@ function TicketCard({
           </span>
         )}
       </div>
+
+      {/* Light catching the whole ticket, three times once in view, one ticket after another. */}
+      {!unavailable && (
+        <span
+          aria-hidden
+          className={styles.shine}
+          style={{ animationDelay: `${0.8 + index * 0.25}s` }}
+        />
+      )}
     </div>
   );
 
