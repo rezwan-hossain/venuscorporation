@@ -35,22 +35,32 @@ const helpLinks = [
   { label: "Contact Help", href: "/contact" },
 ];
 
+// The logo is dark navy on a transparent background, so on the black footer it
+// sits on a white card to stay readable.
+const FooterLogo = () => (
+  <Link
+    href="/"
+    aria-label="Venus Corporation home"
+    className="inline-block max-w-full rounded-xl bg-white px-4 py-3 transition-transform duration-300 hover:scale-[1.03]"
+  >
+    <Image
+      src="/venuscorporation-logo.png"
+      alt="Venus Corporation"
+      width={719}
+      height={347}
+      className="h-auto w-[200px] max-w-full"
+      sizes="200px"
+    />
+  </Link>
+);
+
 const SiteFooter = () => {
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-5 sm:px-6 py-12 sm:py-16">
         {/* ─── Top Section: Logo + Social (Mobile Centered) ─── */}
         <div className="flex flex-col items-center text-center md:hidden mb-10">
-          <Link href="/" className="relative w-[72px] h-[72px] group">
-            <span className="absolute inset-0 rounded-full bg-neon-lime opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-80" />
-            <Image
-              src="/MerchSports-small.png"
-              alt="MerchSports"
-              width={72}
-              height={72}
-              className="rounded-full object-cover relative z-10 transition-transform duration-300 group-hover:scale-105"
-            />
-          </Link>
+          <FooterLogo />
           <p className="text-gray-400 text-sm leading-relaxed mt-4 max-w-xs">
             Inspiring runners to push beyond their limits. Join us for an
             unforgettable marathon experience.
@@ -72,23 +82,11 @@ const SiteFooter = () => {
         </div>
 
         {/* ─── Main Grid ─── */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-5 gap-8 sm:gap-10 md:gap-12">
-          {/* Logo Section — Desktop Only */}
-          <div className="hidden md:block">
-            <Link
-              href="/"
-              className="relative w-[72px] h-[72px] group inline-block"
-            >
-              <span className="absolute inset-0 rounded-full bg-neon-lime opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-80" />
-              <Image
-                src="/MerchSports-small.png"
-                alt="MerchSports"
-                width={72}
-                height={72}
-                className="rounded-full object-cover relative z-10 transition-transform duration-300 group-hover:scale-105"
-              />
-            </Link>
-            <p className="text-gray-400 text-sm leading-relaxed mt-3">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-[1.5fr_1fr_1fr_1fr_1fr] gap-8 sm:gap-10 md:gap-12">
+          {/* Logo Section — tablet: its own row; desktop: first column */}
+          <div className="hidden md:col-span-4 md:flex md:items-center md:gap-6 xl:col-span-1 xl:block">
+            <FooterLogo />
+            <p className="text-gray-400 text-sm leading-relaxed md:mt-0 md:max-w-sm xl:mt-3 xl:max-w-none">
               Inspiring runners to push beyond their limits. Join us for an
               unforgettable marathon experience.
             </p>
