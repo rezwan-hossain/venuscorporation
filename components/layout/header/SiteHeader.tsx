@@ -1,4 +1,4 @@
-// components/SiteHeader4.tsx (Final optimized version)
+// components/layout/header/SiteHeader.tsx
 "use client";
 
 import { useState, useEffect, lazy, Suspense, memo } from "react";
@@ -42,7 +42,7 @@ const MobileToggle = memo(
 
 MobileToggle.displayName = "MobileToggle";
 
-export default function SiteHeader4() {
+export default function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, loading, setUser } = useAuth();
   const { scrolled, visible } = useHeaderScroll(mobileOpen);

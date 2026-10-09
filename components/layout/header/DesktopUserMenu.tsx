@@ -1,4 +1,4 @@
-// components/header/DesktopUserMenu.tsx
+// components/layout/header/DesktopUserMenu.tsx
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";

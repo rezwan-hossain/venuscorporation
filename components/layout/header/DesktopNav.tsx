@@ -1,4 +1,4 @@
-// components/header/DesktopNav.tsx (Optimized)
+// components/layout/header/DesktopNav.tsx (Optimized)
 "use client";
 
 import { memo } from "react";

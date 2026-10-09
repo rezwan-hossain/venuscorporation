@@ -1,4 +1,4 @@
-// components/header/MobileMenu.tsx
+// components/layout/header/MobileMenu.tsx
 "use client";
 
 import { useCallback } from "react";
