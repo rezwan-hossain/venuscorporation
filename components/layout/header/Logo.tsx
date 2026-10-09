@@ -8,28 +8,26 @@ interface LogoProps {
   scrolled: boolean;
 }
 
+// Wide wordmark (719×347, transparent background). Sized by height so it
+// keeps its proportions; width follows automatically.
 export default function Logo({ scrolled }: LogoProps) {
   return (
     <Link
       href="/"
-      className="relative z-10 group"
+      className="relative z-10 group shrink-0"
       prefetch={true} // Prefetch homepage
+      aria-label="Venus Corporation home"
     >
       <Image
-        src="/MerchSports-small.png"
-        alt="MerchSports Logo"
-        width={82}
-        height={82}
-        className={`rounded-full object-cover transition-all duration-300 ${
-          scrolled
-            ? "w-[62px] h-[62px]"
-            : "w-[62px] h-[62px] md:w-[82px] md:h-[82px]"
+        src="/venuscorporation-logo.png"
+        alt="Venus Corporation"
+        width={719}
+        height={347}
+        className={`w-auto object-contain transition-all duration-300 ${
+          scrolled ? "h-16" : "h-16 md:h-22"
         }`}
         priority
-        quality={90}
-        sizes="(max-width: 768px) 62px, 82px"
-        placeholder="blur"
-        blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        sizes="(min-width: 768px) 190px, 140px"
       />
     </Link>
   );

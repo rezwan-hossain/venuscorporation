@@ -47,10 +47,12 @@ export const metadata: Metadata = {
   referrer: "origin-when-cross-origin",
   category: "technology",
 
+  // app/favicon.ico is linked by Next.js automatically. Defining `icons` here
+  // turns off the other automatic icon links, so apple-icon is listed too.
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "32x32" },
-      { url: "/icon0.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
     ],
     apple: [{ url: "/apple-icon.png", sizes: "180x180" }],
   },
