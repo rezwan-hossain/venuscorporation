@@ -1,8 +1,5 @@
 import { getUpcomingEvents } from "@/app/actions/event";
 import EventCard from "@/module/event/components/EventCard";
-import { formatEventTimeUTC } from "@/utils/date";
-import { stat } from "fs";
-import { ChevronDown } from "lucide-react";
 
 export default async function UpcomingEvents() {
   const { events } = await getUpcomingEvents(2);
@@ -26,49 +23,9 @@ export default async function UpcomingEvents() {
 
         {/* Grid */}
         <div className="max-w-7xl mx-auto space-y-10 mt-12">
-          {events.map((event, index) => {
-            const formattedEvent = {
-              slug: event.slug,
-              title: event.name,
-              description: event.description,
-              shortDesc: event.shortDesc,
-              // time: new Date(event.time).toLocaleTimeString("en-US", {
-              //   hour: "2-digit",
-              //   minute: "2-digit",
-              // }),
-              time: formatEventTimeUTC(event.time),
-              date: new Date(event.date)
-                .toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "2-digit",
-                  year: "numeric",
-                })
-                .toUpperCase(),
-              location: event.address.toUpperCase(),
-              pricing:
-                event.packages.length > 0 ? (
-                  <>
-                    {event.packages.map((pkg, i) => (
-                      <span key={i}>
-                        {pkg.name}{" "}
-                        <span className="font-semibold text-neon-lime">
-                          ৳{pkg.price}
-                        </span>
-                        {i !== event.packages.length - 1 && " / "}
-                      </span>
-                    ))}
-                  </>
-                ) : (
-                  "No packages available"
-                ),
-              image: event.bannerImage,
-              eventType: event.eventType,
-              highlighted: index === 0,
-              status: event.status,
-            };
-
-            return <EventCard key={event.id} event={formattedEvent} />;
-          })}
+          {events.map((event) => (
+            <EventCard key={event.id} event={event} />
+          ))}
         </div>
       </div>
     </section>

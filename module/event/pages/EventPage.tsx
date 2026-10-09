@@ -1,50 +1,12 @@
 import { HeroText } from "@/components/ui/HeroText";
 import EventCard from "../components/EventCard";
 import { EventData } from "@/types/event";
-import { formatEventTime, formatEventTimeUTC } from "@/utils/date";
 
 type EventsPageProps = {
   upcomingEvents: EventData[];
   previousEvents: EventData[];
   error?: string;
 };
-
-// ✅ Format raw event into EventCard-friendly shape
-function formatEvent(event: EventData, index: number) {
-  return {
-    slug: event.slug,
-    title: event.name,
-    description: event.description,
-    status: event.status,
-    shortDesc: event.shortDesc,
-    time: formatEventTimeUTC(event.time),
-    date: new Date(event.date)
-      .toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-      })
-      .toUpperCase(),
-    location: event.address.toUpperCase(),
-    pricing:
-      event.packages.length > 0 ? (
-        <>
-          {event.packages.map((pkg, i) => (
-            <span key={i}>
-              {pkg.name}{" "}
-              <span className="font-semibold text-neon-lime">৳{pkg.price}</span>
-              {i !== event.packages.length - 1 && " / "}
-            </span>
-          ))}
-        </>
-      ) : (
-        "No packages available"
-      ),
-    image: event.bannerImage,
-    eventType: event.eventType,
-    highlighted: index === 0,
-  };
-}
 
 const EventsPage = ({
   upcomingEvents,
@@ -66,55 +28,9 @@ const EventsPage = ({
           </h2>
         </div>
 
-        {upcomingEvents.map((event, index) => {
-          const formattedEvent = {
-            slug: event.slug,
-            title: event.name,
-            description: event.description,
-            shortDesc: event.shortDesc,
-            // time: new Date(event.time).toLocaleTimeString("en-US", {
-            //   hour: "2-digit",
-            //   minute: "2-digit",
-            // }),
-            time: formatEventTimeUTC(event.time),
-            date: new Date(event.date)
-              .toLocaleDateString("en-US", {
-                month: "short",
-                day: "2-digit",
-                year: "numeric",
-              })
-              .toUpperCase(),
-            location: event.address.toUpperCase(),
-            // pricing:
-            //   event.packages.length > 0
-            //     ? event.packages
-            //         .map((pkg) => `${pkg.name} ৳${pkg.price}`)
-            //         .join(" / ")
-            //     : "No packages available",
-
-            pricing:
-              event.packages.length > 0 ? (
-                <>
-                  {event.packages.map((pkg, i) => (
-                    <span key={i}>
-                      {pkg.name}{" "}
-                      <span className="font-semibold text-neon-lime">
-                        ৳{pkg.price}
-                      </span>
-                      {i !== event.packages.length - 1 && " / "}
-                    </span>
-                  ))}
-                </>
-              ) : (
-                "No packages available"
-              ),
-            image: event.bannerImage,
-            eventType: event.eventType,
-            highlighted: index === 0,
-          };
-
-          return <EventCard key={event.id} event={formatEvent(event, index)} />;
-        })}
+        {upcomingEvents.map((event) => (
+          <EventCard key={event.id} event={event} />
+        ))}
       </div>
 
       {previousEvents?.length ? (
@@ -130,57 +46,9 @@ const EventsPage = ({
             </h2>
           </div>
 
-          {previousEvents.map((event, index) => {
-            const formattedEvent = {
-              slug: event.slug,
-              title: event.name,
-              description: event.description,
-              shortDesc: event.shortDesc,
-              // time: new Date(event.time).toLocaleTimeString("en-US", {
-              //   hour: "2-digit",
-              //   minute: "2-digit",
-              // }),
-              time: formatEventTimeUTC(event.time),
-              date: new Date(event.date)
-                .toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "2-digit",
-                  year: "numeric",
-                })
-                .toUpperCase(),
-              location: event.address.toUpperCase(),
-              // pricing:
-              //   event.packages.length > 0
-              //     ? event.packages
-              //         .map((pkg) => `${pkg.name} ৳${pkg.price}`)
-              //         .join(" / ")
-              //     : "No packages available",
-
-              pricing:
-                event.packages.length > 0 ? (
-                  <>
-                    {event.packages.map((pkg, i) => (
-                      <span key={i}>
-                        {pkg.name}{" "}
-                        <span className="font-semibold text-neon-lime">
-                          ৳{pkg.price}
-                        </span>
-                        {i !== event.packages.length - 1 && " / "}
-                      </span>
-                    ))}
-                  </>
-                ) : (
-                  "No packages available"
-                ),
-              image: event.bannerImage,
-              eventType: event.eventType,
-              highlighted: index === 0,
-            };
-
-            return (
-              <EventCard key={event.id} event={formatEvent(event, index)} />
-            );
-          })}
+          {previousEvents.map((event) => (
+            <EventCard key={event.id} event={event} />
+          ))}
         </div>
       ) : null}
     </div>
