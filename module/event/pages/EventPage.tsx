@@ -61,7 +61,7 @@ const EventsPage = ({
           <div className="text-lg uppercase tracking-widest text-gray-500"></div>
 
           <h2 className="text-4xl md:text-6xl font-bold uppercase leading-tighter text-gray-900 ">
-            upcomming <br />
+            upcoming <br />
             <span className="text-neon-lime">events</span>
           </h2>
         </div>
