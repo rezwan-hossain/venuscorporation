@@ -33,7 +33,7 @@ const ContactInfo = () => {
         </div>
         <div className="ml-16 flex flex-col gap-0.5 text-muted-foreground text-[15px]">
           <span>genzrunnersofficial@gmail.com</span>
-          <span>info@merchcommunication.com</span>
+          <span>venuscorporation.org</span>
         </div>
       </div>
 

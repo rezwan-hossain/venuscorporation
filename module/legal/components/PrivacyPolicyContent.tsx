@@ -114,7 +114,7 @@ const sections = [
     content: `
       If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:
       
-      Email: info@merchcommunication.com
+      Email: info@venuscorporation.org
       Phone: +880 186-2221943
       Address: House-32,Road-08,Block-H,Mirpur-2
       

@@ -144,7 +144,7 @@ const sections = [
     content: `
       For any questions or concerns regarding these Terms and Conditions, please contact us at:
       
-      Email: info@merchcommunication.com
+      Email: info@venuscorporation.org
       Phone: +8801862221943
       Address: House-32,Road-08,Block-H,Mirpur-2
     `,

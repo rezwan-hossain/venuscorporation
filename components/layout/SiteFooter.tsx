@@ -145,7 +145,7 @@ const SiteFooter = () => {
                   <span className="w-9 h-9 rounded-full bg-gray-800 group-hover:bg-neon-lime/20 flex items-center justify-center flex-shrink-0 transition-colors">
                     <Mail size={16} className="text-neon-lime" />
                   </span>
-                  info@merchcommunication.com
+                  info@venuscorporation.org
                 </a>
               </li>
               <li>

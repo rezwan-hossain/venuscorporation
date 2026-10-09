@@ -2,74 +2,74 @@
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import Link from "next/link";
+import { Building2, Globe, Route, type LucideIcon } from "lucide-react";
 
 import { HeroText } from "@/components/ui/HeroText";
 import type { EventData } from "@/types/event";
-import EventInfoCard from "../components/EventInfoCard";
 import EventDescription3 from "../components/EventDescription3";
 import ShareButtons from "../components/ShareButtons";
 import TicketOptions from "../components/TicketOptions";
-import { formatEventTime, formatEventTimeUTC } from "@/utils/date";
 import { ViewContentTracker } from "@/components/tracking/ViewContentTracker";
 
-// Dynamic imports for non-critical components
 const CountdownTimer = dynamic(() => import("../components/CountdownTimer"), {
-  loading: () => <div className="h-24 bg-gray-100 animate-pulse rounded-xl" />,
+  loading: () => <div className="h-44 rounded-2xl bg-gray-100 animate-pulse" />,
 });
-
-// const EventDescription = dynamic(
-//   () => import("../components/EventDescription"),
-//   {
-//     loading: () => (
-//       <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />
-//     ),
-//   },
-// );
 
 type EventDetailPageProps = {
   event: EventData;
   searchParams?: { view?: string };
 };
 
-type ViewMode = "styled" | "unstyled";
-
-// Pre-compute formatted values on server
-function formatEventDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString("en-US", {
+// Event dates are stored as UTC midnight and times as the Dhaka wall-clock
+// time written in UTC (see app/actions/admin.ts), so both format in UTC.
+const formatDate = (date: Date) =>
+  new Date(date).toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
+    timeZone: "UTC",
   });
+
+const formatTime = (time: Date) =>
+  new Date(time).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  });
+
+/** The real start instant: event day + start time, Dhaka (UTC+6). */
+function startsAt(date: Date, time: Date): Date {
+  const d = new Date(date);
+  const t = new Date(time);
+  return new Date(
+    Date.UTC(
+      d.getUTCFullYear(),
+      d.getUTCMonth(),
+      d.getUTCDate(),
+      t.getUTCHours(),
+      t.getUTCMinutes(),
+    ) -
+      6 * 60 * 60 * 1000,
+  );
 }
 
-// function formatEventTime(time: string | Date): string {
-//   return new Date(time).toLocaleTimeString("en-US", {
-//     hour: "2-digit",
-//     minute: "2-digit",
-//   });
-// }
+const BLUR =
+  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDAwUBAAAAAAAAAAAAAQIDBAURAAYhEiIxQVFh/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAYEQEBAQEBAAAAAAAAAAAAAAABAgADEf/aAAwDAQACEQMRAD8Aw+3bdu9ru1BXQ26eSGnqIpZFRVZmVXBIAHknGmG/rjPuC4Uu4J6SajgqIPTjp8qV7Y0H3A5Azk8f2mms0Bui5NdXe//Z";
 
 const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
-  const view: ViewMode =
-    (searchParams?.view as ViewMode) === "styled" ? "styled" : "unstyled";
-  const isUnstyled = view === "unstyled";
+  // ?view=styled switches the description renderer (kept for previewing).
+  const styledDescription = searchParams?.view === "styled";
+  const isOpen = event.status === "ACTIVE";
+  const packages = event.packages.filter((p) => !p.isArchived);
 
-  const isCompleted = event.status === "COMPLETED";
+  const formattedDate = formatDate(event.date);
+  const formattedTime = formatTime(event.time);
 
-  // Pre-compute on server
-  const formattedDate = formatEventDate(event.date);
-  // const formattedTime = formatEventTime(event.time);
-  const formattedTime = formatEventTimeUTC(event.time);
-
-  // If user selects different package, that is fine
-  // InitiateCheckout will fire with exact package on checkout page
-  const firstPackage = event.packages?.[0];
+  // InitiateCheckout fires with the exact package on the checkout page.
+  const firstPackage = packages[0];
 
   return (
     <div className="min-h-screen bg-background">
-      {/* ✅ Fires ViewContent on page load */}
-
       {firstPackage && (
         <ViewContentTracker
           product={{
@@ -91,113 +91,76 @@ const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
         />
       </div>
 
-      <div
-        // className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12"
-        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 ${
-          isCompleted ? "grayscale opacity-60" : ""
-        }`}
-      >
-        {/* Desktop Banner - LCP Element */}
-        <div className="hidden md:block relative rounded-xl overflow-hidden mt-4 mb-8">
-          {/* <Image
-            src={event.bannerImage}
-            alt={event.name}
-            fill
-            className="object-contain lg:object-cover"
-            sizes="(min-width: 1024px) 100vw, (min-width: 768px) 100vw, 100vw"
-            quality={75}
-            priority // 👈 Add this for LCP optimization
-          /> */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 lg:pb-24">
+        {/* Banner (LCP element) */}
+        <div className="relative mt-4 overflow-hidden rounded-2xl">
           <Image
             src={event.bannerImage}
             alt={event.name}
-            width={1200}
-            height={540}
-            className="w-full h-[300px] sm:h-[360px] lg:h-[540px] object-contain lg:object-cover rounded-xl"
-            priority // Critical for LCP
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+            width={1400}
+            height={620}
+            className={`h-60 w-full object-cover sm:h-90 lg:h-130 ${
+              isOpen ? "" : "grayscale-[60%]"
+            }`}
+            priority
+            sizes="(max-width: 1280px) 100vw, 1280px"
             placeholder="blur"
-            quality={75}
-            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDAwUBAAAAAAAAAAAAAQIDBAURAAYhEiIxQVFh/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAYEQEBAQEBAAAAAAAAAAAAAAABAgADEf/aAAwDAQACEQMRAD8Aw+3bdu9ru1BXQ26eSGnqIpZFRVZmVXBIAHknGmG/rjPuC4Uu4J6SajgqIPTjp8qV7Y0H3A5Azk8f2mms0Bui5NdXe//Z"
+            blurDataURL={BLUR}
           />
-          {/* <EventTypeBadge eventType={event.eventType} /> */}
-          <StatusRibbon status={event.status} />
+          <StatusPill status={event.status} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8 lg:gap-12">
-          {/* Left column */}
-          <div>
-            {/* Mobile Hero Image */}
-            <div className="block md:hidden relative rounded-xl overflow-hidden">
-              <Image
-                src={event.thumbImage ?? event.bannerImage}
-                alt={event.name}
-                width={600}
-                height={280}
-                className="w-full h-[280px] sm:h-[360px] object-cover"
-                priority // Also LCP on mobile
-                sizes="100vw"
-                placeholder="blur"
-                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDAwUBAAAAAAAAAAAAAQIDBAURAAYhEiIxQVFh/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAYEQEBAQEBAAAAAAAAAAAAAAABAgADEf/aAAwDAQACEQMRAD8Aw+3bdu9ru1BXQ26eSGnqIpZFRVZmVXBIAHknGmG/rjPuC4Uu4J6SajgqIPTjp8qV7Y0H3A5Azk8f2mms0Bui5NdXe//Z"
-              />
-              <StatusRibbon status={event.status} />
-            </div>
+        {/* Phones: countdown, race info, tickets, share (the buy column is
+            display:contents there, so the countdown can move to the top on
+            its own). Large screens: buy column on the right, spanning both
+            rows so it stays sticky beside everything on the left. */}
+        <div className="mt-8 grid grid-cols-1 gap-10 lg:mt-12 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[auto_1fr] lg:gap-x-14">
+          {/* Race info: quick facts first, then the full description */}
+          <div className="min-w-0 space-y-10 lg:col-start-1 lg:row-start-1">
+            <AtAGlance event={event} packages={packages} />
 
-            <section className="mt-6 lg:mt-10">
-              <div className="flex items-center justify-end mb-4">
-                <Link
-                  href={`?view=${isUnstyled ? "styled" : "unstyled"}`}
-                  className="text-sm font-medium underline underline-offset-4"
-                  prefetch={false}
-                >
-                  Switch to {isUnstyled ? "styled" : "unstyled"}
-                </Link>
-              </div>
-
-              <h2 className="font-display text-3xl lg:text-4xl tracking-wide mb-6">
-                EVENT DETAILS
+            <section>
+              <h2 className="text-3xl tracking-wide uppercase lg:text-4xl">
+                About the race
               </h2>
-
-              {isUnstyled ? (
-                <div
-                  className="prose mt-14 prose-slate [&>h2]:mt-12 [&>h2]:flex [&>h2]:items-center [&>h2]:font-mono [&>h2]:text-sm/7 [&>h2]:font-medium [&>h2]:text-slate-900 [&>h2]:before:mr-3 [&>h2]:before:h-3 [&>h2]:before:w-1.5 [&>h2]:before:rounded-r-full [&>h2]:before:bg-cyan-200 [&>h2:nth-of-type(3n)]:before:bg-violet-200 [&>h2:nth-of-type(3n+2)]:before:bg-indigo-200 [&>ul]:mt-6 [&>ul]:list-['\2013\20'] [&>ul]:pl-5"
-                  dangerouslySetInnerHTML={{ __html: event.description }}
-                />
-              ) : (
-                // <Suspense fallback={<DescriptionSkeleton />}>
-                //   <EventDescription description={event.description} />
-                // </Suspense>
-                <EventDescription3 description={event.description} />
-              )}
+              <div className="mt-5">
+                {styledDescription ? (
+                  <EventDescription3 description={event.description} />
+                ) : (
+                  <div
+                    className="prose prose-slate max-w-none [&>h2]:mt-10 [&>h2]:flex [&>h2]:items-center [&>h2]:font-mono [&>h2]:text-sm/7 [&>h2]:font-medium [&>h2]:text-slate-900 [&>h2]:before:mr-3 [&>h2]:before:h-3 [&>h2]:before:w-1.5 [&>h2]:before:rounded-r-full [&>h2]:before:bg-neon-lime [&>ul]:mt-6 [&>ul]:list-['\2013\20'] [&>ul]:pl-5"
+                    dangerouslySetInnerHTML={{ __html: event.description }}
+                  />
+                )}
+              </div>
             </section>
           </div>
 
-          {/* Right column - Sticky sidebar */}
-          <aside className="lg:sticky lg:top-20 h-fit space-y-8 mt-10">
-            <Suspense
-              fallback={
-                <div className="h-24 bg-gray-100 animate-pulse rounded-xl" />
-              }
-            >
-              <CountdownTimer targetDate={new Date(event.date)} />
-            </Suspense>
+          {/* Buy column */}
+          <aside className="contents lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:block lg:space-y-6 lg:self-start">
+            {isOpen && (
+              <div className="order-first lg:order-none">
+                <Suspense
+                  fallback={
+                    <div className="h-44 rounded-2xl bg-gray-100 animate-pulse" />
+                  }
+                >
+                  <CountdownTimer
+                    targetDate={startsAt(event.date, event.time)}
+                  />
+                </Suspense>
+              </div>
+            )}
 
             <TicketOptions
               packages={event.packages}
               eventId={event.id}
               eventStatus={event.status}
             />
+          </aside>
 
-            <EventInfoCard
-              status={event.status}
-              date={formattedDate}
-              time={formattedTime}
-              address={event.address}
-              eventType={event.eventType}
-              organizer={event.organizer}
-            />
-
-            {event.status !== "COMPLETED" && event.status !== "CANCELLED" && (
+          {isOpen && (
+            <div className="min-w-0 lg:col-start-1 lg:row-start-2">
               <ShareButtons
                 slug={event.slug}
                 eventName={event.name}
@@ -205,43 +168,109 @@ const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
                 siteUrl={process.env.NEXT_PUBLIC_SITE_URL}
                 subtitle="Running with friends? Send them this race."
               />
-            )}
-          </aside>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-// Extracted components for better code splitting
-const EventTypeBadge = ({ eventType }: { eventType: string }) => (
-  <span
-    className={`absolute top-4 right-4 px-4 py-1.5 text-xs font-semibold rounded-full ${
-      eventType === "VIRTUAL"
-        ? "bg-purple-500 text-white"
-        : "bg-neon-lime text-white"
-    }`}
-  >
-    {eventType === "LIVE" ? "UPCOMING" : eventType}
-  </span>
-);
+/** Facts the hero line doesn't already show: format, distances, organizer. */
+function AtAGlance({
+  event,
+  packages,
+}: {
+  event: EventData;
+  packages: EventData["packages"];
+}) {
+  const rows: { icon: LucideIcon; label: string; value: React.ReactNode }[] = [
+    {
+      icon: Globe,
+      label: "Format",
+      value:
+        event.eventType === "VIRTUAL" ? "Virtual — run anywhere" : "In person",
+    },
+  ];
 
-const StatusRibbon = ({ status }: { status: string }) => (
-  <div className="absolute top-0 left-0 h-16 w-16 overflow-visible">
-    <div className="absolute -rotate-45 bg-neon-lime text-white font-body font-semibold text-xs text-center py-1 w-[170px] left-[-34px] top-[32px]">
-      {status === "ACTIVE" ? "Upcoming" : status}
-    </div>
-  </div>
-);
+  if (packages.length > 0) {
+    rows.push({
+      icon: Route,
+      label: "Distances",
+      value: (
+        <ul className="flex flex-wrap gap-2">
+          {packages.map((p) => (
+            <li
+              key={p.id}
+              className="rounded-full border border-gray-200 px-3 py-0.5 text-xs font-semibold text-gray-700"
+            >
+              {p.distance}
+            </li>
+          ))}
+        </ul>
+      ),
+    });
+  }
 
-// Skeleton components
-const DescriptionSkeleton = () => (
-  <div className="space-y-4 animate-pulse">
-    <div className="h-4 bg-gray-200 rounded w-full" />
-    <div className="h-4 bg-gray-200 rounded w-5/6" />
-    <div className="h-4 bg-gray-200 rounded w-4/6" />
-    <div className="h-4 bg-gray-200 rounded w-full" />
-  </div>
-);
+  if (event.organizer) {
+    rows.push({
+      icon: Building2,
+      label: "Organizer",
+      value: (
+        <span className="flex items-center gap-2.5">
+          {event.organizer.logo && (
+            // Plain <img>: organizer logos can come from any host.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={event.organizer.logo}
+              alt=""
+              className="h-7 w-7 rounded-full object-cover"
+            />
+          )}
+          {event.organizer.name}
+        </span>
+      ),
+    });
+  }
+
+  return (
+    <section className="rounded-2xl border border-gray-200">
+      <h2 className="border-b border-gray-200 px-5 py-4 text-xl tracking-wide uppercase sm:px-6">
+        At a glance
+      </h2>
+      <dl className="divide-y divide-gray-100">
+        {rows.map(({ icon: Icon, label, value }) => (
+          <div
+            key={label}
+            className="flex flex-col gap-1.5 px-5 py-4 sm:flex-row sm:items-center sm:gap-6 sm:px-6"
+          >
+            <dt className="flex w-36 shrink-0 items-center gap-2.5 text-xs font-semibold uppercase tracking-widest text-gray-500">
+              <Icon className="h-4 w-4 text-gray-400" aria-hidden />
+              {label}
+            </dt>
+            <dd className="text-sm font-medium text-gray-900">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+const STATUS_STYLE: Record<string, { label: string; dot: string }> = {
+  ACTIVE: { label: "Upcoming", dot: "bg-green-500" },
+  COMPLETED: { label: "Completed", dot: "bg-gray-400" },
+  CANCELLED: { label: "Cancelled", dot: "bg-red-500" },
+  INACTIVE: { label: "Not open yet", dot: "bg-amber-400" },
+};
+
+const StatusPill = ({ status }: { status: string }) => {
+  const s = STATUS_STYLE[status] ?? { label: status, dot: "bg-gray-400" };
+  return (
+    <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-gray-900 shadow-sm backdrop-blur">
+      <span className={`h-2 w-2 rounded-full ${s.dot}`} aria-hidden />
+      {s.label}
+    </span>
+  );
+};
 
 export default EventDetailPage;
