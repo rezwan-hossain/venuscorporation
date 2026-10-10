@@ -192,7 +192,7 @@ const SiteFooter = () => {
         <div className="border-t border-gray-800 mt-10 sm:mt-12 pt-6 sm:pt-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
             <p className="text-xs sm:text-sm text-gray-500">
-              © <CurrentYear /> MERCH SPORTS. All rights reserved.
+              © <CurrentYear /> Venus Corporation. All rights reserved.
             </p>
             <p className="text-xs text-gray-600 hidden sm:block">
               Run beyond your limits.
