@@ -148,7 +148,7 @@ export default function Ambassador() {
           </div>
 
           <h2 className="text-4xl md:text-6xl font-bold uppercase leading-tighter text-gray-900 ">
-            oddomo bangladesh <br />
+            venus corporation <br />
             <span className="text-neon-lime">2026</span>
           </h2>
         </div>

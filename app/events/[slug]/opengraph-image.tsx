@@ -286,7 +286,7 @@ export default async function EventOGImage({
           display: "flex",
         }}
       >
-        merchsports.com
+        venuscorporation.org
       </div>
     </div>,
     {
