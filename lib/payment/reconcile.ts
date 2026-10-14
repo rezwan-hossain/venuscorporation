@@ -27,6 +27,7 @@ export type ReconcileResult =
   | "PAID_NO_SLOT" // paid, but the order has no slot anymore — refund case
   | "GATEWAY_ERROR"; // couldn't get an answer — try again later
 
+/** Formats an amount like 1599 → "1,599" for audit messages. */
 const fmt = (v: unknown) => {
   const n = Number(v);
   return Number.isFinite(n) ? n.toLocaleString("en-IN") : String(v);

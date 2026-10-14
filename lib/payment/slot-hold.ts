@@ -24,6 +24,7 @@ import { audit, SYSTEM } from "@/lib/audit";
 
 export const SLOT_HOLD_MS = 24 * 60 * 60 * 1000; //60 * 60 * 1000; // 1 hour
 
+/** When a slot hold taken now should expire (now + SLOT_HOLD_MS). */
 export function newHoldExpiry(now: Date = new Date()): Date {
   return new Date(now.getTime() + SLOT_HOLD_MS);
 }

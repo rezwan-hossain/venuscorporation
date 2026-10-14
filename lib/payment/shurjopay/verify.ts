@@ -17,7 +17,7 @@ import {
   verifyShurjoPayPayment,
   SP_CODE,
   type ShurjoPayVerificationItem,
-} from "@/lib/shurjopay2";
+} from "@/lib/shurjopay";
 
 export type VerifyResult =
   | { state: "PAID"; item: ShurjoPayVerificationItem }
@@ -29,8 +29,10 @@ export type VerifyResult =
       code?: number;
     };
 
+/** Waits `ms` milliseconds (used between retries). */
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Rejects if `p` hasn't settled within `ms` milliseconds. */
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
     const t = setTimeout(() => reject(new Error(`verify timed out after ${ms}ms`)), ms);
@@ -47,6 +49,13 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   });
 }
 
+/**
+ * Turns ShurjoPay's verify answer into PAID / NOT_PAID / UNSURE.
+ *   1. Empty answer        → UNSURE
+ *   2. Any entry is 1000   → PAID (never blindly use the first entry)
+ *   3. First is 1001/1002  → NOT_PAID
+ *   4. Anything else       → UNSURE (e.g. 1068 "initiated")
+ */
 function classify(items: ShurjoPayVerificationItem[]): VerifyResult {
   if (items.length === 0) return { state: "UNSURE", reason: "empty" };
 

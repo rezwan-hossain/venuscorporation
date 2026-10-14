@@ -13,6 +13,7 @@
 const PRIVATE_HOST =
   /^(localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|\[::1\]|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|.+\.local)$/i;
 
+/** Parses a URL, or returns null if it's missing or invalid. */
 const tryUrl = (v: string | undefined) => {
   try {
     return v ? new URL(v) : null;
@@ -23,6 +24,11 @@ const tryUrl = (v: string | undefined) => {
 
 export type ConfigCheck = { block: string | null; warnings: string[] };
 
+/**
+ * Checks the ShurjoPay settings in .env.
+ *   block    → a problem that would lose payments: refuse to take payments
+ *   warnings → worth fixing, but payments can still run
+ */
 export function checkPaymentConfig(
   env: Record<string, string | undefined> = process.env,
 ): ConfigCheck {

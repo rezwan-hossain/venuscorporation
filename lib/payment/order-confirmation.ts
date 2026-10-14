@@ -18,6 +18,13 @@ import type { SmsVars } from "@/lib/sms-template";
 import { recordDelivery } from "@/lib/notification-log";
 import type { ChildLogger } from "@/lib/logger";
 
+/**
+ * Runs after an order is confirmed as paid (flow STEP 8):
+ *   1. Record coupon usage (skipped on a resend)
+ *   2. Send the confirmation email
+ *   3. Send the confirmation SMS
+ * Each step is non-fatal: a failure is logged and recorded, never thrown.
+ */
 export async function runPostPaymentSteps({
   orderId,
   transactionId,
