@@ -1,4 +1,4 @@
-// lib/payment-reconcile.ts
+// lib/payment/reconcile.ts
 //
 // Makes payment confirmation independent of the browser redirect.
 //
@@ -13,9 +13,9 @@
 
 import { prisma } from "@/lib/prisma";
 import type { ChildLogger } from "@/lib/logger";
-import { verifyPayment } from "@/lib/payment-verify";
-import { confirmPaidOrder } from "@/lib/slot-hold";
-import { runPostPaymentSteps } from "@/lib/order-confirmation";
+import { verifyPayment } from "@/lib/payment/shurjopay/verify";
+import { confirmPaidOrder } from "@/lib/payment/slot-hold";
+import { runPostPaymentSteps } from "@/lib/payment/order-confirmation";
 import { audit, SYSTEM, type AuditActor } from "@/lib/audit";
 
 export type ReconcileResult =

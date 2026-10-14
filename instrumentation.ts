@@ -1,7 +1,7 @@
 // instrumentation.ts
 //
 // Runs once when the Next.js server starts. Used to start the background sweep
-// that releases expired checkout slot holds (see lib/slot-hold.ts).
+// that releases expired checkout slot holds (see lib/payment/slot-hold.ts).
 //
 // Why a timer and not only the sweep inside placeOrder: the event page is
 // cached and disables "Register" at 0 slots, so a package filled with abandoned
@@ -29,11 +29,11 @@ export async function register() {
   if (g.__slotHoldSweep) return;
   g.__slotHoldSweep = true;
 
-  const { releaseExpiredHolds } = await import("./lib/slot-hold");
+  const { releaseExpiredHolds } = await import("./lib/payment/slot-hold");
   const { purgeOldVisitors } = await import("./lib/page-views");
   const { logger } = await import("./lib/logger");
-  const { reconcilePendingPayments } = await import("./lib/payment-reconcile");
-  const { checkPaymentConfig } = await import("./lib/payment-config");
+  const { reconcilePendingPayments } = await import("./lib/payment/reconcile");
+  const { checkPaymentConfig } = await import("./lib/payment/shurjopay/config");
 
   // Say so loudly at boot if payments can't be confirmed with this setup.
   const config = checkPaymentConfig();
@@ -67,7 +67,7 @@ export async function register() {
   };
   setInterval(reconcile, RECONCILE_INTERVAL_MS).unref();
   setTimeout(reconcile, 45_000).unref();
-  const { verifyShurjoPayPayment, SP_CODE } = await import("./lib/shurjopay2");
+  const { verifyShurjoPayPayment, SP_CODE } = await import("./lib/payment/shurjopay/client");
 
   // Before releasing an order that reached ShurjoPay, ask ShurjoPay whether it
   // was actually paid (the callback can be lost). Throws on API errors, which

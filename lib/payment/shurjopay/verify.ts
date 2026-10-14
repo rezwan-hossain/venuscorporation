@@ -1,4 +1,4 @@
-// lib/payment-verify.ts
+// lib/payment/shurjopay/verify.ts
 //
 // Asks ShurjoPay what happened to a payment session, robustly:
 //   - retries a failed or empty answer (ShurjoPay can take a moment to settle
@@ -17,7 +17,7 @@ import {
   verifyShurjoPayPayment,
   SP_CODE,
   type ShurjoPayVerificationItem,
-} from "@/lib/shurjopay";
+} from "@/lib/payment/shurjopay/client";
 
 export type VerifyResult =
   | { state: "PAID"; item: ShurjoPayVerificationItem }

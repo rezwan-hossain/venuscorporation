@@ -13,10 +13,10 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { logger } from "@/lib/logger";
 import { getRequestId } from "@/utils/requestUtils";
 import { audit, type AuditActor } from "@/lib/audit";
-import { verifyPayment } from "@/lib/payment-verify";
-import { reconcileOrder } from "@/lib/payment-reconcile";
-import { claimSlots, confirmPaidOrder, releaseHold } from "@/lib/slot-hold";
-import { runPostPaymentSteps } from "@/lib/order-confirmation";
+import { verifyPayment } from "@/lib/payment/shurjopay/verify";
+import { reconcileOrder } from "@/lib/payment/reconcile";
+import { claimSlots, confirmPaidOrder, releaseHold } from "@/lib/payment/slot-hold";
+import { runPostPaymentSteps } from "@/lib/payment/order-confirmation";
 import { revalidateTag } from "next/cache";
 import type {
   GatewayCheck,

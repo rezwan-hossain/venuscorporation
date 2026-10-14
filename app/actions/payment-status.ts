@@ -9,7 +9,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
-import { reconcileOrder } from "@/lib/payment-reconcile";
+import { reconcileOrder } from "@/lib/payment/reconcile";
 
 export type PaymentProgress =
   | "CONFIRMED" // paid and confirmed → success page
@@ -22,6 +22,12 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CHECK_EVERY_MS = 15_000;
 const lastGatewayCheck = new Map<string, number>();
 
+/**
+ * Where is this order's payment? Polled every few seconds by the
+ * "Confirming your payment…" page.
+ *   1. Answer from our database when the order is already settled
+ *   2. Otherwise ask ShurjoPay (at most once per 15s per order)
+ */
 export async function getPaymentProgress(orderId: string): Promise<PaymentProgress> {
   if (typeof orderId !== "string" || !UUID.test(orderId)) return "NOT_FOUND";
 

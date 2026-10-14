@@ -1,15 +1,31 @@
+// app/actions/payment.ts
+//
+// Starts a ShurjoPay payment for an order that placeOrder() already created.
+// Covers STEPS 2–4 of the payment flow (see the map at the top of
+// lib/payment/shurjopay/client.ts). Called by the checkout page and the "retry payment" page.
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
-import { getShurjoPayToken, createShurjoPayPayment } from "@/lib/shurjopay";
+import { getShurjoPayToken, createShurjoPayPayment } from "@/lib/payment/shurjopay/client";
 import { getClientIp } from "@/lib/get-client-ip";
 import { logger } from "@/lib/logger";
 import { getRequestId } from "@/utils/requestUtils";
-import { newHoldExpiry, reclaimReleasedOrder } from "@/lib/slot-hold";
-import { checkPaymentConfig } from "@/lib/payment-config";
-import { reconcileOrder } from "@/lib/payment-reconcile";
+import { newHoldExpiry, reclaimReleasedOrder } from "@/lib/payment/slot-hold";
+import { checkPaymentConfig } from "@/lib/payment/shurjopay/config";
+import { reconcileOrder } from "@/lib/payment/reconcile";
 
+type InitiateResult = { success: boolean; error: string; checkoutUrl: string };
+
+const fail = (error: string): InitiateResult => ({ success: false, error, checkoutUrl: "" });
+
+/**
+ * Opens a ShurjoPay checkout page for one order.
+ *
+ * Returns `checkoutUrl` — the browser redirects there and the customer pays.
+ * Returns an `error` (and no URL) when paying isn't possible or safe right now.
+ *
+ * Safe to call again for the same order (retry): it never charges twice.
+ */
 export async function initiateShurjoPayPayment({
   orderId,
   customerName,
@@ -20,143 +36,72 @@ export async function initiateShurjoPayPayment({
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-}) {
-  // Auth check
-  // const supabase = await createClient();
-  // const {
-  //   data: { user },
-  // } = await supabase.auth.getUser();
-
-  // if (!user) {
-  //   return { success: false, error: "You must be logged in", checkoutUrl: "" };
-  // }
-
+}): Promise<InitiateResult> {
   const requestId = await getRequestId();
   const start = Date.now();
-
-  const log = logger.child({
-    requestId,
-    action: "initiateShurjoPayPayment",
-    orderId,
-  });
-
+  const log = logger.child({ requestId, action: "initiateShurjoPayPayment", orderId });
   log.info("action:start");
 
   try {
-    // Refuse to take money we could never confirm (live ShurjoPay sending
-    // customers back to localhost) — how paid orders end up stuck as pending.
+    // ── 1. Check our ShurjoPay setup ─────────────────────────────
+    // Refuse to take money we could never confirm (e.g. live ShurjoPay
+    // sending customers back to localhost) — that's how paid orders get
+    // stuck as pending.
     const config = checkPaymentConfig();
     if (config.block) {
       log.error({ configProblem: config.block }, "payment:config_invalid — refusing to start payment");
-      return {
-        success: false,
-        error: "Online payment is temporarily unavailable. Please try again later.",
-        checkoutUrl: "",
-      };
+      return fail("Online payment is temporarily unavailable. Please try again later.");
     }
 
-    // ✅ Get client IP at the start
-    const clientIp = await getClientIp();
-    console.log("🌐 Client IP:", clientIp);
-    log.info({ clientIp }, "client_ip:resolved");
-
-    // Get order with payment
-    const dbStart = Date.now();
-
+    // ── 2. Load the order and its payment record ─────────────────
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: {
-        payment: true,
-        package: true,
-        event: true,
-      },
+      include: { payment: true, package: true, event: true },
     });
-
-    const dbDuration = Date.now() - dbStart;
-
     if (!order) {
-      log.warn(
-        {
-          db: {
-            model: "Order",
-            operation: "findUnique",
-            durationMs: dbDuration,
-          },
-        },
-        "db:not_found",
-      );
-
-      return { success: false, error: "Order not found", checkoutUrl: "" };
+      log.warn("db:not_found");
+      return fail("Order not found");
     }
-
-    log.info(
-      {
-        db: { model: "Order", operation: "findUnique", durationMs: dbDuration },
-      },
-      "db:success",
-    );
-
     if (!order.payment) {
-      log.error({ orderId }, "payment:record_missing");
-      return {
-        success: false,
-        error: "Payment record not found",
-        checkoutUrl: "",
-      };
+      log.error("payment:record_missing");
+      return fail("Payment record not found");
     }
-
     if (order.payment.status === "PAID") {
-      log.warn(
-        { paymentId: order.payment.id },
-        "payment:already_paid — duplicate initiation attempt",
-      );
-
-      return {
-        success: false,
-        error: "Order is already paid",
-        checkoutUrl: "",
-      };
+      log.warn({ paymentId: order.payment.id }, "payment:already_paid — duplicate initiation attempt");
+      return fail("Order is already paid");
     }
 
-    // Step 0a: Never charge twice. If an earlier ShurjoPay session for this
-    // order was actually paid (its callback lost), confirm that one instead of
-    // opening a new payment.
+    // ── 3. Never charge twice ────────────────────────────────────
+    // If this order already had a ShurjoPay session (a retry), ask ShurjoPay
+    // whether that one was actually paid (its callback may have been lost).
+    // If it was, confirm it instead of opening a new payment.
     if (order.payment.paymentId) {
       const previous = await reconcileOrder(order.id, { log });
       log.info({ previous }, "payment:previous_session_checked");
 
-      if (previous === "CONFIRMED" || previous === "ALREADY_PAID") {
-        return {
-          success: true,
-          error: "",
-          checkoutUrl: `/payment/success?orderId=${order.id}`,
-        };
-      }
-      if (previous === "PAID_NO_SLOT" || previous === "NEEDS_REVIEW") {
-        return {
-          success: false,
-          error:
+      switch (previous) {
+        case "CONFIRMED":
+        case "ALREADY_PAID":
+          return { success: true, error: "", checkoutUrl: `/payment/success?orderId=${order.id}` };
+        case "PAID_NO_SLOT":
+        case "NEEDS_REVIEW":
+          return fail(
             "We already received a payment for this order and are checking it. Please don't pay again — contact support with your order ID.",
-          checkoutUrl: "",
-        };
-      }
-      if (previous === "GATEWAY_ERROR") {
-        return {
-          success: false,
-          error:
+          );
+        case "GATEWAY_ERROR":
+          return fail(
             "We couldn't check your previous payment attempt just now. Please try again in a minute so you aren't charged twice.",
-          checkoutUrl: "",
-        };
+          );
+        // NOT_PAID / NO_SESSION → safe to start a new payment, carry on.
       }
-      // NOT_PAID / NO_SESSION → safe to start a new payment.
     }
 
-    // Step 0: Make sure this order holds its slot for the whole payment.
-    //   PENDING   → refresh the hold so it can't expire mid-payment.
+    // ── 4. Make sure the order keeps its slot while the customer pays ──
+    //   PENDING   → extend the hold so it can't expire mid-payment
     //   CANCELLED → if the system released it (expired / declined), take the
     //               slot back if one is still free; admin cancels are final.
-    // Both writes are conditional on the status, so a concurrent sweep can't
-    // slip between the check and the update.
+    // Both updates are conditional on the status, so a background sweep
+    // running at the same moment can't slip in between.
     const refreshed = await prisma.order.updateMany({
       where: { id: order.id, status: "PENDING", source: "ONLINE" },
       data: { holdExpiresAt: newHoldExpiry() },
@@ -165,97 +110,34 @@ export async function initiateShurjoPayPayment({
     if (refreshed.count === 0) {
       const current = await prisma.order.findUnique({
         where: { id: order.id },
-        select: { status: true, source: true },
+        select: { status: true },
       });
 
       if (current?.status === "CANCELLED") {
         const reclaim = await reclaimReleasedOrder(order.id);
         log.info({ reclaim }, "slots:reclaim_attempt");
-
-        if (reclaim === "NO_SLOTS") {
-          return {
-            success: false,
-            error:
-              "Sorry, your reservation expired and this package is now sold out.",
-            checkoutUrl: "",
-          };
-        }
-        if (reclaim === "NOT_RECLAIMABLE") {
-          return {
-            success: false,
-            error: "This order was cancelled. Please place a new order.",
-            checkoutUrl: "",
-          };
-        }
+        if (reclaim === "NO_SLOTS") return fail("Sorry, your reservation expired and this package is now sold out.");
+        if (reclaim === "NOT_RECLAIMABLE") return fail("This order was cancelled. Please place a new order.");
       } else if (current?.status === "CONFIRMED") {
-        return {
-          success: false,
-          error: "Order is already paid",
-          checkoutUrl: "",
-        };
+        return fail("Order is already paid");
       }
-      // PENDING manual orders fall through unchanged (no hold to refresh).
+      // PENDING manual orders fall through unchanged (they have no hold).
     }
 
-    // Step 1: Get ShurjoPay token
-    log.info(
-      { externalApi: { service: "shurjopay", operation: "getToken" } },
-      "external_api:start",
-    );
-
-    const tokenStart = Date.now();
-
-    console.log("🔑 Getting ShurjoPay token...");
-    const tokenData = await getShurjoPayToken();
-
-    const tokenDuration = Date.now() - tokenStart;
-
-    if (!tokenData.token) {
-      log.error(
-        {
-          externalApi: {
-            service: "shurjopay",
-            operation: "getToken",
-            durationMs: tokenDuration,
-          },
-        },
-        "external_api:failure — empty token",
-      );
-
-      return {
-        success: false,
-        error: "Payment gateway unavailable. Please try again.",
-        checkoutUrl: "",
-      };
+    // ── 5. Get a ShurjoPay authentication token (flow STEP 2) ────
+    let token;
+    try {
+      token = await getShurjoPayToken();
+    } catch (err) {
+      log.error({ err }, "external_api:failure — no token");
+      return fail("Payment gateway unavailable. Please try again.");
     }
 
-    log.info(
-      {
-        externalApi: {
-          service: "shurjopay",
-          operation: "getToken",
-          durationMs: tokenDuration,
-        },
-      },
-      "external_api:success",
-    );
-
-    // Step 2: Create ShurjoPay payment
-
-    log.info(
-      {
-        externalApi: { service: "shurjopay", operation: "createPayment" },
-        amount: order.payment.amount,
-      },
-      "external_api:start",
-    );
-
-    const paymentStart = Date.now();
-
-    console.log("💳 Creating ShurjoPay payment...");
-    const paymentResponse = await createShurjoPayPayment({
-      token: tokenData.token,
-      storeId: tokenData.store_id,
+    // ── 6. Initiate the payment transaction (flow STEP 3) ────────
+    const clientIp = await getClientIp(); // ShurjoPay asks for the customer's IP
+    const payment = await createShurjoPayPayment({
+      token: token.token,
+      storeId: token.store_id,
       orderId: order.id,
       amount: order.payment.amount,
       customerName,
@@ -264,86 +146,28 @@ export async function initiateShurjoPayPayment({
       clientIp,
     });
 
-    const paymentDuration = Date.now() - paymentStart;
-
-    if (!paymentResponse.checkout_url) {
-      log.error(
-        {
-          externalApi: {
-            service: "shurjopay",
-            operation: "createPayment",
-            durationMs: paymentDuration,
-          },
-          spOrderId: paymentResponse.sp_order_id,
-        },
-        "external_api:failure — no checkout_url",
-      );
-
-      return {
-        success: false,
-        error: "Failed to initiate payment. Please try again.",
-        checkoutUrl: "",
-      };
+    if (!payment.checkout_url) {
+      log.error({ spOrderId: payment.sp_order_id }, "external_api:failure — no checkout_url");
+      return fail("Failed to initiate payment. Please try again.");
     }
 
-    log.info(
-      {
-        externalApi: {
-          service: "shurjopay",
-          operation: "createPayment",
-          durationMs: paymentDuration,
-        },
-        spOrderId: paymentResponse.sp_order_id,
-      },
-      "external_api:success",
-    );
-
-    // Step 3: Update payment record with ShurjoPay order ID
-    const updateStart = Date.now();
-
+    // ── 7. Remember ShurjoPay's id for this payment ──────────────
+    // The callback, the reconciler and the sweep all find the payment by it.
     await prisma.payment.update({
       where: { id: order.payment.id },
       data: {
-        paymentId: String(paymentResponse.sp_order_id),
+        paymentId: String(payment.sp_order_id),
         paymentMethod: "shurjopay",
         paymentGateway: "shurjopay",
       },
     });
 
-    console.log("✅ ShurjoPay payment created, redirecting to checkout...");
-    log.info(
-      {
-        db: {
-          model: "Payment",
-          operation: "update",
-          durationMs: Date.now() - updateStart,
-        },
-        spOrderId: paymentResponse.sp_order_id,
-      },
-      "db:success",
-    );
-
-    log.info(
-      {
-        spOrderId: paymentResponse.sp_order_id,
-        durationMs: Date.now() - start,
-      },
-      "action:success",
-    );
-    // Return checkout URL
-    return {
-      success: true,
-      error: "",
-      checkoutUrl: String(paymentResponse.checkout_url),
-    };
-  } catch (error: any) {
+    // ── 8. Hand the checkout page to the browser (flow STEP 4) ───
+    log.info({ spOrderId: payment.sp_order_id, durationMs: Date.now() - start }, "action:success");
+    return { success: true, error: "", checkoutUrl: String(payment.checkout_url) };
+  } catch (error) {
     log.error({ err: error, durationMs: Date.now() - start }, "action:error");
-    console.error("❌ ShurjoPay error:", error?.message);
-    return {
-      success: false,
-      error: "Failed to initiate payment. Please try again.",
-      checkoutUrl: "",
-    };
+    return fail("Failed to initiate payment. Please try again.");
   } finally {
     await log.flush();
   }

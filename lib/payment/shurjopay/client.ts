@@ -1,4 +1,4 @@
-// lib/shurjopay.ts
+// lib/payment/shurjopay/client.ts
 //
 // The ShurjoPay client — the ONLY file that talks to the ShurjoPay API.
 // (Replaces the old lib/shurjopay2.ts and lib/surjopay/ folder.)
@@ -26,18 +26,18 @@
 //            app/api/payment/shurjopay/callback/route.ts
 //
 //  STEP 6  Verify the payment with ShurjoPay (never trust the redirect alone)
-//          → verifyPayment()           lib/payment-verify.ts (retries, timeouts)
+//          → verifyPayment()           lib/payment/shurjopay/verify.ts (retries, timeouts)
 //            which calls verifyShurjoPayPayment() in this file
 //
 //  STEP 7  Paid? Mark Payment PAID + Order CONFIRMED (race-safe)
-//          → confirmPaidOrder()        lib/slot-hold.ts
+//          → confirmPaidOrder()        lib/payment/slot-hold.ts
 //
 //  STEP 8  Record coupon usage, send confirmation email + SMS
-//          → runPostPaymentSteps()     lib/order-confirmation.ts
+//          → runPostPaymentSteps()     lib/payment/order-confirmation.ts
 //
 //  SAFETY NET (if the customer never comes back to STEP 5):
-//          → reconcilePendingPayments()  lib/payment-reconcile.ts (every 5 min)
-//          → releaseExpiredHolds()       lib/slot-hold.ts (hourly sweep)
+//          → reconcilePendingPayments()  lib/payment/reconcile.ts (every 5 min)
+//          → releaseExpiredHolds()       lib/payment/slot-hold.ts (hourly sweep)
 //            both started from instrumentation.ts
 //
 // ════════════════════════════════════════════════════════════════════════
@@ -248,7 +248,7 @@ export async function createShurjoPayPayment(input: {
  * Asks ShurjoPay for the real status of a payment.
  *
  * This is the ONLY trustworthy proof of payment — the browser redirect in
- * STEP 5 could be faked or replayed. Use lib/payment-verify.ts → verifyPayment()
+ * STEP 5 could be faked or replayed. Use lib/payment/shurjopay/verify.ts → verifyPayment()
  * rather than calling this directly: it adds retries and picks the right entry.
  *
  * @param spOrderId ShurjoPay's payment id (saved in Payment.paymentId)

@@ -6,7 +6,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { logger } from "@/lib/logger";
-import { runPostPaymentSteps } from "@/lib/order-confirmation";
+import { runPostPaymentSteps } from "@/lib/payment/order-confirmation";
 
 export type Delivery = {
   id: string;

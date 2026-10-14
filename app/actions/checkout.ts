@@ -28,7 +28,7 @@ import {
   claimSlots,
   newHoldExpiry,
   releaseExpiredHolds,
-} from "@/lib/slot-hold";
+} from "@/lib/payment/slot-hold";
 
 // ─── GET CHECKOUT DATA ─────────────────────────────────────
 // UNCHANGED.

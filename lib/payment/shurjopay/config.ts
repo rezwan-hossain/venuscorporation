@@ -1,4 +1,4 @@
-// lib/payment-config.ts
+// lib/payment/shurjopay/config.ts
 //
 // 1. paymentConfigProblem(): catches the setup that silently loses payment
 //    confirmations — LIVE ShurjoPay sending customers back to an address they

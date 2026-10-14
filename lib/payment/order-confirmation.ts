@@ -1,4 +1,4 @@
-// lib/order-confirmation.ts
+// lib/payment/order-confirmation.ts
 //
 // What happens after an order is confirmed as paid: record coupon usage, then
 // send the confirmation email and SMS. Shared by the ShurjoPay callback, the

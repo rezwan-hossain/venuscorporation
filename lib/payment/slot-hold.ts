@@ -1,4 +1,4 @@
-// lib/slot-hold.ts
+// lib/payment/slot-hold.ts
 //
 // Slot holds for online checkout.
 //
