@@ -5,6 +5,7 @@
 //
 // ════════════════════════════════════════════════════════════════════════
 //  THE WHOLE PAYMENT FLOW (which file does each step)
+//  Full flow charts (with / without IPN): lib/payment/README.md
 // ════════════════════════════════════════════════════════════════════════
 //
 //  STEP 1  Customer fills the checkout form
@@ -21,11 +22,17 @@
 //  STEP 4  Redirect the customer to ShurjoPay's checkout_url — they pay there
 //          (bKash / Nagad / card ...). This happens in the browser.
 //
-//  STEP 5  ShurjoPay sends the customer back to our callback URL
+//  STEP 5  We hear about the payment — two ways, often both:
+//    5a.   Browser: ShurjoPay sends the CUSTOMER back to our callback URL
 //          → GET /api/payment/shurjopay/callback?order_id=<sp_order_id>
-//            app/api/payment/shurjopay/callback/route.ts
+//            app/api/payment/shurjopay/callback/route.ts   (shows a page)
+//    5b.   IPN: ShurjoPay's SERVER notifies us (even if the tab was closed)
+//          → POST /api/payment/shurjopay/ipn?sp_order_id=<sp_order_id>
+//            app/api/payment/shurjopay/ipn/route.ts        (replies 200)
+//          Both hand over to processShurjoPayResult()
+//            lib/payment/shurjopay/process-result.ts       (STEPS 6–8)
 //
-//  STEP 6  Verify the payment with ShurjoPay (never trust the redirect alone)
+//  STEP 6  Verify the payment with ShurjoPay (never trust the message alone)
 //          → verifyPayment()           lib/payment/shurjopay/verify.ts (retries, timeouts)
 //            which calls verifyShurjoPayPayment() in this file
 //
@@ -35,7 +42,7 @@
 //  STEP 8  Record coupon usage, send confirmation email + SMS
 //          → runPostPaymentSteps()     lib/payment/order-confirmation.ts
 //
-//  SAFETY NET (if the customer never comes back to STEP 5):
+//  SAFETY NET (if neither the browser nor the IPN reached us in STEP 5):
 //          → reconcilePendingPayments()  lib/payment/reconcile.ts (every 5 min)
 //          → releaseExpiredHolds()       lib/payment/slot-hold.ts (hourly sweep)
 //            both started from instrumentation.ts
