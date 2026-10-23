@@ -52,6 +52,7 @@ const serif = Cormorant_Garamond({
 const NAVY = "#14245a";
 const NAVY_DEEP = "#0d1840";
 const GOLD = "#c49a3c";
+const GOLD_LIGHT = "#dcb45c"; // brighter gold for text on navy
 const CREAM = "#faf8f3";
 const container = "mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8";
 const SERIF = { fontFamily: "var(--font-v5-serif)" } as const;
@@ -144,39 +145,72 @@ function Numbers() {
 }
 
 // ════════════════════════════════════════════════════════════════════════
-//  4. How we plan — path cards with arrows, on navy
+//  4. How we plan — numbered step cards joined by arrows, on navy
 // ════════════════════════════════════════════════════════════════════════
 
 function PlanningPath() {
   return (
-    <section className="py-24 lg:py-32" style={{ background: NAVY }}>
+    <section className="relative isolate overflow-hidden py-24 lg:py-32" style={{ background: NAVY }}>
+      {/* Soft gold glow at the top + faint dot texture (decorative) */}
+      <div aria-hidden className="absolute -top-40 left-1/2 -z-10 h-80 w-[48rem] max-w-full -translate-x-1/2 rounded-full opacity-20 blur-3xl" style={{ background: GOLD }} />
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10"
+        style={{
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1.2px)",
+          backgroundSize: "22px 22px",
+          maskImage: "linear-gradient(to bottom, transparent, #000 40%, transparent)",
+        }}
+      />
+
       <div className={container}>
         <SectionHeading light kicker="How we plan" title="Your event, step by" italic="step." />
+        <p className="mx-auto mt-5 max-w-xl text-center text-white/65">
+          One team guides you from the first conversation to the final report — you always know what happens next.
+        </p>
 
-        <ol className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <ol className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-5">
           {steps.map((s, i) => (
-            <li key={s.title} className="relative rounded-2xl border border-white/10 bg-white/5 p-6">
-              <span className="text-4xl italic lining-nums" style={{ ...SERIF, color: GOLD }}>
-                {i + 1}
-              </span>
-              <h3 className="mt-3 font-semibold text-white" style={SANS}>
-                {s.title}
-              </h3>
-              <p className="mt-2 text-sm text-white/65">{s.text}</p>
+            <li key={s.title} className={`group relative ${i === steps.length - 1 ? "sm:col-span-2 lg:col-span-1" : ""}`}>
+              <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition duration-500 group-hover:-translate-y-1 group-hover:border-white/20 group-hover:bg-white/[0.08] lg:p-7">
+                {/* Gold line along the top that grows on hover */}
+                <span aria-hidden className="absolute top-0 left-0 h-0.5 w-12 transition-all duration-500 group-hover:w-full" style={{ background: GOLD_LIGHT }} />
+
+                <span className="text-5xl leading-none italic lining-nums" style={{ ...SERIF, color: GOLD_LIGHT }}>
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <h3 className="mt-6 text-lg font-semibold text-white" style={SANS}>
+                  {s.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-white/65">{s.text}</p>
+              </div>
 
               {/* Arrow to the next card (large screens only) */}
               {i < steps.length - 1 && (
                 <span
-                  className="absolute -right-3.5 top-1/2 z-10 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full lg:flex"
-                  style={{ background: GOLD, color: NAVY_DEEP }}
+                  className="absolute top-12 -right-[1.1rem] z-10 hidden h-8 w-8 items-center justify-center rounded-full border-4 lg:flex"
+                  style={{ background: GOLD_LIGHT, color: NAVY_DEEP, borderColor: NAVY }}
                   aria-hidden
                 >
-                  <ArrowRight size={14} />
+                  <ArrowRight size={13} strokeWidth={2.5} />
                 </span>
               )}
             </li>
           ))}
         </ol>
+
+        <div className="mt-14 flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-center sm:gap-8">
+          <Link
+            href={cta.primary.href}
+            className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-semibold tracking-wide transition hover:brightness-110"
+            style={{ background: GOLD_LIGHT, color: NAVY_DEEP }}
+          >
+            {cta.primary.label} <ArrowRight size={16} />
+          </Link>
+          <a href={cta.secondary.href} className="inline-flex items-center gap-2 text-sm font-semibold text-white/85 hover:text-white">
+            <Phone size={16} style={{ color: GOLD_LIGHT }} /> {cta.secondary.label}
+          </a>
+        </div>
       </div>
     </section>
   );
