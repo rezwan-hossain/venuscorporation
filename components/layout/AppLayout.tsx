@@ -30,7 +30,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </Suspense>
       </main>
 
-      <Suspense fallback={<div className="h-48 bg-black" />}>
+      <Suspense fallback={<div className="h-48 bg-[#0b1433]" />}>
         <SiteFooter />
       </Suspense>
     </>
