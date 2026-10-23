@@ -23,16 +23,17 @@
 //   6. Testimonials
 //      Gallery — module/home/components/Gallery.tsx
 //   7. FAQ
-//   8. Call to action
+//   8. Call to action — module/home/components/ContactCta.tsx
 
 import Image from "next/image";
 import Link from "next/link";
 import { Cormorant_Garamond } from "next/font/google";
-import { ArrowRight, Mail, Phone, Plus, Quote, Star } from "lucide-react";
+import { ArrowRight, Phone, Plus, Quote, Star } from "lucide-react";
 
 import { projects, testimonials as groupTestimonials } from "../business/data";
-import { brand, cta, stats, steps } from "../business/data-v3";
+import { cta, stats, steps } from "../business/data-v3";
 import { faqs } from "../business/data-v5";
+import ContactCta from "../components/ContactCta";
 import Gallery from "../components/Gallery";
 import ServiceList from "../components/ServiceList";
 import SignatureMoments from "../components/SignatureMoments";
@@ -343,67 +344,6 @@ function Faq() {
           </li>
         ))}
       </ul>
-    </section>
-  );
-}
-
-// ════════════════════════════════════════════════════════════════════════
-//  8. Call to action — full-width navy with the swoosh (same as v4's)
-// ════════════════════════════════════════════════════════════════════════
-
-/** The card's navy + gold corner swoosh (decorative). */
-function Swoosh({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 400 160" className={`pointer-events-none ${className}`} aria-hidden>
-      <path d="M0 160 C120 142 235 92 400 22 L400 160 Z" fill="#f4ecdb" opacity="0.12" />
-      <path d="M40 160 C175 132 280 82 400 34" fill="none" stroke={GOLD} strokeWidth="2.5" />
-      <path d="M120 160 C225 138 305 104 400 66" fill="none" stroke={GOLD} strokeWidth="1.25" opacity="0.8" />
-      <path d="M235 160 C305 142 352 122 400 100 L400 160 Z" fill={NAVY_DEEP} />
-    </svg>
-  );
-}
-
-function ContactCta() {
-  return (
-    <section className="relative overflow-hidden" style={{ background: NAVY }}>
-      <Swoosh className="absolute bottom-0 right-0 w-[36rem] max-w-[95%]" />
-
-      <div className={`${container} relative grid gap-12 py-24 lg:grid-cols-[1.4fr_1fr] lg:items-end lg:py-32`}>
-        {/* 8.1 The ask */}
-        <div>
-          <p className="flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: GOLD }}>
-            {brand.motto.left} · {brand.motto.right}
-            <span className="h-px w-10" style={{ background: GOLD }} aria-hidden />
-          </p>
-          <h2 className="mt-5 text-5xl leading-[1.05] font-semibold text-white sm:text-6xl" style={SERIF}>
-            Let&apos;s create something <em className="font-medium" style={{ color: GOLD }}>unforgettable.</em>
-          </h2>
-          <p className="mt-6 max-w-xl text-lg text-white/70">{cta.text}</p>
-        </div>
-
-        {/* 8.2 Three ways to reach us */}
-        <ul className="space-y-3">
-          <li>
-            <Link
-              href={cta.primary.href}
-              className="flex items-center justify-between rounded-2xl px-6 py-5 font-semibold transition hover:opacity-90"
-              style={{ background: GOLD, color: NAVY_DEEP }}
-            >
-              {cta.primary.label} <ArrowRight size={18} />
-            </Link>
-          </li>
-          <li>
-            <a href={cta.secondary.href} className="flex items-center gap-3 rounded-2xl border border-white/20 px-6 py-5 text-white transition hover:bg-white/10">
-              <Phone size={18} style={{ color: GOLD }} /> {cta.secondary.label}
-            </a>
-          </li>
-          <li>
-            <Link href="/contact" className="flex items-center gap-3 rounded-2xl border border-white/20 px-6 py-5 text-white transition hover:bg-white/10">
-              <Mail size={18} style={{ color: GOLD }} /> Send us a message
-            </Link>
-          </li>
-        </ul>
-      </div>
     </section>
   );
 }

@@ -155,4 +155,9 @@ export const cta = {
   text: "Tell us the occasion, the date and the number of guests — we'll come back with ideas and a clear quote.",
   primary: { label: "Plan your event", href: "/contact" },
   secondary: { label: "Call us", href: "tel:+8801862221943" },
+  // Used by the homepage's closing section
+  phone: "+880 1862 221943",
+  email: "info@venuscorporation.org",
+  promises: ["Free first consultation", "Reply within one working day", "Clear, itemised quote"],
+  background: photo("1464366400600-7168b8af9bc3", 2000), // decorated reception hall
 };
