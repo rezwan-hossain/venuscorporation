@@ -5,7 +5,7 @@
 // with a "Now showing" video hero, an expandable service list, client
 // testimonials, an FAQ and a call to action.
 //
-// Content: module/home/business/data-v3.ts (numbers, steps, gallery, brand)
+// Content: module/home/business/data-v3.ts (numbers, steps, brand)
 // + data-v5.ts (FAQ) + data.ts ("Featured work" and
 // testimonials).
 // Shown on the homepage via app/page.tsx.
@@ -21,7 +21,7 @@
 //   5. Signature moments — module/home/components/SignatureMoments.tsx
 //      Featured work
 //   6. Testimonials
-//      Gallery
+//      Gallery — module/home/components/Gallery.tsx
 //   7. FAQ
 //   8. Call to action
 
@@ -31,8 +31,9 @@ import { Cormorant_Garamond } from "next/font/google";
 import { ArrowRight, Mail, Phone, Plus, Quote, Star } from "lucide-react";
 
 import { projects, testimonials as groupTestimonials } from "../business/data";
-import { brand, cta, gallery, stats, steps } from "../business/data-v3";
+import { brand, cta, stats, steps } from "../business/data-v3";
 import { faqs } from "../business/data-v5";
+import Gallery from "../components/Gallery";
 import ServiceList from "../components/ServiceList";
 import SignatureMoments from "../components/SignatureMoments";
 import SummitHero from "../components/SummitHero";
@@ -281,55 +282,6 @@ function Testimonials() {
           ))}
         </ul>
       </div>
-    </section>
-  );
-}
-
-// ════════════════════════════════════════════════════════════════════════
-//  Gallery — photo grid with serif labels (same as v3's gallery)
-// ════════════════════════════════════════════════════════════════════════
-
-/**
- * Which photo spans more than one cell (index = position in `gallery`).
- * Large screens, 3 columns:
- *   [ 0 | 1 | 2 ]
- *   [ 0 | 3 | 4 ]
- *   [ 5   5 | 4 ]
- * (Small screens: plain 2 columns, 3 full rows.)
- */
-const GALLERY_SPAN = ["lg:row-span-2", "", "", "", "lg:row-span-2", "lg:col-span-2"];
-
-function Gallery() {
-  return (
-    <section className={`${container} py-24 lg:py-32`}>
-      <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-        <div>
-          <p className="flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: GOLD }}>
-            Moments we&apos;ve made
-            <span className="h-px w-12" style={{ background: GOLD }} aria-hidden />
-          </p>
-          <h2 className="mt-4 text-4xl leading-[1.1] font-semibold sm:text-5xl" style={{ ...SERIF, color: NAVY }}>
-            Our{" "}
-            <em className="font-medium" style={{ color: GOLD }}>
-              gallery
-            </em>
-          </h2>
-        </div>
-        <Link href="/gallery" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: NAVY }}>
-          View full gallery <ArrowRight size={16} />
-        </Link>
-      </div>
-
-      <ul className="mt-12 grid auto-rows-[14rem] grid-cols-2 gap-4 lg:grid-cols-3">
-        {gallery.map((g, i) => (
-          <li key={g.label} className={`group relative overflow-hidden rounded-3xl ${GALLERY_SPAN[i]}`}>
-            <Image src={g.image} alt={g.label} fill sizes="(min-width: 1024px) 30vw, 45vw" className="object-cover transition duration-700 group-hover:scale-105" />
-            <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-3 py-1 text-sm italic backdrop-blur" style={{ ...SERIF, color: NAVY }}>
-              {g.label}
-            </span>
-          </li>
-        ))}
-      </ul>
     </section>
   );
 }
