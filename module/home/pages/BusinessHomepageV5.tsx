@@ -6,7 +6,7 @@
 // testimonials, an FAQ and a call to action.
 //
 // Content: module/home/business/data-v3.ts (numbers, steps, gallery, brand)
-// + data-v5.ts (signature moments, FAQ) + data.ts ("Featured work" and
+// + data-v5.ts (FAQ) + data.ts ("Featured work" and
 // testimonials).
 // Shown on the homepage via app/page.tsx.
 //
@@ -18,7 +18,7 @@
 //   2. Services — module/home/components/ServiceList.tsx
 //   3. Numbers
 //   4. How we plan — path cards
-//   5. Signature moments
+//   5. Signature moments — module/home/components/SignatureMoments.tsx
 //      Featured work
 //   6. Testimonials
 //      Gallery
@@ -32,8 +32,9 @@ import { ArrowRight, Mail, Phone, Plus, Quote, Star } from "lucide-react";
 
 import { projects, testimonials as groupTestimonials } from "../business/data";
 import { brand, cta, gallery, stats, steps } from "../business/data-v3";
-import { faqs, signature } from "../business/data-v5";
+import { faqs } from "../business/data-v5";
 import ServiceList from "../components/ServiceList";
+import SignatureMoments from "../components/SignatureMoments";
 import SummitHero from "../components/SummitHero";
 import WhoWeAre from "../components/WhoWeAre";
 
@@ -181,68 +182,13 @@ function PlanningPath() {
 }
 
 // ════════════════════════════════════════════════════════════════════════
-//  5. Signature moments — arched "invitation" cards, middle one raised
-// ════════════════════════════════════════════════════════════════════════
-
-function SignatureMoments() {
-  return (
-    <section id="moments" className={`${container} scroll-mt-24 py-24 lg:py-32`}>
-      <SectionHeading kicker="Signature moments" title="Events we're" italic="proud of." />
-
-      {/* Large screens: the middle card sits lower, for a staggered row */}
-      <ul className="mt-14 grid items-start gap-6 md:grid-cols-3 lg:gap-8">
-        {signature.map((m, i) => (
-          <li key={m.title} className={i === 1 ? "md:mt-16" : ""}>
-            <figure className="group relative aspect-[4/5] overflow-hidden rounded-t-full rounded-b-3xl shadow-xl shadow-[#14245a]/15 md:aspect-[3/4]" style={{ background: NAVY }}>
-              <Image src={m.image} alt="" fill sizes="(min-width: 768px) 30vw, 90vw" className="object-cover transition duration-700 group-hover:scale-105" />
-
-              {/* Navy tint at the top (keeps bright photos from fading into the
-                  page) and a deeper fade at the bottom for the text */}
-              <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#0d1840] via-[#0d1840]/45 to-[#0d1840]/20" />
-
-              {/* Thin gold arch inside the card, like a printed invitation */}
-              <div aria-hidden className="pointer-events-none absolute inset-3 rounded-t-full rounded-b-2xl border transition duration-500 group-hover:inset-2" style={{ borderColor: `${GOLD}80` }} />
-
-              <figcaption className="absolute inset-x-0 bottom-0 px-6 pb-9 text-center">
-                <p className="flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-[0.3em]" style={{ color: GOLD }}>
-                  <Star size={10} fill={GOLD} strokeWidth={0} aria-hidden />
-                  {m.category}
-                  <Star size={10} fill={GOLD} strokeWidth={0} aria-hidden />
-                </p>
-                <p className="mt-3 text-2xl leading-tight font-semibold text-balance text-white lining-nums lg:text-[1.65rem]" style={SERIF}>
-                  {m.title}
-                </p>
-                {/* Gold line that widens on hover */}
-                <span aria-hidden className="mx-auto mt-4 block h-px w-10 transition-all duration-500 group-hover:w-20" style={{ background: GOLD }} />
-                <p className="mx-auto mt-4 max-w-[17rem] text-sm leading-relaxed text-white/80 lining-nums">{m.caption}</p>
-              </figcaption>
-            </figure>
-          </li>
-        ))}
-      </ul>
-
-      <div className="mt-14 text-center md:mt-20">
-        <Link
-          href="/events"
-          className="inline-flex items-center gap-2 text-sm font-semibold underline decoration-1 underline-offset-[6px] transition hover:decoration-2"
-          style={{ color: NAVY, textDecorationColor: GOLD }}
-        >
-          See all our events <ArrowRight size={16} />
-        </Link>
-      </div>
-    </section>
-  );
-}
-
-// ════════════════════════════════════════════════════════════════════════
 //  Featured work — numbered list: number · title + client · category · photo
 //  (same as v2's "Selected projects")
 // ════════════════════════════════════════════════════════════════════════
 
 function FeaturedWork() {
   return (
-    // Comes right after the white "Signature moments", so no extra top space.
-    <section className={`${container} pb-24 lg:pb-32`}>
+    <section className={`${container} py-24 lg:py-32`}>
       <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
         <div>
           {/* Small pill label with a gold dot */}
