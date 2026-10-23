@@ -131,7 +131,7 @@ function Numbers() {
             <dd className="text-5xl leading-none font-semibold lining-nums" style={{ ...SERIF, color: NAVY }}>
               {s.value}
             </dd>
-            <dt className="mt-2 text-sm italic" style={{ ...SERIF, color: GOLD }}>
+            <dt className="mt-2 text-base italic sm:text-lg" style={{ ...SERIF, color: "#a8852f" }}>
               {s.label}
             </dt>
           </div>
@@ -181,7 +181,7 @@ function PlanningPath() {
 }
 
 // ════════════════════════════════════════════════════════════════════════
-//  5. Signature moments — tall cards, caption slides up on hover
+//  5. Signature moments — arched "invitation" cards, middle one raised
 // ════════════════════════════════════════════════════════════════════════
 
 function SignatureMoments() {
@@ -189,23 +189,47 @@ function SignatureMoments() {
     <section id="moments" className={`${container} scroll-mt-24 py-24 lg:py-32`}>
       <SectionHeading kicker="Signature moments" title="Events we're" italic="proud of." />
 
-      <ul className="mt-14 grid gap-6 md:grid-cols-3">
-        {signature.map((m) => (
-          <li key={m.title}>
-            <figure className="group relative aspect-[3/4] overflow-hidden rounded-t-full rounded-b-3xl">
+      {/* Large screens: the middle card sits lower, for a staggered row */}
+      <ul className="mt-14 grid items-start gap-6 md:grid-cols-3 lg:gap-8">
+        {signature.map((m, i) => (
+          <li key={m.title} className={i === 1 ? "md:mt-16" : ""}>
+            <figure className="group relative aspect-[4/5] overflow-hidden rounded-t-full rounded-b-3xl shadow-xl shadow-[#14245a]/15 md:aspect-[3/4]" style={{ background: NAVY }}>
               <Image src={m.image} alt="" fill sizes="(min-width: 768px) 30vw, 90vw" className="object-cover transition duration-700 group-hover:scale-105" />
-              <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#0d1840] via-[#0d1840]/30 to-transparent" />
-              <figcaption className="absolute inset-x-0 bottom-0 p-7 text-center transition duration-500 md:translate-y-6 md:group-hover:translate-y-0">
-                <Star size={14} fill={GOLD} strokeWidth={0} className="mx-auto" aria-hidden />
-                <p className="mt-3 text-2xl font-semibold text-white" style={SERIF}>
+
+              {/* Navy tint at the top (keeps bright photos from fading into the
+                  page) and a deeper fade at the bottom for the text */}
+              <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#0d1840] via-[#0d1840]/45 to-[#0d1840]/20" />
+
+              {/* Thin gold arch inside the card, like a printed invitation */}
+              <div aria-hidden className="pointer-events-none absolute inset-3 rounded-t-full rounded-b-2xl border transition duration-500 group-hover:inset-2" style={{ borderColor: `${GOLD}80` }} />
+
+              <figcaption className="absolute inset-x-0 bottom-0 px-6 pb-9 text-center">
+                <p className="flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-[0.3em]" style={{ color: GOLD }}>
+                  <Star size={10} fill={GOLD} strokeWidth={0} aria-hidden />
+                  {m.category}
+                  <Star size={10} fill={GOLD} strokeWidth={0} aria-hidden />
+                </p>
+                <p className="mt-3 text-2xl leading-tight font-semibold text-balance text-white lining-nums lg:text-[1.65rem]" style={SERIF}>
                   {m.title}
                 </p>
-                <p className="mt-2 text-sm text-white/75 transition duration-500 md:opacity-0 md:group-hover:opacity-100">{m.caption}</p>
+                {/* Gold line that widens on hover */}
+                <span aria-hidden className="mx-auto mt-4 block h-px w-10 transition-all duration-500 group-hover:w-20" style={{ background: GOLD }} />
+                <p className="mx-auto mt-4 max-w-[17rem] text-sm leading-relaxed text-white/80 lining-nums">{m.caption}</p>
               </figcaption>
             </figure>
           </li>
         ))}
       </ul>
+
+      <div className="mt-14 text-center md:mt-20">
+        <Link
+          href="/events"
+          className="inline-flex items-center gap-2 text-sm font-semibold underline decoration-1 underline-offset-[6px] transition hover:decoration-2"
+          style={{ color: NAVY, textDecorationColor: GOLD }}
+        >
+          See all our events <ArrowRight size={16} />
+        </Link>
+      </div>
     </section>
   );
 }
@@ -217,7 +241,8 @@ function SignatureMoments() {
 
 function FeaturedWork() {
   return (
-    <section className={`${container} py-24 lg:py-32`}>
+    // Comes right after the white "Signature moments", so no extra top space.
+    <section className={`${container} pb-24 lg:pb-32`}>
       <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
         <div>
           {/* Small pill label with a gold dot */}
@@ -243,7 +268,7 @@ function FeaturedWork() {
         {projects.map((p, i) => (
           <li key={p.title} className="group border-b border-slate-200">
             <article className="grid items-center gap-5 py-7 transition-colors sm:grid-cols-[4rem_1fr_auto] lg:grid-cols-[5rem_1fr_12rem_14rem] lg:px-4 lg:hover:bg-[#faf8f3]">
-              <span className="text-3xl lining-nums" style={{ color: GOLD }}>
+              <span className="text-3xl italic lining-nums" style={{ ...SERIF, color: GOLD }}>
                 {String(i + 1).padStart(2, "0")}
               </span>
               <div>
@@ -277,36 +302,39 @@ function FeaturedWork() {
 
 function Testimonials() {
   return (
-    <section className={`${container} py-24 lg:py-32`}>
-      <div className="mx-auto max-w-2xl text-center">
-        <p className="flex items-center justify-center gap-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#a8852f]">
-          <span className="h-px w-8" style={{ background: GOLD }} aria-hidden />
-          Testimonials
-        </p>
-        {/* Uses the site's heading font (bold condensed capitals) */}
-        <h2 className="mt-4 text-4xl leading-[1.05] tracking-wide uppercase sm:text-5xl" style={{ color: NAVY }}>
-          What our clients say
-        </h2>
-      </div>
+    // Cream band so the white sections around it don't run together.
+    <section className="py-24 lg:py-32" style={{ background: CREAM }}>
+      <div className={container}>
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="flex items-center justify-center gap-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#a8852f]">
+            <span className="h-px w-8" style={{ background: GOLD }} aria-hidden />
+            Testimonials
+          </p>
+          {/* Uses the site's heading font (bold condensed capitals) */}
+          <h2 className="mt-4 text-4xl leading-[1.05] tracking-wide uppercase sm:text-5xl" style={{ color: NAVY }}>
+            What our clients say
+          </h2>
+        </div>
 
-      <ul className="mt-14 grid gap-6 lg:grid-cols-3">
-        {groupTestimonials.map((t) => (
-          <li key={t.name}>
-            <figure className="flex h-full flex-col rounded-3xl bg-[#f8f6f1] p-8">
-              <Quote size={32} style={{ color: GOLD }} aria-hidden />
-              <blockquote className="mt-5 flex-1 text-lg leading-relaxed" style={{ color: NAVY }}>
-                “{t.quote}”
-              </blockquote>
-              <figcaption className="mt-7 border-t border-slate-200 pt-5">
-                <p className="font-semibold" style={{ color: NAVY }}>
-                  {t.name}
-                </p>
-                <p className="text-sm text-slate-500">{t.role}</p>
-              </figcaption>
-            </figure>
-          </li>
-        ))}
-      </ul>
+        <ul className="mt-14 grid gap-6 lg:grid-cols-3">
+          {groupTestimonials.map((t) => (
+            <li key={t.name}>
+              <figure className="flex h-full flex-col rounded-3xl border bg-white p-8 shadow-sm shadow-[#14245a]/5" style={{ borderColor: `${GOLD}33` }}>
+                <Quote size={32} style={{ color: GOLD }} aria-hidden />
+                <blockquote className="mt-5 flex-1 text-lg leading-relaxed" style={{ color: NAVY }}>
+                  “{t.quote}”
+                </blockquote>
+                <figcaption className="mt-7 border-t border-slate-200 pt-5">
+                  <p className="font-semibold" style={{ color: NAVY }}>
+                    {t.name}
+                  </p>
+                  <p className="text-sm text-slate-500">{t.role}</p>
+                </figcaption>
+              </figure>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }
@@ -366,7 +394,8 @@ function Gallery() {
 
 function Faq() {
   return (
-    <section className={`${container} py-24 lg:py-32`}>
+    // Comes right after the white gallery, so no extra top space.
+    <section className={`${container} pb-24 lg:pb-32`}>
       <SectionHeading kicker="Good to know" title="Questions," italic="answered." />
 
       <ul className="mx-auto mt-12 max-w-3xl space-y-3">

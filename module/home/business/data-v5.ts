@@ -53,16 +53,19 @@ export const invitation = {
 export const signature = [
   {
     title: "Garden wedding for 400 guests",
+    category: "Wedding",
     caption: "Floral design, live music and a seamless evening timeline.",
     image: photo("1519741497674-611481863552", 900),
   },
   {
     title: "Leadership summit, three halls",
+    category: "Corporate",
     caption: "Live streaming, translation and 1,200 delegates on schedule.",
     image: photo("1505373877841-8d25f7d46678", 900),
   },
   {
     title: "City marathon race day",
+    category: "Sports",
     caption: "Routes, timing, 8,000 runners and a finish-line festival.",
     image: photo("1530143311094-34d807799e8f", 900),
   },
