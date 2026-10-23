@@ -1,0 +1,54 @@
+/* module/home/components/ServiceList.module.css
+ *
+ * Smooth open/close for the service rows (native <details>).
+ *   - the row's height eases open/closed (::details-content)
+ *   - the content fades + slides in on top of that
+ * Browsers without ::details-content support simply open instantly.
+ */
+
+.list {
+  interpolate-size: allow-keywords; /* lets height animate to "auto" */
+}
+
+/* Scroll anchoring: while a row resizes, the browser tries to keep the
+   content *below* the list in place by scrolling the page every frame —
+   that's what made the animation jitter. Turn it off for the page only
+   while the list is being used (hovered / focused). */
+:root:has(.list:hover),
+:root:has(.list:focus-within) {
+  overflow-anchor: none;
+}
+
+.row::details-content {
+  height: 0;
+  overflow: clip;
+  transition:
+    height 380ms cubic-bezier(0.32, 0.72, 0, 1),
+    content-visibility 380ms allow-discrete;
+}
+
+.row[open]::details-content {
+  height: auto;
+}
+
+/* The content itself: fade + small slide, GPU-friendly (opacity/transform only) */
+.panel {
+  opacity: 0;
+  transform: translateY(-0.5rem);
+  transition:
+    opacity 260ms ease,
+    transform 380ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.row[open] .panel {
+  opacity: 1;
+  transform: none;
+  transition-delay: 60ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row::details-content,
+  .panel {
+    transition: none;
+  }
+}
