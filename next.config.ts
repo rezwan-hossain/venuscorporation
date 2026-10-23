@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["pino", "pino-pretty", "@axiomhq/pino", "sharp"],
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    agentUpgrade: "security",
   },
   cacheComponents: true,
   images: {
