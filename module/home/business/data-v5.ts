@@ -23,7 +23,17 @@ export const summitHero = {
   title: "Business summits that move industries forward",
   text: "Corporate stages, delegates and keynotes — planned and delivered end to end.",
   primaryCta: { label: "Plan your event", href: "/contact" },
-  watchCta: { label: "Watch our events", href: "#moments" },
+  watchCta: { label: "Watch our events", href: "#moments" }, // href = fallback if the video can't open
+
+  // Showreel that "Watch our events" plays in a full-screen player.
+  // Paste any YouTube link (youtube.com/watch?v=…, youtu.be/…, /shorts/…)
+  // or a video file path (e.g. "/videos/showreel.mp4" in public/videos/).
+  // DEMO: a placeholder YouTube video — replace with your own showreel.
+  // Set to null to make the button jump to "Signature moments" instead.
+  showreel: {
+    url: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+    title: "Venus Corporation showreel",
+  } as { url: string; title: string } | null,
 
   // The white bar under the hero: the next event on the calendar
   nextEvent: {

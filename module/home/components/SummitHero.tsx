@@ -16,6 +16,7 @@ import { ArrowRight, Play } from "lucide-react";
 
 import { brand } from "../business/data-v3";
 import { summitHero } from "../business/data-v5";
+import ShowreelButton from "./ShowreelButton";
 
 // Classical Roman capitals (like the "VENUS CORPORATION" lettering on the
 // logo) for the headline.
@@ -116,16 +117,21 @@ export default function SummitHero() {
             >
               {h.primaryCta.label}
             </Link>
-            <a href={h.watchCta.href} className="group inline-flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.2em] text-white">
-              <span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition group-hover:bg-white/10"
-                style={{ borderColor: GOLD_LIGHT }}
-                aria-hidden
-              >
-                <Play size={14} fill="#fff" strokeWidth={0} className="translate-x-px" />
-              </span>
-              {h.watchCta.label}
-            </a>
+            {/* Opens the showreel player; without a showreel it jumps to "Signature moments" */}
+            {h.showreel ? (
+              <ShowreelButton label={h.watchCta.label} video={h.showreel} />
+            ) : (
+              <a href={h.watchCta.href} className="group inline-flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+                <span
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition group-hover:bg-white/10"
+                  style={{ borderColor: GOLD_LIGHT }}
+                  aria-hidden
+                >
+                  <Play size={14} fill="#fff" strokeWidth={0} className="translate-x-px" />
+                </span>
+                {h.watchCta.label}
+              </a>
+            )}
           </div>
         </div>
       </div>
