@@ -1,6 +1,7 @@
 // config/navigation.ts
 export const navItems = [
   { label: "Home", href: "/" },
+  { label: "Services", href: "/services" },
   { label: "Events", href: "/events" },
   { label: "Gallery", href: "/gallery" },
   { label: "Team", href: "/teams" },
