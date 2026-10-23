@@ -51,6 +51,7 @@ export const about = {
   ],
   points: ["Specialist teams, one point of contact", "End-to-end delivery in-house", "Trusted by brands across Bangladesh"],
   image: photo("1556761175-5973dc0f32e7", 1100), // team meeting
+  badge: { value: "12+", label: "Years of experience" },
 };
 
 // ─── Companies (the portfolio) ────────────────────────
