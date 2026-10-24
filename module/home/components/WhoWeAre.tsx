@@ -102,7 +102,7 @@ export default function WhoWeAre() {
 
             <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5">
               <Link
-                href="/teams"
+                href="/about#team"
                 className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold tracking-wide transition hover:brightness-110"
                 style={{ background: GOLD_LIGHT, color: NAVY_DEEP }}
               >

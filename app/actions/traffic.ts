@@ -76,6 +76,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/": "Homepage",
   "/events": "Events list",
   "/gallery": "Gallery",
+  "/about": "About Us",
   "/teams": "Team",
   "/contact": "Contact",
   "/cart": "Cart",

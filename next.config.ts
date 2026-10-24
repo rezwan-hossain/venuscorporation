@@ -71,6 +71,13 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  async redirects() {
+    return [
+      // The team moved to the About Us page.
+      { source: "/teams", destination: "/about#team", permanent: true },
+    ];
+  },
+
   async headers() {
     const rules = [
       // Security headers for all routes

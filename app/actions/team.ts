@@ -25,7 +25,7 @@ type TeamCategory = "MANAGEMENT" | "ADMIN" | "ADVISOR" | "ORGANIZER";
 
 // ─── GET ALL TEAM MEMBERS ──────────────────────────
 export async function getAllTeamMembers() {
-  // Admin only: includes hidden members. The public /teams page uses
+  // Admin only: includes hidden members. The public /about page uses
   // getActiveTeamMembers instead.
   const { error: authError } = await requireAdmin();
   if (authError) return { members: [], error: authError };
@@ -118,7 +118,7 @@ export async function createTeamMember(data: {
       },
     });
 
-    revalidatePath("/team");
+    revalidatePath("/about");
     revalidatePath("/profile");
 
     await audit({
@@ -174,7 +174,7 @@ export async function updateTeamMember(
       });
     }
 
-    revalidatePath("/team");
+    revalidatePath("/about");
     revalidatePath("/profile");
 
     return { success: true, member };
@@ -199,7 +199,7 @@ export async function deleteTeamMember(id: string) {
       summary: `Removed team member "${removed.name}"`,
     });
 
-    revalidatePath("/team");
+    revalidatePath("/about");
     revalidatePath("/profile");
 
     return { success: true };
@@ -231,7 +231,7 @@ export async function toggleTeamMemberActive(id: string) {
       changes: { isActive: [member.isActive, updated.isActive] },
     });
 
-    revalidatePath("/team");
+    revalidatePath("/about");
     revalidatePath("/profile");
 
     return { success: true, member: updated };
@@ -265,7 +265,7 @@ export async function reorderTeamMembers(
       summary: `Reordered ${updates.length} team member${updates.length === 1 ? "" : "s"}`,
     });
 
-    revalidatePath("/team");
+    revalidatePath("/about");
     revalidatePath("/profile");
 
     return { success: true };
