@@ -1,9 +1,8 @@
-// module/home/pages/BusinessHomepageV5.tsx
+// module/home/pages/BusinessHomepage.tsx
 //
-// Homepage VARIATION 5 — event management, "invitation" style.
-// Same brand as v3/v4 (business card: navy, gold, elegant serif, gold star),
-// with a "Now showing" video hero, an expandable service list, client
-// testimonials, an FAQ and a call to action.
+// Homepage — event management, in the business-card style (navy, gold,
+// elegant serif, gold star), with a "Now showing" video hero, an expandable
+// service list, client testimonials, an FAQ and a call to action.
 //
 // Content: module/home/business/data-v3.ts (numbers, steps, brand)
 // + data-v5.ts (FAQ) + data.ts ("Featured work" and
@@ -46,7 +45,7 @@ const serif = Cormorant_Garamond({
   weight: ["500", "600", "700"],
   style: ["normal", "italic"],
   display: "swap",
-  variable: "--font-v5-serif",
+  variable: "--font-home-serif",
 });
 
 // Shared look (from the card)
@@ -56,10 +55,10 @@ const GOLD = "#c49a3c";
 const GOLD_LIGHT = "#dcb45c"; // brighter gold for text on navy
 const CREAM = "#faf8f3";
 const container = "mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8";
-const SERIF = { fontFamily: "var(--font-v5-serif)" } as const;
+const SERIF = { fontFamily: "var(--font-home-serif)" } as const;
 const SANS = { fontFamily: "var(--font-body)" } as const; // beats the global heading font
 
-export default function BusinessHomepageV5() {
+export default function BusinessHomepage() {
   return (
     <div className={`${serif.variable} bg-white text-slate-600`}>
       <SummitHero />

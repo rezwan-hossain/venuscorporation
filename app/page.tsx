@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import BusinessHomepageV5 from "@/module/home/pages/BusinessHomepageV5";
+import BusinessHomepage from "@/module/home/pages/BusinessHomepage";
 // The original marathon homepage — to switch back, import it and render it below instead:
 // import Homepage from "@/module/home/pages/Homepage";
 
@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  return <BusinessHomepageV5 />;
+  return <BusinessHomepage />;
 }
