@@ -44,6 +44,11 @@ const CATEGORY_OPTIONS: {
   description: string;
 }[] = [
   {
+    value: "MANAGEMENT",
+    label: "Management",
+    description: "Business leadership — CEO, MD, directors, department heads",
+  },
+  {
     value: "ADMIN",
     label: "Leadership",
     description: "Core team leaders and founders",
@@ -58,6 +63,26 @@ const CATEGORY_OPTIONS: {
     label: "Organizer",
     description: "Event organizers and coordinators",
   },
+];
+
+// Common business titles, suggested in the Role field (any text is still allowed).
+const ROLE_SUGGESTIONS = [
+  "Chairman",
+  "Chief Executive Officer (CEO)",
+  "Managing Director (MD)",
+  "Deputy Managing Director",
+  "Director",
+  "Chief Operating Officer (COO)",
+  "Chief Financial Officer (CFO)",
+  "Chief Marketing Officer (CMO)",
+  "Head of Marketing",
+  "Head of Sales",
+  "Head of Operations",
+  "Head of Finance",
+  "Head of HR",
+  "General Manager",
+  "Marketing Manager",
+  "Project Manager",
 ];
 
 export function TeamMemberForm({ member, onSuccess, onCancel }: Props) {
@@ -175,9 +200,16 @@ export function TeamMemberForm({ member, onSuccess, onCancel }: Props) {
             <Input
               value={form.role}
               onChange={(e) => updateField("role", e.target.value)}
-              placeholder="e.g. Founder & CEO"
+              placeholder="e.g. Managing Director (MD)"
+              list="team-role-suggestions"
               className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
             />
+            {/* Suggestions while typing (CEO, MD, Head of Marketing…) */}
+            <datalist id="team-role-suggestions">
+              {ROLE_SUGGESTIONS.map((r) => (
+                <option key={r} value={r} />
+              ))}
+            </datalist>
           </div>
         </div>
 

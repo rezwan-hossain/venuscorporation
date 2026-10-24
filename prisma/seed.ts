@@ -366,6 +366,9 @@ async function seedContent() {
 
   await prisma.teamMember.createMany({
     data: [
+      { name: "Rezaul Karim", role: "Chief Executive Officer (CEO)", category: "MANAGEMENT", img: 68 },
+      { name: "Shirin Akhter", role: "Managing Director (MD)", category: "MANAGEMENT", img: 49 },
+      { name: "Imran Chowdhury", role: "Head of Marketing", category: "MANAGEMENT", img: 33 },
       { name: "Tanvir Hossain", role: "Founder & Race Director", category: "ADMIN", img: 12 },
       { name: "Nusrat Jahan", role: "Head of Operations", category: "ADMIN", img: 47 },
       { name: "Dr. Kamal Uddin", role: "Medical Advisor", category: "ADVISOR", img: 59 },
@@ -374,7 +377,7 @@ async function seedContent() {
       { name: "Sadia Islam", role: "Volunteer Lead", category: "ORGANIZER", img: 44 },
     ].map(({ img: n, ...m }, i) => ({
       ...m,
-      category: m.category as "ADMIN" | "ADVISOR" | "ORGANIZER",
+      category: m.category as "MANAGEMENT" | "ADMIN" | "ADVISOR" | "ORGANIZER",
       bio: `${m.name.split(" ").slice(-2).join(" ")} has been part of the running community in Bangladesh for years.`,
       image: `https://i.pravatar.cc/300?img=${n}`,
       sortOrder: i,

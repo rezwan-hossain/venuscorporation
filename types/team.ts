@@ -1,6 +1,6 @@
 // types/team.ts
 
-export type TeamCategory = "ADMIN" | "ADVISOR" | "ORGANIZER";
+export type TeamCategory = "MANAGEMENT" | "ADMIN" | "ADVISOR" | "ORGANIZER";
 
 export type TeamMember = {
   id: string;

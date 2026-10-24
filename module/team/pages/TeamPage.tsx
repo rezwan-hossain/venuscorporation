@@ -5,18 +5,23 @@ import TeamStats from "../components/TeamStats";
 import type { TeamMember } from "@/types/team";
 
 type TeamPageProps = {
+  managementMembers: TeamMember[];
   adminMembers: TeamMember[];
   advisorMembers: TeamMember[];
   organizerMembers: TeamMember[];
 };
 
 const TeamPage = ({
+  managementMembers,
   adminMembers,
   advisorMembers,
   organizerMembers,
 }: TeamPageProps) => {
   const totalMembers =
-    adminMembers.length + advisorMembers.length + organizerMembers.length;
+    managementMembers.length +
+    adminMembers.length +
+    advisorMembers.length +
+    organizerMembers.length;
 
   return (
     <div className="min-h-screen bg-background font-body">
@@ -49,6 +54,17 @@ const TeamPage = ({
             // organizerCount={organizerMembers.length}
           />
         </div>
+
+        {/* Management — CEO, MD, directors, heads of department */}
+        {managementMembers.length > 0 && (
+          <div className="mb-20">
+            <TeamGrid
+              members={managementMembers}
+              title="MANAGEMENT"
+              subtitle="The leaders running Venus Corporation"
+            />
+          </div>
+        )}
 
         {/* Admin Team */}
         {adminMembers.length > 0 && (

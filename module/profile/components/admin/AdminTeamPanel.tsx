@@ -22,6 +22,7 @@ import {
   GripVertical,
   Shield,
   Briefcase,
+  Crown,
 } from "lucide-react";
 import Image from "next/image";
 import { TeamMemberForm } from "./TeamMemberForm";
@@ -34,6 +35,12 @@ type View = "list" | "create" | "edit";
 
 // Category display config
 const CATEGORY_CONFIG = {
+  MANAGEMENT: {
+    label: "Management",
+    bgColor: "bg-emerald-100",
+    textColor: "text-emerald-700",
+    icon: Crown,
+  },
   ADMIN: {
     label: "Leadership",
     bgColor: "bg-purple-100",
@@ -60,6 +67,7 @@ export function AdminTeamPanel({ initialMembers }: Props) {
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
+  const managementMembers = members.filter((m) => m.category === "MANAGEMENT");
   const adminMembers = members.filter((m) => m.category === "ADMIN");
   const advisorMembers = members.filter((m) => m.category === "ADVISOR");
   const organizerMembers = members.filter((m) => m.category === "ORGANIZER");
@@ -109,11 +117,13 @@ export function AdminTeamPanel({ initialMembers }: Props) {
     setLoadingId(null);
   };
 
-  const MemberCard = ({ member }: { member: TeamMember }) => {
+  // Plain render helpers (not components), so React doesn't recreate them each render.
+  const renderMemberCard = (member: TeamMember) => {
     const categoryConfig = CATEGORY_CONFIG[member.category];
 
     return (
       <div
+        key={member.id}
         className={`bg-white border rounded-xl p-4 transition-all ${
           member.isActive ? "border-gray-200" : "border-gray-200 opacity-50"
         }`}
@@ -238,15 +248,11 @@ export function AdminTeamPanel({ initialMembers }: Props) {
     );
   };
 
-  const CategorySection = ({
-    title,
-    members,
-    icon: Icon,
-  }: {
-    title: string;
-    members: TeamMember[];
-    icon: React.ElementType;
-  }) => {
+  const renderCategorySection = (
+    title: string,
+    members: TeamMember[],
+    Icon: React.ElementType,
+  ) => {
     if (members.length === 0) return null;
 
     return (
@@ -258,9 +264,7 @@ export function AdminTeamPanel({ initialMembers }: Props) {
           </h3>
         </div>
         <div className="space-y-3">
-          {members.map((member) => (
-            <MemberCard key={member.id} member={member} />
-          ))}
+          {members.map((member) => renderMemberCard(member))}
         </div>
       </div>
     );
@@ -301,9 +305,10 @@ export function AdminTeamPanel({ initialMembers }: Props) {
       {view === "list" && (
         <>
           {/* Stats Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
             {[
               { label: "Total", value: members.length, icon: Users },
+              { label: "Management", value: managementMembers.length, icon: Crown },
               { label: "Leadership", value: adminMembers.length, icon: Shield },
               {
                 label: "Advisors",
@@ -346,21 +351,10 @@ export function AdminTeamPanel({ initialMembers }: Props) {
             </div>
           ) : (
             <>
-              <CategorySection
-                title="Leadership"
-                members={adminMembers}
-                icon={Shield}
-              />
-              <CategorySection
-                title="Advisors"
-                members={advisorMembers}
-                icon={UserCog}
-              />
-              <CategorySection
-                title="Organizers"
-                members={organizerMembers}
-                icon={Briefcase}
-              />
+              {renderCategorySection("Management", managementMembers, Crown)}
+              {renderCategorySection("Leadership", adminMembers, Shield)}
+              {renderCategorySection("Advisors", advisorMembers, UserCog)}
+              {renderCategorySection("Organizers", organizerMembers, Briefcase)}
             </>
           )}
         </>

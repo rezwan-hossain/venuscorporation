@@ -323,6 +323,7 @@ enum DiscountType {
 }
 
 enum TeamCategory {
+  MANAGEMENT // business leadership: CEO, MD, directors, heads of department
   ADMIN
   ADVISOR
   ORGANIZER

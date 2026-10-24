@@ -21,7 +21,7 @@ const TEAM_AUDIT_FIELDS = [
   "facebookUrl",
 ] as const;
 
-type TeamCategory = "ADMIN" | "ADVISOR" | "ORGANIZER";
+type TeamCategory = "MANAGEMENT" | "ADMIN" | "ADVISOR" | "ORGANIZER";
 
 // ─── GET ALL TEAM MEMBERS ──────────────────────────
 export async function getAllTeamMembers() {
