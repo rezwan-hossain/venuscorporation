@@ -159,13 +159,13 @@ export default function EventCard({ event }: EventCardProps) {
               className={`flex w-full items-center justify-between gap-3 rounded-full py-1.5 pl-5 pr-1.5 text-xs sm:inline-flex sm:w-auto sm:shrink-0 sm:justify-start font-semibold uppercase tracking-widest transition-colors duration-200 ${
                 isCompleted
                   ? "border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
-                  : "bg-neon-lime text-white hover:bg-gray-900"
+                  : "bg-[#dcb45c] text-[#0d1840] hover:bg-[#14245a] hover:text-white"
               }`}
             >
               {isCompleted ? "View recap" : "Event details"}
               <span
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-white ${
-                  isCompleted ? "bg-gray-700" : "bg-gray-900"
+                  isCompleted ? "bg-gray-700" : "bg-[#14245a]"
                 }`}
               >
                 <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
