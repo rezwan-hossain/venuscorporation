@@ -22,8 +22,19 @@ import { summitHero } from "../business/data-v5";
 import ShowreelButton from "./ShowreelButton";
 
 // Fonts: Roman capitals for the headline, elegant serif for the motto.
-const display = Cinzel({ subsets: ["latin"], weight: ["500", "600"], display: "swap", variable: "--font-hero-display" });
-const serif = Cormorant_Garamond({ subsets: ["latin"], weight: ["500"], style: ["italic"], display: "swap", variable: "--font-hero-serif" });
+const display = Cinzel({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  display: "swap",
+  variable: "--font-hero-display",
+});
+const serif = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["500"],
+  style: ["italic"],
+  display: "swap",
+  variable: "--font-hero-serif",
+});
 
 // Colours (from the business card)
 const NAVY = "#14245a";
@@ -39,22 +50,37 @@ const container = "mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8";
 
 /** Event dates are stored as UTC midnight, so format them in UTC. */
 const formatDate = (date: Date) =>
-  new Date(date).toLocaleDateString("en-GB", { timeZone: "UTC", day: "numeric", month: "short", year: "numeric" });
+  new Date(date).toLocaleDateString("en-GB", {
+    timeZone: "UTC",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 
 async function getHeroContent() {
   const { events } = await getNextEvents(1);
   const event = events[0];
 
   if (!event) {
-    return { label: summitHero.kicker, title: summitHero.title, text: summitHero.text, next: null };
+    return {
+      label: summitHero.kicker,
+      title: summitHero.title,
+      text: summitHero.text,
+      next: null,
+    };
   }
 
   const date = formatDate(event.date);
   return {
-    label: `Next up · ${date}`,
+    label: ` ${date}`,
     title: event.name,
     text: event.shortDesc || summitHero.text,
-    next: { name: event.name, address: event.address, date, href: `/events/${event.slug}` },
+    next: {
+      name: event.name,
+      address: event.address,
+      date,
+      href: `/events/${event.slug}`,
+    },
   };
 }
 
@@ -67,14 +93,28 @@ export default async function SummitHero() {
 
   return (
     // pt-*: start below the fixed header (its dark text needs a light background).
-    <section className={`${display.variable} ${serif.variable} pt-24 lg:flex lg:h-[min(100svh,50rem)] lg:min-h-[34rem] lg:flex-col lg:pt-28`}>
+    <section
+      className={`${display.variable} ${serif.variable} pt-20 md:pt-24 lg:flex lg:h-[min(100svh,50rem)] lg:min-h-[34rem] lg:flex-col lg:pt-28`}
+    >
       {/* ── 1. Navy panel ── */}
-      <div className="relative isolate overflow-hidden lg:min-h-0 lg:flex-1" style={{ background: NAVY }}>
+      <div
+        className="relative isolate overflow-hidden lg:min-h-0 lg:flex-1"
+        style={{ background: NAVY }}
+      >
         <HeroBackground />
 
-        <div className={`${container} flex min-h-[52svh] flex-col justify-center py-16 lg:h-full lg:min-h-0 lg:py-[clamp(1.5rem,5vh,4rem)]`}>
-          <p className="flex items-center gap-4 text-[11px] font-semibold uppercase tracking-[0.3em] sm:text-xs" style={{ color: GOLD_LIGHT }}>
-            <span className="h-px w-10 shrink-0" style={{ background: GOLD_LIGHT }} aria-hidden />
+        <div
+          className={`${container} flex min-h-[52svh] flex-col justify-center py-16 lg:h-full lg:min-h-0 lg:py-[clamp(1.5rem,5vh,4rem)]`}
+        >
+          <p
+            className="flex items-center gap-4 text-[11px] font-semibold uppercase tracking-[0.3em] sm:text-xs"
+            style={{ color: GOLD_LIGHT }}
+          >
+            <span
+              className="h-px w-10 shrink-0"
+              style={{ background: GOLD_LIGHT }}
+              aria-hidden
+            />
             {label}
           </p>
 
@@ -85,7 +125,9 @@ export default async function SummitHero() {
             {title}
           </h1>
 
-          <p className="mt-6 line-clamp-3 max-w-md text-base leading-relaxed text-white/85 sm:text-lg lg:mt-[2.5vh]">{text}</p>
+          <p className="mt-6 line-clamp-3 max-w-md text-base leading-relaxed text-white/85 sm:text-lg lg:mt-[2.5vh]">
+            {text}
+          </p>
 
           <div className="mt-10 flex flex-col items-center gap-6 sm:flex-row sm:gap-8 lg:mt-[4vh]">
             <Link
@@ -115,11 +157,27 @@ function HeroBackground() {
   const { poster, video } = summitHero;
   return (
     <>
-      <Image src={poster} alt="" fill priority sizes="100vw" className="-z-20 object-cover" />
+      <Image
+        src={poster}
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="-z-20 object-cover"
+      />
 
       {/* Muted + looping so browsers allow autoplay; hidden for reduced motion. */}
       {video && (
-        <video className="absolute inset-0 -z-20 h-full w-full object-cover motion-reduce:hidden" autoPlay muted loop playsInline preload="metadata" poster={poster} aria-hidden>
+        <video
+          className="absolute inset-0 -z-20 h-full w-full object-cover motion-reduce:hidden"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster={poster}
+          aria-hidden
+        >
           <source src={video} type="video/mp4" />
         </video>
       )}
@@ -155,12 +213,25 @@ function HeroBackground() {
 /** "Watch our events": opens the showreel, or (without one) jumps down the page. */
 function WatchButton() {
   const { showreel, watchCta } = summitHero;
-  if (showreel) return <ShowreelButton label={watchCta.label} video={showreel} />;
+  if (showreel)
+    return <ShowreelButton label={watchCta.label} video={showreel} />;
 
   return (
-    <a href={watchCta.href} className="group inline-flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.2em] text-white">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition group-hover:bg-white/10" style={{ borderColor: GOLD_LIGHT }} aria-hidden>
-        <Play size={14} fill="#fff" strokeWidth={0} className="translate-x-px" />
+    <a
+      href={watchCta.href}
+      className="group inline-flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+    >
+      <span
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition group-hover:bg-white/10"
+        style={{ borderColor: GOLD_LIGHT }}
+        aria-hidden
+      >
+        <Play
+          size={14}
+          fill="#fff"
+          strokeWidth={0}
+          className="translate-x-px"
+        />
       </span>
       {watchCta.label}
     </a>
@@ -175,29 +246,51 @@ function NextEventBar({ next }: { next: NextEvent }) {
 
   return (
     <div className="shrink-0 border-b border-slate-200 bg-white">
-      <div className={`${container} flex flex-col items-center gap-4 py-6 text-center lg:flex-row lg:justify-between lg:gap-8 lg:py-5 lg:text-left`}>
+      <div
+        className={`${container} flex flex-col items-center gap-4 py-6 text-center lg:flex-row lg:justify-between lg:gap-8 lg:py-5 lg:text-left`}
+      >
         {/* Motto: large screens only */}
-        <p className="hidden shrink-0 text-xl whitespace-nowrap italic lg:block" style={{ fontFamily: "var(--font-hero-serif)", color: NAVY }}>
-          {brand.motto.left} <span style={{ color: GOLD }}>|</span> {brand.motto.right}
+        <p
+          className="hidden shrink-0 text-xl whitespace-nowrap italic lg:block"
+          style={{ fontFamily: "var(--font-hero-serif)", color: NAVY }}
+        >
+          {brand.motto.left} <span style={{ color: GOLD }}>|</span>{" "}
+          {brand.motto.right}
         </p>
 
         {next ? (
           <>
             {/* Phones/tablets: stacked — label, name, venue · date */}
             <div className="lg:hidden">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.25em]" style={{ color: GOLD }}>
+              <p
+                className="text-[11px] font-semibold uppercase tracking-[0.25em]"
+                style={{ color: GOLD }}
+              >
                 Next up
               </p>
-              <p className="mt-1.5 text-lg font-semibold text-balance" style={{ color: NAVY }}>
+              <p
+                className="mt-1.5 text-lg font-semibold text-balance"
+                style={{ color: NAVY }}
+              >
                 {next.name}
               </p>
               <p className="mt-1.5 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-slate-500">
                 <span className="flex items-center gap-1.5">
-                  <MapPin size={14} className="shrink-0" style={{ color: GOLD }} aria-hidden />
+                  <MapPin
+                    size={14}
+                    className="shrink-0"
+                    style={{ color: GOLD }}
+                    aria-hidden
+                  />
                   {next.address}
                 </span>
                 <span className="flex items-center gap-1.5 lining-nums">
-                  <CalendarDays size={14} className="shrink-0" style={{ color: GOLD }} aria-hidden />
+                  <CalendarDays
+                    size={14}
+                    className="shrink-0"
+                    style={{ color: GOLD }}
+                    aria-hidden
+                  />
                   {next.date}
                 </span>
               </p>
@@ -223,7 +316,11 @@ function NextEventBar({ next }: { next: NextEvent }) {
         <Link
           href={next ? next.href : "/events"}
           className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-6 py-3 text-xs font-bold whitespace-nowrap uppercase tracking-[0.2em] transition hover:bg-[#14245a] hover:text-white lg:rounded-none lg:px-0 lg:py-0 lg:underline lg:underline-offset-4 lg:shadow-none! lg:hover:bg-transparent lg:hover:text-[#14245a]"
-          style={{ color: NAVY, textDecorationColor: GOLD, boxShadow: `inset 0 0 0 1px ${GOLD}99` }}
+          style={{
+            color: NAVY,
+            textDecorationColor: GOLD,
+            boxShadow: `inset 0 0 0 1px ${GOLD}99`,
+          }}
         >
           {linkLabel} <ArrowRight size={14} />
         </Link>

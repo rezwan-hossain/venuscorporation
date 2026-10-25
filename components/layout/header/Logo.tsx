@@ -24,7 +24,7 @@ export default function Logo({ scrolled }: LogoProps) {
         width={719}
         height={347}
         className={`w-auto object-contain transition-all duration-300 ${
-          scrolled ? "h-16" : "h-16 md:h-22"
+          scrolled ? "h-12 md:h-16" : "h-14 md:h-22"
         }`}
         priority
         sizes="(min-width: 768px) 190px, 140px"

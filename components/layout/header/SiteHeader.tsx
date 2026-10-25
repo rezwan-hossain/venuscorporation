@@ -67,8 +67,8 @@ export default function SiteHeader() {
         } ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-sm" : "bg-transparent"}`}
       >
         <div
-          className={`mx-auto max-w-[1400px] flex items-center justify-between px-6 lg:px-8 transition-all duration-300 ${
-            scrolled ? "h-20" : "h-24"
+          className={`mx-auto max-w-[1400px] flex items-center justify-between px-5 sm:px-6 lg:px-8 transition-all duration-300 ${
+            scrolled ? "h-16 md:h-20" : "h-20 md:h-24"
           }`}
         >
           <Logo scrolled={scrolled} />
