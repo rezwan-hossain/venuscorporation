@@ -16,6 +16,7 @@
 //      Who we are — module/home/components/WhoWeAre.tsx
 //   2. Services — module/home/components/ServiceList.tsx
 //   3. Numbers
+//      Upcoming corporate events — module/home/components/UpcomingCorporateEvents.tsx (database)
 //   4. How we plan — path cards
 //   5. Signature moments — module/home/components/SignatureMoments.tsx
 //      Featured work
@@ -24,6 +25,7 @@
 //   7. FAQ
 //   8. Call to action — module/home/components/ContactCta.tsx
 
+import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Cormorant_Garamond } from "next/font/google";
@@ -37,6 +39,7 @@ import Gallery from "../components/Gallery";
 import ServiceList from "../components/ServiceList";
 import SignatureMoments from "../components/SignatureMoments";
 import SummitHero from "../components/SummitHero";
+import UpcomingCorporateEvents from "../components/UpcomingCorporateEvents";
 import WhoWeAre from "../components/WhoWeAre";
 
 // The business card's elegant serif — loaded for this page only.
@@ -64,6 +67,11 @@ export default function BusinessHomepage() {
       <SummitHero />
       <WhoWeAre />
       <ServiceList />
+
+      {/* Real events from the database — the rest of the page doesn't wait for it */}
+      <Suspense fallback={null}>
+        <UpcomingCorporateEvents />
+      </Suspense>
       <Numbers />
       <PlanningPath />
       <SignatureMoments />
@@ -83,7 +91,10 @@ export default function BusinessHomepage() {
 /** "— ★ —" ornament with the logo's gold star. */
 function StarRule({ className = "" }: { className?: string }) {
   return (
-    <div className={`flex items-center justify-center gap-3 ${className}`} aria-hidden>
+    <div
+      className={`flex items-center justify-center gap-3 ${className}`}
+      aria-hidden
+    >
       <span className="h-px w-12" style={{ background: GOLD }} />
       <Star size={14} fill={GOLD} strokeWidth={0} />
       <span className="h-px w-12" style={{ background: GOLD }} />
@@ -92,21 +103,43 @@ function StarRule({ className = "" }: { className?: string }) {
 }
 
 /** Small gold spaced capitals. */
-function Kicker({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function Kicker({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${className}`} style={{ color: GOLD }}>
+    <p
+      className={`text-xs font-semibold uppercase tracking-[0.3em] ${className}`}
+      style={{ color: GOLD }}
+    >
       {children}
     </p>
   );
 }
 
 /** Centered section heading: star ornament, kicker, serif title with gold italic. */
-function SectionHeading({ kicker, title, italic, light = false }: { kicker: string; title: string; italic?: string; light?: boolean }) {
+function SectionHeading({
+  kicker,
+  title,
+  italic,
+  light = false,
+}: {
+  kicker: string;
+  title: string;
+  italic?: string;
+  light?: boolean;
+}) {
   return (
     <div className="text-center">
       <StarRule />
       <Kicker className="mt-5">{kicker}</Kicker>
-      <h2 className="mt-3 text-4xl leading-[1.1] font-semibold sm:text-5xl" style={{ ...SERIF, color: light ? "#fff" : NAVY }}>
+      <h2
+        className="mt-3 text-4xl leading-[1.1] font-semibold sm:text-5xl"
+        style={{ ...SERIF, color: light ? "#fff" : NAVY }}
+      >
         {title}
         {italic && (
           <>
@@ -130,11 +163,21 @@ function Numbers() {
     <section style={{ background: CREAM }}>
       <dl className={`${container} grid grid-cols-2 py-14 lg:grid-cols-4`}>
         {stats.map((s, i) => (
-          <div key={s.label} className={`px-4 py-4 text-center ${i % 2 === 1 ? "border-l" : ""} ${i === 2 ? "lg:border-l" : ""}`} style={{ borderColor: `${GOLD}55` }}>
-            <dd className="text-5xl leading-none font-semibold lining-nums" style={{ ...SERIF, color: NAVY }}>
+          <div
+            key={s.label}
+            className={`px-4 py-4 text-center ${i % 2 === 1 ? "border-l" : ""} ${i === 2 ? "lg:border-l" : ""}`}
+            style={{ borderColor: `${GOLD}55` }}
+          >
+            <dd
+              className="text-5xl leading-none font-semibold lining-nums"
+              style={{ ...SERIF, color: NAVY }}
+            >
               {s.value}
             </dd>
-            <dt className="mt-2 text-base italic sm:text-lg" style={{ ...SERIF, color: "#a8852f" }}>
+            <dt
+              className="mt-2 text-base italic sm:text-lg"
+              style={{ ...SERIF, color: "#a8852f" }}
+            >
               {s.label}
             </dt>
           </div>
@@ -150,46 +193,80 @@ function Numbers() {
 
 function PlanningPath() {
   return (
-    <section className="relative isolate overflow-hidden py-24 lg:py-32" style={{ background: NAVY }}>
+    <section
+      className="relative isolate overflow-hidden py-24 lg:py-32"
+      style={{ background: NAVY }}
+    >
       {/* Soft gold glow at the top + faint dot texture (decorative) */}
-      <div aria-hidden className="absolute -top-40 left-1/2 -z-10 h-80 w-[48rem] max-w-full -translate-x-1/2 rounded-full opacity-20 blur-3xl" style={{ background: GOLD }} />
+      <div
+        aria-hidden
+        className="absolute -top-40 left-1/2 -z-10 h-80 w-[48rem] max-w-full -translate-x-1/2 rounded-full opacity-20 blur-3xl"
+        style={{ background: GOLD }}
+      />
       <div
         aria-hidden
         className="absolute inset-0 -z-10"
         style={{
-          backgroundImage: "radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1.2px)",
+          backgroundImage:
+            "radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1.2px)",
           backgroundSize: "22px 22px",
-          maskImage: "linear-gradient(to bottom, transparent, #000 40%, transparent)",
+          maskImage:
+            "linear-gradient(to bottom, transparent, #000 40%, transparent)",
         }}
       />
 
       <div className={container}>
-        <SectionHeading light kicker="How we plan" title="Your event, step by" italic="step." />
+        <SectionHeading
+          light
+          kicker="How we plan"
+          title="Your event, step by"
+          italic="step."
+        />
         <p className="mx-auto mt-5 max-w-xl text-center text-white/65">
-          One team guides you from the first conversation to the final report — you always know what happens next.
+          One team guides you from the first conversation to the final report —
+          you always know what happens next.
         </p>
 
         <ol className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-5">
           {steps.map((s, i) => (
-            <li key={s.title} className={`group relative ${i === steps.length - 1 ? "sm:col-span-2 lg:col-span-1" : ""}`}>
+            <li
+              key={s.title}
+              className={`group relative ${i === steps.length - 1 ? "sm:col-span-2 lg:col-span-1" : ""}`}
+            >
               <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition duration-500 group-hover:-translate-y-1 group-hover:border-white/20 group-hover:bg-white/[0.08] lg:p-7">
                 {/* Gold line along the top that grows on hover */}
-                <span aria-hidden className="absolute top-0 left-0 h-0.5 w-12 transition-all duration-500 group-hover:w-full" style={{ background: GOLD_LIGHT }} />
+                <span
+                  aria-hidden
+                  className="absolute top-0 left-0 h-0.5 w-12 transition-all duration-500 group-hover:w-full"
+                  style={{ background: GOLD_LIGHT }}
+                />
 
-                <span className="text-5xl leading-none italic lining-nums" style={{ ...SERIF, color: GOLD_LIGHT }}>
+                <span
+                  className="text-5xl leading-none italic lining-nums"
+                  style={{ ...SERIF, color: GOLD_LIGHT }}
+                >
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <h3 className="mt-6 text-lg font-semibold text-white" style={SANS}>
+                <h3
+                  className="mt-6 text-lg font-semibold text-white"
+                  style={SANS}
+                >
                   {s.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/65">{s.text}</p>
+                <p className="mt-2 text-sm leading-relaxed text-white/65">
+                  {s.text}
+                </p>
               </div>
 
               {/* Arrow to the next card (large screens only) */}
               {i < steps.length - 1 && (
                 <span
                   className="absolute top-12 -right-[1.1rem] z-10 hidden h-8 w-8 items-center justify-center rounded-full border-4 lg:flex"
-                  style={{ background: GOLD_LIGHT, color: NAVY_DEEP, borderColor: NAVY }}
+                  style={{
+                    background: GOLD_LIGHT,
+                    color: NAVY_DEEP,
+                    borderColor: NAVY,
+                  }}
                   aria-hidden
                 >
                   <ArrowRight size={13} strokeWidth={2.5} />
@@ -207,8 +284,12 @@ function PlanningPath() {
           >
             {cta.primary.label} <ArrowRight size={16} />
           </Link>
-          <a href={cta.secondary.href} className="inline-flex items-center gap-2 text-sm font-semibold text-white/85 hover:text-white">
-            <Phone size={16} style={{ color: GOLD_LIGHT }} /> {cta.secondary.label}
+          <a
+            href={cta.secondary.href}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-white/85 hover:text-white"
+          >
+            <Phone size={16} style={{ color: GOLD_LIGHT }} />{" "}
+            {cta.secondary.label}
           </a>
         </div>
       </div>
@@ -231,15 +312,26 @@ function FeaturedWork() {
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.25em]"
             style={{ color: NAVY }}
           >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: GOLD }} aria-hidden />
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ background: GOLD }}
+              aria-hidden
+            />
             Featured work
           </span>
           {/* Uses the site's heading font (bold condensed capitals) */}
-          <h2 className="mt-5 text-4xl leading-[1.05] tracking-wide uppercase sm:text-5xl" style={{ color: NAVY }}>
+          <h2
+            className="mt-5 text-4xl leading-[1.05] tracking-wide uppercase sm:text-5xl"
+            style={{ color: NAVY }}
+          >
             Selected projects
           </h2>
         </div>
-        <Link href="/contact" className="inline-flex items-center gap-2 text-sm font-semibold hover:underline" style={{ color: "#a8852f" }}>
+        <Link
+          href="/contact"
+          className="inline-flex items-center gap-2 text-sm font-semibold hover:underline"
+          style={{ color: "#a8852f" }}
+        >
           Start your project <ArrowRight size={16} />
         </Link>
       </div>
@@ -249,11 +341,17 @@ function FeaturedWork() {
         {projects.map((p, i) => (
           <li key={p.title} className="group border-b border-slate-200">
             <article className="grid items-center gap-5 py-7 transition-colors sm:grid-cols-[4rem_1fr_auto] lg:grid-cols-[5rem_1fr_12rem_14rem] lg:px-4 lg:hover:bg-[#faf8f3]">
-              <span className="text-3xl italic lining-nums" style={{ ...SERIF, color: GOLD }}>
+              <span
+                className="text-3xl italic lining-nums"
+                style={{ ...SERIF, color: GOLD }}
+              >
                 {String(i + 1).padStart(2, "0")}
               </span>
               <div>
-                <h3 className="text-2xl tracking-wide uppercase sm:text-3xl" style={{ color: NAVY }}>
+                <h3
+                  className="text-2xl tracking-wide uppercase sm:text-3xl"
+                  style={{ color: NAVY }}
+                >
                   {p.title}
                 </h3>
                 <p className="mt-1 text-slate-500">
@@ -267,7 +365,13 @@ function FeaturedWork() {
                 {p.category}
               </span>
               <div className="relative hidden aspect-[16/10] overflow-hidden rounded-2xl lg:block">
-                <Image src={p.image} alt="" fill sizes="14rem" className="object-cover transition duration-500 group-hover:scale-105" />
+                <Image
+                  src={p.image}
+                  alt=""
+                  fill
+                  sizes="14rem"
+                  className="object-cover transition duration-500 group-hover:scale-105"
+                />
               </div>
             </article>
           </li>
@@ -288,11 +392,18 @@ function Testimonials() {
       <div className={container}>
         <div className="mx-auto max-w-2xl text-center">
           <p className="flex items-center justify-center gap-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#a8852f]">
-            <span className="h-px w-8" style={{ background: GOLD }} aria-hidden />
+            <span
+              className="h-px w-8"
+              style={{ background: GOLD }}
+              aria-hidden
+            />
             Testimonials
           </p>
           {/* Uses the site's heading font (bold condensed capitals) */}
-          <h2 className="mt-4 text-4xl leading-[1.05] tracking-wide uppercase sm:text-5xl" style={{ color: NAVY }}>
+          <h2
+            className="mt-4 text-4xl leading-[1.05] tracking-wide uppercase sm:text-5xl"
+            style={{ color: NAVY }}
+          >
             What our clients say
           </h2>
         </div>
@@ -300,9 +411,15 @@ function Testimonials() {
         <ul className="mt-14 grid gap-6 lg:grid-cols-3">
           {groupTestimonials.map((t) => (
             <li key={t.name}>
-              <figure className="flex h-full flex-col rounded-3xl border bg-white p-8 shadow-sm shadow-[#14245a]/5" style={{ borderColor: `${GOLD}33` }}>
+              <figure
+                className="flex h-full flex-col rounded-3xl border bg-white p-8 shadow-sm shadow-[#14245a]/5"
+                style={{ borderColor: `${GOLD}33` }}
+              >
                 <Quote size={32} style={{ color: GOLD }} aria-hidden />
-                <blockquote className="mt-5 flex-1 text-lg leading-relaxed" style={{ color: NAVY }}>
+                <blockquote
+                  className="mt-5 flex-1 text-lg leading-relaxed"
+                  style={{ color: NAVY }}
+                >
                   “{t.quote}”
                 </blockquote>
                 <figcaption className="mt-7 border-t border-slate-200 pt-5">
@@ -328,15 +445,30 @@ function Faq() {
   return (
     // Comes right after the white gallery, so no extra top space.
     <section className={`${container} pb-24 lg:pb-32`}>
-      <SectionHeading kicker="Good to know" title="Questions," italic="answered." />
+      <SectionHeading
+        kicker="Good to know"
+        title="Questions,"
+        italic="answered."
+      />
 
       <ul className="mx-auto mt-12 max-w-3xl space-y-3">
         {faqs.map((f) => (
           <li key={f.q}>
-            <details className="group rounded-2xl border px-6 open:bg-[#faf8f3]" style={{ borderColor: `${GOLD}55` }}>
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 font-semibold [&::-webkit-details-marker]:hidden" style={{ color: NAVY }}>
+            <details
+              className="group rounded-2xl border px-6 open:bg-[#faf8f3]"
+              style={{ borderColor: `${GOLD}55` }}
+            >
+              <summary
+                className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 font-semibold [&::-webkit-details-marker]:hidden"
+                style={{ color: NAVY }}
+              >
                 {f.q}
-                <Plus size={18} className="shrink-0 transition-transform duration-300 group-open:rotate-45" style={{ color: GOLD }} aria-hidden />
+                <Plus
+                  size={18}
+                  className="shrink-0 transition-transform duration-300 group-open:rotate-45"
+                  style={{ color: GOLD }}
+                  aria-hidden
+                />
               </summary>
               <p className="pb-6 leading-relaxed">{f.a}</p>
             </details>

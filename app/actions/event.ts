@@ -89,6 +89,47 @@ export async function getUpcomingEvents(limit: number = 3) {
   }
 }
 
+/**
+ * The next events on the calendar (today or later), soonest first.
+ * Used by the homepage's "Upcoming corporate events" section.
+ * Same cache tags as getUpcomingEvents, so admin edits refresh it; cached for
+ * hours (not days) so events drop off soon after their date passes.
+ */
+export async function getNextEvents(limit: number = 4) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("events", "upcoming-events");
+
+  // Event dates are stored as UTC midnight — compare against today's UTC midnight.
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  try {
+    const events = await prisma.event.findMany({
+      where: {
+        isActive: true,
+        isArchived: false,
+        status: "ACTIVE",
+        date: { gte: today },
+      },
+      include: {
+        organizer: true,
+        packages: {
+          where: { isActive: true },
+          orderBy: { price: "asc" },
+        },
+      },
+      orderBy: { date: "asc" },
+      take: limit,
+    });
+
+    return { events };
+  } catch (error) {
+    console.error("Failed to fetch next events:", error);
+    return { events: [], error: "Failed to fetch next events" };
+  }
+}
+
 export async function getPreviousEvents(limit: number = 3) {
   "use cache";
   cacheLife("days");
