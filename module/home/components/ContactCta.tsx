@@ -2,7 +2,8 @@
 //
 // Homepage closing section — "Let's create something unforgettable."
 //   left  — motto label, serif heading, intro and three gold-star promises
-//   right — "Get in touch" glass panel: plan your event (gold), call, message
+//   right — "Get in touch" glass panel: plan your event (gold), call,
+//           WhatsApp, message
 // Background: a faint photo under the navy, a gold glow and the swoosh.
 // (Small screens: text first, contact panel below.)
 //
@@ -12,8 +13,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Cormorant_Garamond } from "next/font/google";
-import { ArrowRight, Mail, Phone, Star } from "lucide-react";
+import { ArrowRight, Check, Mail, MessageCircle, Phone, Star } from "lucide-react";
 
+import { contactDetails } from "@/config/contact";
 import { brand, cta } from "../business/data-v3";
 
 // The business card's elegant serif.
@@ -59,8 +61,8 @@ function ContactOption({
   detail: string;
   primary?: boolean;
 }) {
-  const external = href.startsWith("tel:") || href.startsWith("mailto:");
-  const className = `group flex items-center gap-4 rounded-2xl px-5 py-4 transition duration-300 ${
+  const external = href.startsWith("tel:") || href.startsWith("mailto:") || href.startsWith("http");
+  const className = `group flex items-center gap-4 rounded-2xl px-5 py-3 transition duration-300 ${
     primary ? "hover:brightness-110" : "border border-white/15 hover:border-white/30 hover:bg-white/[0.07]"
   }`;
   const style = primary ? { background: GOLD_LIGHT, color: NAVY_DEEP } : { color: "#fff" };
@@ -80,7 +82,7 @@ function ContactOption({
     </>
   );
   return external ? (
-    <a href={href} className={className} style={style}>
+    <a href={href} className={className} style={style} {...(href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
       {body}
     </a>
   ) : (
@@ -97,28 +99,29 @@ export default function ContactCta() {
       <Image src={cta.background} alt="" fill sizes="100vw" className="-z-20 object-cover opacity-15 mix-blend-luminosity" />
       <div aria-hidden className="absolute inset-0 -z-10 bg-linear-to-r from-[#14245a] via-[#14245a]/90 to-[#14245a]/70" />
       <div aria-hidden className="absolute -top-32 -left-32 -z-10 h-96 w-96 rounded-full opacity-20 blur-3xl" style={{ background: GOLD }} />
+      <div aria-hidden className="absolute -right-24 -bottom-40 -z-10 h-96 w-96 rounded-full opacity-15 blur-3xl" style={{ background: "#6f86d6" }} />
       <Swoosh className="absolute right-0 bottom-0 -z-10 w-[36rem] max-w-[95%]" />
 
-      <div className={`${container} grid gap-14 py-24 lg:grid-cols-[1.3fr_1fr] lg:items-center lg:gap-16 lg:py-32`}>
+      <div className={`${container} grid gap-10 py-16 lg:grid-cols-[1.3fr_1fr] lg:items-center lg:gap-16 lg:py-20`}>
         {/* 8.1 The ask */}
         <div>
           <p className="flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: GOLD_LIGHT }}>
             {brand.motto.left} · {brand.motto.right}
             <span className="h-px w-10" style={{ background: GOLD_LIGHT }} aria-hidden />
           </p>
-          <h2 className="mt-6 text-5xl leading-[1.02] font-semibold text-balance text-white sm:text-6xl lg:text-7xl" style={SERIF}>
+          <h2 className="mt-5 text-4xl leading-[1.05] font-semibold text-balance text-white sm:text-5xl lg:text-6xl" style={SERIF}>
             Let&apos;s create something{" "}
             <em className="font-medium" style={{ color: GOLD_LIGHT }}>
               unforgettable.
             </em>
           </h2>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/75">{cta.text}</p>
+          <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/75">{cta.text}</p>
 
           {/* Promises */}
-          <ul className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-7">
+          <ul className="mt-7 flex flex-wrap gap-2.5">
             {cta.promises.map((p) => (
-              <li key={p} className="flex items-center gap-2.5 text-sm font-medium text-white/85">
-                <Star size={12} fill={GOLD_LIGHT} strokeWidth={0} aria-hidden />
+              <li key={p} className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/85">
+                <Check size={14} strokeWidth={2.5} style={{ color: GOLD_LIGHT }} aria-hidden />
                 {p}
               </li>
             ))}
@@ -126,13 +129,20 @@ export default function ContactCta() {
         </div>
 
         {/* 8.2 Three ways to reach us, in a glass panel */}
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-3 shadow-2xl shadow-black/20 sm:p-4">
-          <p className="px-3 pt-2 pb-4 text-xs font-semibold uppercase tracking-[0.25em] text-white/50">Get in touch</p>
-          <div className="space-y-3">
+        <div className="rounded-[1.75rem] border border-[#dcb45c]/25 bg-white/[0.04] p-3 shadow-2xl shadow-black/25 backdrop-blur-sm sm:p-4">
+          <p className="flex items-center justify-between px-3 pt-2 pb-4 text-xs font-semibold uppercase tracking-[0.25em] text-white/50">
+            Get in touch
+            <span className="flex items-center gap-1.5 text-[10px] tracking-[0.15em] normal-case text-white/45">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#25D366]" aria-hidden /> We&apos;re online
+            </span>
+          </p>
+          <div className="space-y-2.5">
             <ContactOption primary href={cta.primary.href} icon={<Star size={18} fill="currentColor" strokeWidth={0} />} title={cta.primary.label} detail="Tell us about your occasion" />
             <ContactOption href={cta.secondary.href} icon={<Phone size={18} />} title={cta.secondary.label} detail={cta.phone} />
+            <ContactOption href={contactDetails.whatsapp.href} icon={<MessageCircle size={18} />} title="WhatsApp" detail="Chat with our team" />
             <ContactOption href="/contact" icon={<Mail size={18} />} title="Send us a message" detail={cta.email} />
           </div>
+          <p className="px-3 pt-3 text-center text-xs text-white/45">We reply within one working day.</p>
         </div>
       </div>
     </section>
