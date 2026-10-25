@@ -35,10 +35,10 @@ export default function EventCard({ event }: EventCardProps) {
 
   return (
     <article
-      className={`group grid grid-cols-1 overflow-hidden rounded-2xl border border-gray-200 transition-shadow duration-300 lg:grid-cols-5 ${
+      className={`group grid grid-cols-1 overflow-hidden rounded-2xl border border-[#c49a3c]/20 transition duration-300 lg:grid-cols-5 ${
         isCompleted
-          ? "bg-gray-50"
-          : "bg-white hover:shadow-xl hover:shadow-gray-900/5"
+          ? "bg-white/70"
+          : "bg-white hover:-translate-y-0.5 hover:border-[#c49a3c]/40 hover:shadow-xl hover:shadow-[#14245a]/10"
       }`}
     >
       {/* Photo: on top on small screens, right-hand side on large ones */}
@@ -58,10 +58,10 @@ export default function EventCard({ event }: EventCardProps) {
 
         {/* Date badge */}
         <div className="absolute left-4 top-4 rounded-xl bg-white px-3.5 py-2 text-center shadow-sm">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-[#a8852f]">
             {month}
           </p>
-          <p className="[font-family:var(--font-heading)] text-3xl leading-none text-gray-900">
+          <p className="[font-family:var(--font-heading)] text-3xl leading-none text-[#14245a]">
             {day}
           </p>
         </div>
