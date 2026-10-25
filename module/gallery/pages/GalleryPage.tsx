@@ -8,9 +8,11 @@
 
 import Link from "next/link";
 import { Cormorant_Garamond } from "next/font/google";
-import { ArrowRight, Camera } from "lucide-react";
+import { ArrowRight, Camera, Play } from "lucide-react";
 
 import Gallery from "../components/Gallery";
+import VideoCard from "../components/VideoCard";
+import { galleryVideos } from "../videos";
 import type { GalleryImage } from "@/types/gallery";
 
 // The business card's elegant serif — loaded for this page only.
@@ -87,7 +89,10 @@ const GalleryPage = ({ images }: GalleryPageProps) => {
         )}
       </section>
 
-      {/* ── 3. Call to action ──────────────────────────────────────── */}
+      {/* ── 3. Videos ──────────────────────────────────────────────── */}
+      {galleryVideos.length > 0 && <VideoSection />}
+
+      {/* ── 4. Call to action ──────────────────────────────────────── */}
       <section className={`${container} pb-24 lg:pb-32`}>
         <div className="relative overflow-hidden rounded-[2rem] px-8 py-14 text-center sm:px-14 lg:py-16" style={{ background: NAVY }}>
           <div aria-hidden className="absolute -top-24 left-1/2 h-48 w-[36rem] max-w-full -translate-x-1/2 rounded-full opacity-25 blur-3xl" style={{ background: GOLD }} />
@@ -109,3 +114,43 @@ const GalleryPage = ({ images }: GalleryPageProps) => {
 };
 
 export default GalleryPage;
+
+/** "Watch our events": the first video large on the left, the rest stacked beside it. */
+function VideoSection() {
+  const [featured, ...rest] = galleryVideos;
+  return (
+    <section className="pb-24 lg:pb-32">
+      <div className={container}>
+        <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+          <div>
+            <p className="flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: GOLD }}>
+              <Play size={11} fill={GOLD} strokeWidth={0} aria-hidden />
+              Event films
+              <span className="h-px w-12" style={{ background: GOLD }} aria-hidden />
+            </p>
+            <h2 className="mt-4 text-4xl leading-[1.1] font-semibold sm:text-5xl" style={{ ...SERIF, color: NAVY }}>
+              Watch our{" "}
+              <em className="font-medium" style={{ color: GOLD }}>
+                events.
+              </em>
+            </h2>
+          </div>
+          <p className="max-w-sm text-slate-500 sm:text-right">The atmosphere, in motion — a few highlights from recent events.</p>
+        </div>
+
+        <div className={`mt-12 grid gap-5 ${rest.length ? "lg:grid-cols-3" : ""}`}>
+          <div className={rest.length ? "lg:col-span-2" : ""}>
+            <VideoCard video={featured} featured />
+          </div>
+          {rest.length > 0 && (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+              {rest.map((v) => (
+                <VideoCard key={v.url} video={v} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
