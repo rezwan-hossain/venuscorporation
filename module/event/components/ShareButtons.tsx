@@ -3,7 +3,12 @@
 
 import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { Check, Copy, Facebook, Instagram, MessageCircle, Send, Share2 } from "lucide-react";
+import { Cormorant_Garamond } from "next/font/google";
 import { shareLink, shareTarget, type ShareChannel, type SharePlace } from "@/lib/share";
+
+// The brand serif for the card heading — loaded here so it works on every
+// page that uses the share block (event page, payment success).
+const serif = Cormorant_Garamond({ subsets: ["latin"], weight: ["600"], style: ["normal", "italic"], display: "swap" });
 
 type Props = {
   slug: string;
@@ -59,18 +64,18 @@ function Tile({
       type="button"
       onClick={onClick}
       aria-label={ariaLabel}
-      className={`group flex flex-col items-center gap-2 rounded-lg border py-3 cursor-pointer transition hover:border-neon-lime hover:bg-neon-lime/10 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-lime/50 ${
-        active ? "border-neon-lime bg-neon-lime/10" : "border-border"
+      className={`group flex flex-col items-center gap-2 rounded-xl border py-3 cursor-pointer transition hover:-translate-y-0.5 hover:border-[#c49a3c]/60 hover:bg-[#faf8f3] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c49a3c]/50 ${
+        active ? "border-[#c49a3c]/60 bg-[#faf8f3]" : "border-[#c49a3c]/25"
       }`}
     >
       <span
-        className={`w-10 h-10 rounded-lg flex items-center justify-center transition group-hover:bg-neon-lime group-hover:text-white ${
-          active ? "bg-neon-lime text-white" : "bg-event-gold/10 text-event-gold"
+        className={`w-10 h-10 rounded-full flex items-center justify-center transition group-hover:bg-[#14245a] group-hover:text-[#dcb45c] ${
+          active ? "bg-[#14245a] text-[#dcb45c]" : "bg-[#c49a3c]/10 text-[#a8852f]"
         }`}
       >
         {icon}
       </span>
-      <span className="text-[10px] text-muted-foreground tracking-wider uppercase whitespace-nowrap transition group-hover:text-gray-900">
+      <span className="text-[10px] font-semibold text-slate-500 tracking-wider uppercase whitespace-nowrap transition group-hover:text-[#14245a]">
         {label}
       </span>
     </button>
@@ -83,7 +88,7 @@ export default function ShareButtons({
   place,
   siteUrl,
   variant = "card",
-  title = "Share Event",
+  title = "Share event",
   subtitle,
   className = "",
 }: Props) {
@@ -147,11 +152,13 @@ export default function ShareButtons({
   const isCard = variant === "card";
 
   return (
-    <div className={`${isCard ? "border border-gray-200 rounded-lg p-4 sm:p-6" : ""} ${className}`}>
+    <div className={`${isCard ? "rounded-2xl border border-[#c49a3c]/25 p-4 sm:p-6" : ""} ${className}`}>
       {isCard ? (
-        <div className="flex items-center gap-2 mb-4 sm:mb-5 border-b border-border pb-3 sm:pb-4">
-          <Share2 size={20} className="text-event-gold" aria-hidden />
-          <h3 className="font-display text-2xl sm:text-3xl tracking-wide uppercase">{title}</h3>
+        <div className="flex items-center gap-3 mb-4 sm:mb-5 border-b border-[#c49a3c]/30 pb-3 sm:pb-4">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#14245a] text-[#dcb45c]" aria-hidden>
+            <Share2 size={16} />
+          </span>
+          <h3 className={`${serif.className} text-3xl font-semibold text-[#14245a] lg:text-4xl`}>{title}</h3>
         </div>
       ) : (
         <p className="text-sm font-bold text-gray-900">{title}</p>
