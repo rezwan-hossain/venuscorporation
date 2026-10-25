@@ -1,4 +1,6 @@
 // module/legal/components/TermsAndConditionsContent.tsx
+import { contactDetails } from "@/config/contact";
+
 const sections = [
   {
     title: "1. Acceptance of Terms",
@@ -144,9 +146,9 @@ const sections = [
     content: `
       For any questions or concerns regarding these Terms and Conditions, please contact us at:
       
-      Email: info@venuscorporation.org
-      Phone: +8801862221943
-      Address: House-32,Road-08,Block-H,Mirpur-2
+      Email: ${contactDetails.email}
+      Phone: ${contactDetails.phones[0].label}
+      Address: ${contactDetails.address}
     `,
   },
 ];

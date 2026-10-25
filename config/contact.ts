@@ -1,8 +1,8 @@
-// module/contact/contact-details.ts
+// config/contact.ts
 //
-// Venus Corporation's contact details, used by the /contact page.
-// (The footer and the homepage's closing section have their own copies of
-// the main phone number and email — update those too if these change.)
+// Venus Corporation's contact details — edit them here.
+// Used by: the Contact page (/contact), the site footer and the floating
+// WhatsApp button. The first phone number is the main one.
 
 export const contactDetails = {
   phones: [
@@ -16,9 +16,12 @@ export const contactDetails = {
   address: "House-32, Road-08, Block-H, Mirpur-2, Dhaka",
   // What Google Maps searches for in the embedded map
   mapQuery: "Mirpur-2, Dhaka, Bangladesh",
+  // Social profiles (footer + Contact page). Replace "#" with your real links;
+  // remove a line to hide that icon.
   social: [
     { label: "Facebook", href: "#" },
     { label: "Instagram", href: "#" },
+    { label: "X", href: "#" },
     { label: "YouTube", href: "#" },
   ],
 };

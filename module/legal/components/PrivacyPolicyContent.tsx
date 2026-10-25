@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Mail,
 } from "lucide-react";
+import { contactDetails } from "@/config/contact";
 
 const sections = [
   {
@@ -114,9 +115,9 @@ const sections = [
     content: `
       If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:
       
-      Email: info@venuscorporation.org
-      Phone: +880 186-2221943
-      Address: House-32,Road-08,Block-H,Mirpur-2
+      Email: ${contactDetails.email}
+      Phone: ${contactDetails.phones[0].label}
+      Address: ${contactDetails.address}
       
       
     `,

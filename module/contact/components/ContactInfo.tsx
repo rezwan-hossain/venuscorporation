@@ -3,9 +3,9 @@
 // The navy contact card on /contact: call, email, WhatsApp, office address
 // and social links, with the gold swoosh in the corner.
 
-import { Facebook, Instagram, Mail, MapPin, MessageCircle, Phone, Youtube } from "lucide-react";
+import { Facebook, Instagram, Mail, MapPin, MessageCircle, Phone, Twitter, Youtube } from "lucide-react";
 
-import { contactDetails } from "../contact-details";
+import { contactDetails } from "@/config/contact";
 
 const NAVY = "#14245a";
 const NAVY_DEEP = "#0d1840";
@@ -13,7 +13,7 @@ const GOLD = "#c49a3c";
 const GOLD_LIGHT = "#dcb45c"; // brighter gold for text on navy
 const SERIF = { fontFamily: "var(--font-contact-serif)" } as const;
 
-const socialIcons = { Facebook, Instagram, YouTube: Youtube } as const;
+const socialIcons = { Facebook, Instagram, X: Twitter, YouTube: Youtube } as const;
 
 /** One row: gold icon circle · small label · value(s). */
 function InfoRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {

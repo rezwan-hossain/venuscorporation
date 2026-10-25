@@ -6,7 +6,7 @@
 //   3. Map — the Mirpur office
 // (Small screens: everything stacks; the form comes right after the card.)
 //
-// Contact details live in module/contact/contact-details.ts.
+// Contact details live in config/contact.ts.
 
 import { Cormorant_Garamond } from "next/font/google";
 import { Star } from "lucide-react";
@@ -14,7 +14,7 @@ import { Star } from "lucide-react";
 import { cta } from "@/module/home/business/data-v3";
 import ContactInfo from "../components/ContactInfo";
 import ContactForm from "../components/ContactForm";
-import { contactDetails } from "../contact-details";
+import { contactDetails } from "@/config/contact";
 
 // The business card's elegant serif — loaded for this page only.
 const serif = Cormorant_Garamond({

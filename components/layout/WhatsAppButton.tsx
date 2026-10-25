@@ -4,10 +4,10 @@
 // AppLayout). Opens WhatsApp with a friendly message already typed.
 //   - WhatsApp-green circle with the logo and a soft pulse ring
 //   - Large screens: a label card slides out to the left on hover / focus
-// Server component, no JavaScript. The number lives in
-// module/contact/contact-details.ts (`whatsapp`).
+// Server component, no JavaScript. The number lives in config/contact.ts
+// (`whatsapp`).
 
-import { contactDetails } from "@/module/contact/contact-details";
+import { contactDetails } from "@/config/contact";
 
 const MESSAGE =
   "Hi Venus Corporation! I'd like to know more about your events.";
@@ -49,7 +49,7 @@ export default function WhatsAppButton() {
       </span>
 
       {/* The round button */}
-      <span className="relative flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/40 ring-1 ring-[#dcb45c] ring-offset-2 ring-offset-white transition duration-300 group-hover:scale-105 group-hover:bg-[#1ebe5b] group-hover:ring-[#c49a3c] group-focus-visible:ring-[#14245a]">
+      <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/40 ring-1 ring-[#dcb45c] ring-offset-2 ring-offset-white transition duration-300 group-hover:scale-105 group-hover:bg-[#1ebe5b] group-hover:ring-[#c49a3c] group-focus-visible:ring-[#14245a]">
         {/* Soft pulse ring (off for reduced motion) */}
         <span
           className="absolute inset-0 animate-ping rounded-full bg-[#25D366] opacity-30 [animation-duration:2.5s] motion-reduce:hidden"

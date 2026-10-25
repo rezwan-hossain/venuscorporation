@@ -5,6 +5,8 @@
 // comes from data-v3.ts, so editing that file updates v3, v4 and v5.
 // No database.
 
+import { contactDetails } from "@/config/contact";
+
 /** Unsplash photo (allowed in next.config.ts) at a given width. */
 const photo = (id: string, w = 1600) =>
   `https://images.unsplash.com/photo-${id}?w=${w}&q=80&auto=format&fit=crop`;
@@ -107,5 +109,5 @@ export const rsvp = {
   title: "Tell us about your occasion",
   text: "Share the date, the number of guests and what you have in mind. We'll reply within one working day with ideas and a clear quote.",
   primary: { label: "Request a proposal", href: "/contact" },
-  phone: { label: "+880 1862 221943", href: "tel:+8801862221943" },
+  phone: contactDetails.phones[0],
 };

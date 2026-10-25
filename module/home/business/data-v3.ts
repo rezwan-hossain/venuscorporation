@@ -11,6 +11,8 @@
 // Numbers, client names and testimonials are placeholders: replace them
 // with real ones before going live.
 
+import { contactDetails } from "@/config/contact";
+
 /** Unsplash photo (allowed in next.config.ts) at a given width. */
 const photo = (id: string, w = 1200) =>
   `https://images.unsplash.com/photo-${id}?w=${w}&q=80&auto=format&fit=crop`;
@@ -154,10 +156,10 @@ export const cta = {
   title: "Let's plan your next event",
   text: "Tell us the occasion, the date and the number of guests — we'll come back with ideas and a clear quote.",
   primary: { label: "Plan your event", href: "/contact" },
-  secondary: { label: "Call us", href: "tel:+8801862221943" },
-  // Used by the homepage's closing section
-  phone: "+880 1862 221943",
-  email: "info@venuscorporation.org",
+  secondary: { label: "Call us", href: contactDetails.phones[0].href },
+  // Used by the homepage's closing section (contact details: config/contact.ts)
+  phone: contactDetails.phones[0].label,
+  email: contactDetails.email,
   promises: ["Free first consultation", "Reply within one working day", "Clear, itemised quote"],
   background: photo("1464366400600-7168b8af9bc3", 2000), // decorated reception hall
 };

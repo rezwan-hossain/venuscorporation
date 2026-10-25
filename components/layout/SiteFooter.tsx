@@ -17,6 +17,7 @@ import { Cormorant_Garamond } from "next/font/google";
 
 import { navItems } from "./navigation";
 import { brand, services } from "@/module/home/business/data-v3";
+import { contactDetails } from "@/config/contact";
 import CurrentYear from "../ui/CurrentYear";
 
 // The business card's elegant serif (tagline + motto).
@@ -34,12 +35,11 @@ const GOLD = "#c49a3c";
 const GOLD_LIGHT = "#dcb45c"; // brighter gold for text on navy
 const SERIF = { fontFamily: "var(--font-footer-serif)" } as const;
 
-const socialIcons = [
-  { icon: Facebook, label: "Facebook", href: "#" },
-  { icon: Instagram, label: "Instagram", href: "#" },
-  { icon: Twitter, label: "Twitter", href: "#" },
-  { icon: Youtube, label: "YouTube", href: "#" },
-];
+// Social links: config/contact.ts (`social`). Icon per label.
+const SOCIAL_ICON = { Facebook, Instagram, X: Twitter, YouTube: Youtube } as const;
+const socialIcons = contactDetails.social
+  .filter((s) => s.label in SOCIAL_ICON)
+  .map((s) => ({ ...s, icon: SOCIAL_ICON[s.label as keyof typeof SOCIAL_ICON] }));
 
 const helpLinks = [
   { label: "Support", href: "/contact" },
@@ -48,10 +48,11 @@ const helpLinks = [
   { label: "Refund Policy", href: "/terms-and-conditions" },
 ];
 
+// Contact details: config/contact.ts (the first phone number is the main one).
 const contact = {
-  email: "info@venuscorporation.org",
-  phone: { label: "+880 1862 221943", href: "tel:+8801862221943" },
-  address: "House-32, Road-08, Block-H, Mirpur-2, Dhaka",
+  email: contactDetails.email,
+  phone: contactDetails.phones[0],
+  address: contactDetails.address,
 };
 
 /** "Exhibitions & Trade Shows" → "exhibitions-trade-shows" (anchor on /services). */
