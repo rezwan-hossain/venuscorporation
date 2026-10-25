@@ -92,6 +92,7 @@ const PHOTOS = [
   "1535131749006-b7f58c99034b",
   "1551698618-1dfe5d97d256",
   "1483721310020-03333e577078",
+  "1540575467063-178a50c2df87", // 15: conference audience (business summit)
 ];
 
 // Bangladeshi mobile, the format checkout stores (BD_PHONE_REGEX).
@@ -192,6 +193,7 @@ const ORGANIZERS = [
   { name: "Dhaka Runners Club", email: "info@dhakarunners.example", phone: "01711000001" },
   { name: "Bengal Marathon Foundation", email: "contact@bengalmarathon.example", phone: "01711000002" },
   { name: "Chattogram Sports Alliance", email: "hello@ctgsports.example", phone: "01711000003" },
+  { name: "Venus Corporation", email: "events@venuscorporation.example", phone: "01711000004" },
 ];
 
 function nextDecember16() {
@@ -203,23 +205,23 @@ function nextDecember16() {
 
 const EVENTS: EventSeed[] = [
   {
-    name: "Dhaka City Marathon",
-    slug: "dhaka-city-marathon",
+    name: "Narsingdi Business Summit 2026",
+    slug: "narsingdi-business-summit-2026",
     day: eventDay(45),
-    time: "06:00",
-    address: "Hatirjheel, Dhaka, Bangladesh",
+    time: "09:30",
+    address: "Narsingdi Sadar, Narsingdi, Bangladesh",
     eventType: "LIVE",
-    organizer: 0,
+    organizer: 3,
     status: "ACTIVE",
-    photo: 0,
-    shortDesc: "The biggest city marathon in Dhaka, from a 5K fun run to the full 42K.",
+    photo: 15,
+    shortDesc: "A one-day summit for business leaders, entrepreneurs and investors from the Narsingdi region.",
     description:
-      "Join the biggest marathon in Dhaka! Run around the Hatirjheel waterfront with thousands of runners. Categories for every fitness level, from a 5K fun run to the full 42K marathon. Finisher medals, event t-shirts and refreshments for every participant.",
+      "The Narsingdi Business Summit brings together business leaders, entrepreneurs, manufacturers and investors for a day of keynotes, panel discussions and B2B networking. Hear from industry leaders on trade, textiles, finance and technology, meet potential partners in pre-booked meetings, and close the day at the networking dinner. Lunch, refreshments and a delegate kit are included with every pass.",
+    // `distance` is shown as the package tag — here it's the pass type.
     packages: [
-      { name: "Fun Run", distance: "5K", price: 800, availableSlots: 500 },
-      { name: "Challenge", distance: "10K", price: 1200, availableSlots: 300 },
-      { name: "Half Marathon", distance: "21K", price: 1800, availableSlots: 200 },
-      { name: "Full Marathon", distance: "42K", price: 2500, availableSlots: 100 },
+      { name: "General Pass", distance: "Day pass", price: 1500, availableSlots: 400 },
+      { name: "Business Pass", distance: "Day + networking", price: 3000, availableSlots: 200 },
+      { name: "VIP Pass", distance: "All access + dinner", price: 6000, availableSlots: 50 },
     ],
     orders: 48,
   },

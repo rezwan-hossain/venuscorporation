@@ -35,14 +35,8 @@ export const summitHero = {
     title: "Venus Corporation showreel",
   } as { url: string; title: string } | null,
 
-  // The white bar under the hero: the next event on the calendar
-  nextEvent: {
-    name: "Dhaka Business Summit 2026",
-    venue: "Bangabandhu International Conference Center",
-    date: "12 Dec 2026",
-    href: "/contact",
-    linkLabel: "Summit details",
-  },
+  // The white bar under the hero shows the next upcoming event from the
+  // database (see NextEventInfo in components/SummitHero.tsx).
 };
 
 // ─── (previous hero) The invitation card ──────────────
