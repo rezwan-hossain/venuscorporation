@@ -11,7 +11,7 @@ import { Cormorant_Garamond } from "next/font/google";
 import { ArrowRight, Camera, Play } from "lucide-react";
 
 import Gallery from "../components/Gallery";
-import VideoCard from "../components/VideoCard";
+import VideoTheater from "../components/VideoTheater";
 import { galleryVideos } from "../videos";
 import type { GalleryImage } from "@/types/gallery";
 
@@ -115,40 +115,33 @@ const GalleryPage = ({ images }: GalleryPageProps) => {
 
 export default GalleryPage;
 
-/** "Watch our events": the first video large on the left, the rest stacked beside it. */
+/** "Watch our events": cinema-style band — the screen and a playlist (VideoTheater). */
 function VideoSection() {
-  const [featured, ...rest] = galleryVideos;
   return (
-    <section className="pb-24 lg:pb-32">
+    <section className="relative isolate mb-24 overflow-hidden py-20 lg:mb-32 lg:py-28" style={{ background: "radial-gradient(120% 80% at 50% 0%, #1b2d6b 0%, #0d1840 55%, #080f2b 100%)" }}>
+      {/* Soft gold "projector" glow at the top (decorative) */}
+      <div aria-hidden className="absolute -top-40 left-1/2 -z-10 h-80 w-[44rem] max-w-full -translate-x-1/2 rounded-full opacity-20 blur-3xl" style={{ background: GOLD }} />
+
       <div className={container}>
         <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
           <div>
-            <p className="flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: GOLD }}>
-              <Play size={11} fill={GOLD} strokeWidth={0} aria-hidden />
+            <p className="flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: GOLD_LIGHT }}>
+              <Play size={11} fill={GOLD_LIGHT} strokeWidth={0} aria-hidden />
               Event films
-              <span className="h-px w-12" style={{ background: GOLD }} aria-hidden />
+              <span className="h-px w-12" style={{ background: GOLD_LIGHT }} aria-hidden />
             </p>
-            <h2 className="mt-4 text-4xl leading-[1.1] font-semibold sm:text-5xl" style={{ ...SERIF, color: NAVY }}>
+            <h2 className="mt-4 text-4xl leading-[1.1] font-semibold text-white sm:text-5xl" style={SERIF}>
               Watch our{" "}
-              <em className="font-medium" style={{ color: GOLD }}>
+              <em className="font-medium" style={{ color: GOLD_LIGHT }}>
                 events.
               </em>
             </h2>
           </div>
-          <p className="max-w-sm text-slate-500 sm:text-right">The atmosphere, in motion — a few highlights from recent events.</p>
+          <p className="max-w-sm text-white/60 sm:text-right">The atmosphere, in motion — a few highlights from recent events.</p>
         </div>
 
-        <div className={`mt-12 grid gap-5 ${rest.length ? "lg:grid-cols-3" : ""}`}>
-          <div className={rest.length ? "lg:col-span-2" : ""}>
-            <VideoCard video={featured} featured />
-          </div>
-          {rest.length > 0 && (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
-              {rest.map((v) => (
-                <VideoCard key={v.url} video={v} />
-              ))}
-            </div>
-          )}
+        <div className="mt-12">
+          <VideoTheater videos={galleryVideos} />
         </div>
       </div>
     </section>
