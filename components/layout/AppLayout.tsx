@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import dynamic from "next/dynamic";
 
 import SiteHeader from "./header/SiteHeader";
+import WhatsAppButton from "./WhatsAppButton";
 
 const SiteFooter = dynamic(() => import("./SiteFooter"), {
   ssr: true,
@@ -33,6 +34,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <Suspense fallback={<div className="h-48 bg-[#0b1433]" />}>
         <SiteFooter />
       </Suspense>
+
+      {/* Floating "Chat on WhatsApp" button, every page */}
+      <WhatsAppButton />
     </>
   );
 }
