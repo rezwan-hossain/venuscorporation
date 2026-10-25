@@ -21,22 +21,22 @@
 //   4. How we plan — path cards
 //      Venue & vendor partners — module/home/components/VenuePartners.tsx
 //   5. Signature moments — module/home/components/SignatureMoments.tsx
-//      Featured work
+//      Featured work — module/home/components/FeaturedWork.tsx
 //   6. Testimonials
 //      Gallery — module/home/components/Gallery.tsx
 //   7. FAQ
 //   8. Call to action — module/home/components/ContactCta.tsx
 
 import { Suspense } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Cormorant_Garamond } from "next/font/google";
 import { ArrowRight, Phone, Plus, Quote, Star } from "lucide-react";
 
-import { projects, testimonials as groupTestimonials } from "../business/data";
+import { testimonials as groupTestimonials } from "../business/data";
 import { cta, stats, steps } from "../business/data-v3";
 import { faqs } from "../business/data-v5";
 import ContactCta from "../components/ContactCta";
+import FeaturedWork from "../components/FeaturedWork";
 import Gallery from "../components/Gallery";
 import ServiceList from "../components/ServiceList";
 import SignatureMoments from "../components/SignatureMoments";
@@ -299,90 +299,6 @@ function PlanningPath() {
           </a>
         </div>
       </div>
-    </section>
-  );
-}
-
-// ════════════════════════════════════════════════════════════════════════
-//  Featured work — numbered list: number · title + client · category · photo
-//  (same as v2's "Selected projects")
-// ════════════════════════════════════════════════════════════════════════
-
-function FeaturedWork() {
-  return (
-    <section className={`${container} py-24 lg:py-32`}>
-      <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-        <div>
-          {/* Small pill label with a gold dot */}
-          <span
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.25em]"
-            style={{ color: NAVY }}
-          >
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ background: GOLD }}
-              aria-hidden
-            />
-            Featured work
-          </span>
-          {/* Uses the site's heading font (bold condensed capitals) */}
-          <h2
-            className="mt-5 text-4xl leading-[1.05] tracking-wide uppercase sm:text-5xl"
-            style={{ color: NAVY }}
-          >
-            Selected projects
-          </h2>
-        </div>
-        <Link
-          href="/contact"
-          className="inline-flex items-center gap-2 text-sm font-semibold hover:underline"
-          style={{ color: "#a8852f" }}
-        >
-          Start your project <ArrowRight size={16} />
-        </Link>
-      </div>
-
-      {/* One row per project; the photo shows on large screens only */}
-      <ul className="mt-12 border-t border-slate-200">
-        {projects.map((p, i) => (
-          <li key={p.title} className="group border-b border-slate-200">
-            <article className="grid items-center gap-5 py-7 transition-colors sm:grid-cols-[4rem_1fr_auto] lg:grid-cols-[5rem_1fr_12rem_14rem] lg:px-4 lg:hover:bg-[#faf8f3]">
-              <span
-                className="text-3xl italic lining-nums"
-                style={{ ...SERIF, color: GOLD }}
-              >
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <div>
-                <h3
-                  className="text-2xl tracking-wide uppercase sm:text-3xl"
-                  style={{ color: NAVY }}
-                >
-                  {p.title}
-                </h3>
-                <p className="mt-1 text-slate-500">
-                  {p.client} · {p.result}
-                </p>
-              </div>
-              <span
-                className="w-fit rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-widest"
-                style={{ borderColor: `${GOLD}99`, color: "#a8852f" }}
-              >
-                {p.category}
-              </span>
-              <div className="relative hidden aspect-[16/10] overflow-hidden rounded-2xl lg:block">
-                <Image
-                  src={p.image}
-                  alt=""
-                  fill
-                  sizes="14rem"
-                  className="object-cover transition duration-500 group-hover:scale-105"
-                />
-              </div>
-            </article>
-          </li>
-        ))}
-      </ul>
     </section>
   );
 }
