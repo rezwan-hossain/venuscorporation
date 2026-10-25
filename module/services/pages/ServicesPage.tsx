@@ -16,15 +16,16 @@
 //   2. Services — two-column cards
 //   3. How we work — connected timeline on navy
 //   4. FAQ — heading left, questions right
-//   5. Call to action — full-width navy with the swoosh
+//   5. Call to action — the homepage's closing section (ContactCta)
 //
 // No client JavaScript: the FAQ uses the native <details> element.
 
 import Image from "next/image";
 import Link from "next/link";
 import { Cormorant_Garamond } from "next/font/google";
-import { ArrowRight, ArrowUpRight, Mail, Phone, Plus, Star } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Phone, Plus, Star } from "lucide-react";
 
+import ContactCta from "@/module/home/components/ContactCta";
 import { brand, cta, services, steps } from "@/module/home/business/data-v3";
 import { faqs } from "@/module/home/business/data-v5";
 
@@ -62,7 +63,7 @@ export default function ServicesPage() {
       <ServiceCards />
       <HowWeWork />
       <Faq />
-      <CallToAction />
+      <ContactCta />
     </div>
   );
 }
@@ -128,6 +129,14 @@ function Hero() {
               <Phone size={16} style={{ color: GOLD }} /> {cta.secondary.label}
             </a>
           </div>
+          <ul className="mt-8 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-x-6">
+            {cta.promises.map((p) => (
+              <li key={p} className="flex items-center gap-2 text-sm font-medium" style={{ color: NAVY }}>
+                <Star size={11} fill={GOLD} strokeWidth={0} aria-hidden />
+                {p}
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* 1.2 Photo grid — each tile jumps to its service below */}
@@ -146,7 +155,7 @@ function Hero() {
                     {num(i)}
                   </span>
                   <span className="absolute inset-x-4 bottom-3.5 flex items-end justify-between gap-2">
-                    <span className="text-lg leading-tight font-semibold text-white sm:text-xl" style={SERIF}>
+                    <span className="text-xl leading-tight font-semibold text-white sm:text-2xl" style={SERIF}>
                       {s.name}
                     </span>
                     <ArrowRight size={16} className="mb-0.5 shrink-0 rotate-90 text-white/70 transition group-hover:translate-y-0.5 group-hover:text-[#dcb45c]" aria-hidden />
@@ -179,11 +188,13 @@ function ServiceCards() {
       <ul className="mt-14 grid gap-8 md:grid-cols-2 lg:gap-10">
         {services.map((s, i) => (
           <li key={s.name} id={serviceSlug(s.name)} className="scroll-mt-28">
-            <article className="group flex h-full flex-col overflow-hidden rounded-[2rem] border bg-white transition duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-[#14245a]/10" style={{ borderColor: `${GOLD}33` }}>
+            <article className="group flex h-full flex-col overflow-hidden rounded-[2rem] border bg-white transition duration-500 hover:-translate-y-1 hover:border-[#c49a3c]/50 hover:shadow-2xl hover:shadow-[#14245a]/10" style={{ borderColor: `${GOLD}33` }}>
               {/* 2.1 Photo with number + name */}
               <div className="relative aspect-[16/10] overflow-hidden" style={{ background: NAVY }}>
                 <Image src={s.image} alt="" fill sizes="(min-width: 768px) 45vw, 92vw" className="object-cover transition duration-700 group-hover:scale-105" />
                 <div aria-hidden className="absolute inset-0 bg-linear-to-t from-[#0d1840]/85 via-[#0d1840]/10 to-transparent" />
+                {/* Thin gold frame that fades in on hover */}
+                <div aria-hidden className="pointer-events-none absolute inset-3 rounded-[1.5rem] border opacity-0 transition duration-500 group-hover:opacity-100" style={{ borderColor: `${GOLD_LIGHT}99` }} />
                 <div className="absolute inset-x-0 bottom-0 flex items-end gap-4 p-7">
                   <span className="text-5xl leading-none italic lining-nums" style={{ ...SERIF, color: GOLD_LIGHT }}>
                     {num(i)}
@@ -317,60 +328,6 @@ function Faq() {
           </li>
         ))}
       </ul>
-    </section>
-  );
-}
-
-// ════════════════════════════════════════════════════════════════════════
-//  5. Call to action — full-width navy with the swoosh
-// ════════════════════════════════════════════════════════════════════════
-
-function CallToAction() {
-  return (
-    <section className="relative overflow-hidden" style={{ background: NAVY }}>
-      <svg viewBox="0 0 400 160" className="pointer-events-none absolute right-0 bottom-0 w-[36rem] max-w-[95%]" aria-hidden>
-        <path d="M0 160 C120 142 235 92 400 22 L400 160 Z" fill="#f4ecdb" opacity="0.12" />
-        <path d="M40 160 C175 132 280 82 400 34" fill="none" stroke={GOLD} strokeWidth="2.5" />
-        <path d="M120 160 C225 138 305 104 400 66" fill="none" stroke={GOLD} strokeWidth="1.25" opacity="0.8" />
-        <path d="M235 160 C305 142 352 122 400 100 L400 160 Z" fill={NAVY_DEEP} />
-      </svg>
-
-      <div className={`${container} relative grid gap-12 py-24 lg:grid-cols-[1.4fr_1fr] lg:items-end lg:py-32`}>
-        <div>
-          <GoldLabel light>
-            {brand.motto.left} · {brand.motto.right}
-          </GoldLabel>
-          <h2 className="mt-5 text-5xl leading-[1.05] font-semibold text-white sm:text-6xl" style={SERIF}>
-            Not sure which service fits?{" "}
-            <em className="font-medium" style={{ color: GOLD_LIGHT }}>
-              Let&apos;s talk.
-            </em>
-          </h2>
-          <p className="mt-6 max-w-xl text-lg text-white/70">{cta.text}</p>
-        </div>
-
-        <ul className="space-y-3">
-          <li>
-            <Link
-              href={cta.primary.href}
-              className="flex items-center justify-between rounded-2xl px-6 py-5 font-semibold transition hover:brightness-110"
-              style={{ background: GOLD_LIGHT, color: NAVY_DEEP }}
-            >
-              {cta.primary.label} <ArrowRight size={18} />
-            </Link>
-          </li>
-          <li>
-            <a href={cta.secondary.href} className="flex items-center gap-3 rounded-2xl border border-white/20 px-6 py-5 text-white transition hover:bg-white/10">
-              <Phone size={18} style={{ color: GOLD_LIGHT }} /> {cta.secondary.label}
-            </a>
-          </li>
-          <li>
-            <Link href="/contact" className="flex items-center gap-3 rounded-2xl border border-white/20 px-6 py-5 text-white transition hover:bg-white/10">
-              <Mail size={18} style={{ color: GOLD_LIGHT }} /> Send us a message
-            </Link>
-          </li>
-        </ul>
-      </div>
     </section>
   );
 }
