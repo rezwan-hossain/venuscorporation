@@ -42,25 +42,33 @@ const serviceSlug = (name: string) =>
 export default function ServiceList() {
   return (
     <section id="services" className={`${serif.variable} ${container} scroll-mt-24 py-24 lg:py-32`}>
-      {/* Heading: "— ★ —" ornament, gold label, serif title */}
-      <div className="text-center">
-        <div className="flex items-center justify-center gap-3" aria-hidden>
-          <span className="h-px w-12" style={{ background: GOLD }} />
-          <Star size={14} fill={GOLD} strokeWidth={0} />
-          <span className="h-px w-12" style={{ background: GOLD }} />
+      {/* Heading: label + serif title (left), intro + count (right) */}
+      <div className="mx-auto flex max-w-6xl flex-col justify-between gap-6 lg:flex-row lg:items-end">
+        <div>
+          <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: GOLD }}>
+            <Star size={11} fill={GOLD} strokeWidth={0} aria-hidden />
+            Our services
+            <span className="h-px w-12" style={{ background: GOLD }} aria-hidden />
+          </p>
+          <h2 className="mt-4 text-4xl leading-[1.1] font-semibold sm:text-5xl" style={{ ...SERIF, color: NAVY }}>
+            Every occasion,{" "}
+            <em className="font-medium" style={{ color: GOLD }}>
+              handled with care.
+            </em>
+          </h2>
         </div>
-        <p className="mt-5 text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: GOLD }}>
-          Our services
-        </p>
-        <h2 className="mt-3 text-4xl leading-[1.1] font-semibold sm:text-5xl" style={{ ...SERIF, color: NAVY }}>
-          Every occasion,{" "}
-          <em className="font-medium" style={{ color: GOLD }}>
-            handled with care.
-          </em>
-        </h2>
+        <div className="flex items-end gap-6 lg:max-w-sm lg:flex-col lg:items-end lg:gap-3 lg:text-right">
+          <p className="text-slate-500">One team for every kind of event — open a service to see what we handle.</p>
+          <p className="shrink-0 text-sm text-slate-400">
+            <span className="text-3xl leading-none font-semibold lining-nums" style={{ ...SERIF, color: NAVY }}>
+              {String(services.length).padStart(2, "0")}
+            </span>{" "}
+            services
+          </p>
+        </div>
       </div>
 
-      <ul className={`${styles.list} mx-auto mt-14 max-w-6xl space-y-3`}>
+      <ul className={`${styles.list} mx-auto mt-12 max-w-6xl space-y-2 border-t pt-2`} style={{ borderColor: `${GOLD}33` }}>
         {services.map((s, i) => (
           <li key={s.name}>
             <details
@@ -81,6 +89,13 @@ export default function ServiceList() {
                   </span>
                   {/* Teaser: what's included (hidden once the row is open) */}
                   <span className="mt-1 hidden truncate text-sm text-slate-400 group-open:hidden md:block">{s.includes.join(" · ")}</span>
+                </span>
+                {/* Small photo that fades in on hover (closed rows, larger screens) */}
+                <span
+                  className="relative hidden h-14 w-20 shrink-0 overflow-hidden rounded-xl opacity-0 shadow-md transition duration-300 group-hover:opacity-100 group-open:hidden md:block"
+                  aria-hidden
+                >
+                  <Image src={s.image} alt="" fill sizes="80px" className="object-cover" />
                 </span>
                 <span
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#c49a3c]/60 text-[#14245a] transition duration-300 group-hover:border-[#14245a] group-open:rotate-45 group-open:border-transparent group-open:bg-[#14245a] group-open:text-[#dcb45c]"
@@ -156,13 +171,13 @@ export default function ServiceList() {
         ))}
       </ul>
 
-      <div className="mt-12 text-center">
+      <div className="mt-10 text-center">
         <Link
           href="/services"
-          className="inline-flex items-center gap-2 text-sm font-semibold underline decoration-1 underline-offset-[6px] transition hover:decoration-2"
-          style={{ color: NAVY, textDecorationColor: GOLD }}
+          className="group inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold transition hover:bg-[#14245a] hover:text-white"
+          style={{ color: NAVY, boxShadow: `inset 0 0 0 1px ${GOLD}99` }}
         >
-          See all services <ArrowRight size={16} />
+          See all services <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
         </Link>
       </div>
     </section>
