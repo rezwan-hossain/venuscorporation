@@ -38,7 +38,18 @@ export const stats = [
 
 // ─── Clients ("Trusted by") ───────────────────────────
 
-export const clients = ["Northwind", "Bluepeak", "Orbit Telecom", "Harbor Bank", "Greenline", "Meridian", "Crescent Foods"];
+// Shown in the homepage "Trusted by" strip. Without a `logo`, the name is shown
+// as a wordmark. To use a real logo, add e.g. logo: "/clients/harbor-bank.png"
+// (put the file in public/clients/; a wide, transparent PNG or SVG works best).
+export const clients: { name: string; logo?: string }[] = [
+  { name: "Harbor Bank" },
+  { name: "Orbit Telecom" },
+  { name: "Crescent Foods" },
+  { name: "Northwind" },
+  { name: "Bluepeak" },
+  { name: "Greenline" },
+  { name: "Meridian" },
+];
 
 // ─── About ────────────────────────────────────────────
 

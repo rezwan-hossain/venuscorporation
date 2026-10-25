@@ -13,6 +13,7 @@
 //
 // Sections, top to bottom:
 //   1. Hero — its own component: module/home/components/SummitHero.tsx
+//      Trusted by — module/home/components/TrustedBy.tsx
 //      Who we are — module/home/components/WhoWeAre.tsx
 //   2. Services — module/home/components/ServiceList.tsx
 //   3. Numbers
@@ -39,6 +40,7 @@ import Gallery from "../components/Gallery";
 import ServiceList from "../components/ServiceList";
 import SignatureMoments from "../components/SignatureMoments";
 import SummitHero from "../components/SummitHero";
+import TrustedBy from "../components/TrustedBy";
 import UpcomingCorporateEvents from "../components/UpcomingCorporateEvents";
 import WhoWeAre from "../components/WhoWeAre";
 
@@ -66,6 +68,7 @@ export default function BusinessHomepage() {
     <div className={`${serif.variable} bg-white text-slate-600`}>
       <SummitHero />
       <WhoWeAre />
+      <TrustedBy />
       <ServiceList />
 
       {/* Real events from the database — the rest of the page doesn't wait for it */}
