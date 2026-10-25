@@ -429,7 +429,7 @@ model ShareClickDaily {
   day     String // YYYY-MM-DD, Asia/Dhaka
   eventId String
   place   String // "event" (event page) | "paid" (after paying)
-  channel String // "whatsapp" | "facebook" | "messenger" | "x" | "copy" | "native"
+  channel String // "whatsapp" | "facebook" | "messenger" | "x" | "instagram" | "copy" | "native"
   clicks  Int    @default(0)
   sharers Int    @default(0)
 

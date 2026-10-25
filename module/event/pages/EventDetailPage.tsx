@@ -2,9 +2,10 @@
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { Building2, Globe, Route, type LucideIcon } from "lucide-react";
+import Link from "next/link";
+import { Cormorant_Garamond } from "next/font/google";
+import { Building2, CalendarDays, ChevronRight, Clock, Globe, MapPin, Ticket, type LucideIcon } from "lucide-react";
 
-import { HeroText } from "@/components/ui/HeroText";
 import type { EventData } from "@/types/event";
 import EventDescription3 from "../components/EventDescription3";
 import ShareButtons from "../components/ShareButtons";
@@ -14,6 +15,19 @@ import { ViewContentTracker } from "@/components/tracking/ViewContentTracker";
 const CountdownTimer = dynamic(() => import("../components/CountdownTimer"), {
   loading: () => <div className="h-44 rounded-2xl bg-gray-100 animate-pulse" />,
 });
+
+// The business card's elegant serif — loaded for this page only. The
+// countdown and ticket components use it too (var(--font-event-serif)).
+const serif = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-event-serif",
+});
+const SERIF = { fontFamily: "var(--font-event-serif)" } as const;
+const NAVY = "#14245a";
+const GOLD = "#c49a3c";
 
 type EventDetailPageProps = {
   event: EventData;
@@ -69,7 +83,7 @@ const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
   const firstPackage = packages[0];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`${serif.variable} min-h-screen bg-white`}>
       {firstPackage && (
         <ViewContentTracker
           product={{
@@ -82,18 +96,37 @@ const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
         />
       )}
 
-      <div className="mt-42">
-        <HeroText
-          title={event.name}
-          date={formattedDate}
-          time={formattedTime}
-          location={event.address}
-        />
-      </div>
+      {/* Title band (light, so the fixed header's dark text stays readable) */}
+      <section className="pt-28 pb-10 sm:pt-36 lg:pt-40 lg:pb-12" style={{ background: "#faf8f3" }}>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm">
+            <Link href="/events" className="font-medium hover:underline" style={{ color: "#a8852f" }}>
+              Events
+            </Link>
+            <ChevronRight size={14} className="text-slate-400" aria-hidden />
+            <span className="truncate text-slate-500">{event.name}</span>
+          </nav>
+          <h1 className="mt-5 max-w-4xl text-4xl leading-[1.05] font-semibold text-balance sm:text-5xl lg:text-6xl" style={{ ...SERIF, color: NAVY }}>
+            {event.name}
+          </h1>
+          <ul className="mt-6 flex flex-wrap gap-2.5">
+            {[
+              { icon: CalendarDays, text: formattedDate },
+              { icon: Clock, text: formattedTime },
+              { icon: MapPin, text: event.address },
+            ].map(({ icon: Icon, text }) => (
+              <li key={text} className="inline-flex items-center gap-2 rounded-full border bg-white px-4 py-2 text-sm font-medium" style={{ borderColor: `${GOLD}40`, color: NAVY }}>
+                <Icon size={15} className="shrink-0" style={{ color: GOLD }} aria-hidden />
+                {text}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 lg:pb-24">
         {/* Banner (LCP element) */}
-        <div className="relative mt-4 overflow-hidden rounded-2xl">
+        <div className="relative mt-8 overflow-hidden rounded-2xl shadow-xl shadow-[#14245a]/10 lg:mt-10">
           <Image
             src={event.bannerImage}
             alt={event.name}
@@ -115,13 +148,13 @@ const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
             its own). Large screens: buy column on the right, spanning both
             rows so it stays sticky beside everything on the left. */}
         <div className="mt-8 grid grid-cols-1 gap-10 lg:mt-12 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[auto_1fr] lg:gap-x-14">
-          {/* Race info: quick facts first, then the full description */}
+          {/* Event info: quick facts first, then the full description */}
           <div className="min-w-0 space-y-10 lg:col-start-1 lg:row-start-1">
             <AtAGlance event={event} packages={packages} />
 
             <section>
-              <h2 className="text-3xl tracking-wide uppercase lg:text-4xl">
-                About the race
+              <h2 className="text-3xl font-semibold lg:text-4xl" style={{ ...SERIF, color: NAVY }}>
+                About the <em className="font-medium" style={{ color: GOLD }}>event</em>
               </h2>
               <div className="mt-5">
                 {styledDescription ? (
@@ -166,7 +199,7 @@ const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
                 eventName={event.name}
                 place="event"
                 siteUrl={process.env.NEXT_PUBLIC_SITE_URL}
-                subtitle="Running with friends? Send them this race."
+                subtitle="Coming with friends? Send them this event."
               />
             </div>
           )}
@@ -189,20 +222,20 @@ function AtAGlance({
       icon: Globe,
       label: "Format",
       value:
-        event.eventType === "VIRTUAL" ? "Virtual — run anywhere" : "In person",
+        event.eventType === "VIRTUAL" ? "Virtual — join from anywhere" : "In person",
     },
   ];
 
   if (packages.length > 0) {
     rows.push({
-      icon: Route,
-      label: "Distances",
+      icon: Ticket,
+      label: "Options",
       value: (
         <ul className="flex flex-wrap gap-2">
           {packages.map((p) => (
             <li
               key={p.id}
-              className="rounded-full border border-gray-200 px-3 py-0.5 text-xs font-semibold text-gray-700"
+              className="rounded-full border border-[#c49a3c]/40 bg-[#faf8f3] px-3 py-0.5 text-xs font-semibold text-[#14245a]"
             >
               {p.distance}
             </li>
@@ -234,21 +267,21 @@ function AtAGlance({
   }
 
   return (
-    <section className="rounded-2xl border border-gray-200">
-      <h2 className="border-b border-gray-200 px-5 py-4 text-xl tracking-wide uppercase sm:px-6">
-        At a glance
+    <section className="rounded-2xl border border-[#c49a3c]/25">
+      <h2 className="border-b border-[#c49a3c]/20 px-5 py-4 text-2xl font-semibold sm:px-6" style={{ ...SERIF, color: NAVY }}>
+        At a <em className="font-medium" style={{ color: GOLD }}>glance</em>
       </h2>
-      <dl className="divide-y divide-gray-100">
+      <dl className="divide-y divide-[#c49a3c]/10">
         {rows.map(({ icon: Icon, label, value }) => (
           <div
             key={label}
             className="flex flex-col gap-1.5 px-5 py-4 sm:flex-row sm:items-center sm:gap-6 sm:px-6"
           >
             <dt className="flex w-36 shrink-0 items-center gap-2.5 text-xs font-semibold uppercase tracking-widest text-gray-500">
-              <Icon className="h-4 w-4 text-gray-400" aria-hidden />
+              <Icon className="h-4 w-4 text-[#c49a3c]" aria-hidden />
               {label}
             </dt>
-            <dd className="text-sm font-medium text-gray-900">{value}</dd>
+            <dd className="text-sm font-medium text-[#14245a]">{value}</dd>
           </div>
         ))}
       </dl>

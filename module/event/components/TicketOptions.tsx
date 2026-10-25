@@ -53,12 +53,13 @@ export default function TicketOptions({
   return (
     <section
       aria-labelledby="tickets-heading"
-      className="border border-gray-200 rounded-lg p-4 lg:p-6"
+      className="rounded-2xl border border-[#c49a3c]/25 p-4 lg:p-6"
     >
-      <div className="flex items-end justify-between gap-4 mb-6 border-b border-neutral-900 pb-4">
+      <div className="flex items-end justify-between gap-4 mb-6 border-b border-[#c49a3c]/30 pb-4">
         <h3
           id="tickets-heading"
-          className="text-2xl lg:text-3xl tracking-wide uppercase"
+          className="text-3xl font-semibold text-[#14245a] lg:text-4xl"
+          style={{ fontFamily: "var(--font-event-serif)" }}
         >
           Tickets
         </h3>
@@ -129,7 +130,7 @@ function TicketCard({
   const body = (
     <div
       className={`relative flex min-h-[7.5rem] overflow-hidden rounded-xl ${
-        unavailable ? "bg-neutral-200" : "bg-[#1a1a1a]"
+        unavailable ? "bg-neutral-200" : "bg-[#14245a]"
       }`}
       style={{ mask: notchMask, WebkitMask: notchMask }}
     >

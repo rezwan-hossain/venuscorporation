@@ -11,7 +11,7 @@
 
 import { cleanCampaign } from "@/lib/traffic-source";
 
-export const SHARE_CHANNELS = ["whatsapp", "facebook", "messenger", "x", "copy", "native"] as const;
+export const SHARE_CHANNELS = ["whatsapp", "facebook", "messenger", "x", "instagram", "copy", "native"] as const;
 export type ShareChannel = (typeof SHARE_CHANNELS)[number];
 
 export const SHARE_PLACES = ["event", "paid"] as const;
@@ -27,6 +27,7 @@ export const CHANNEL_LABELS: Record<ShareChannel, string> = {
   facebook: "Facebook",
   messenger: "Messenger",
   x: "X / Twitter",
+  instagram: "Instagram",
   copy: "Copied link",
   native: "Phone share menu",
 };
@@ -58,6 +59,7 @@ const UTM_SOURCE: Partial<Record<ShareChannel, string>> = {
   facebook: "facebook",
   messenger: "messenger",
   x: "x",
+  instagram: "instagram",
 };
 
 /** The event link to share, tagged for this channel and place. */
@@ -70,7 +72,11 @@ export function shareLink(siteUrl: string, slug: string, channel: ShareChannel, 
   return url.toString();
 }
 
-/** Where a share button sends the browser (null = handled in the page: copy / native). */
+/**
+ * Where a share button sends the browser (null = handled in the page: copy / native).
+ * Instagram has no web "share a link" address: the page copies the link first,
+ * then this opens Instagram so it can be pasted into a story or message.
+ */
 export function shareTarget(channel: ShareChannel, link: string, text: string): string | null {
   const u = encodeURIComponent(link);
   switch (channel) {
@@ -82,6 +88,8 @@ export function shareTarget(channel: ShareChannel, link: string, text: string): 
       return `fb-messenger://share/?link=${u}`;
     case "x":
       return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${u}`;
+    case "instagram":
+      return "https://www.instagram.com/";
     default:
       return null;
   }

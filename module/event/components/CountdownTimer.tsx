@@ -63,11 +63,12 @@ const CountdownTimer = ({ targetDate }: CountdownTimerProps) => {
   ];
 
   return (
-    <div className="bg-[#1a1a1a] rounded-2xl p-4 sm:p-6 w-full ">
+    <div className="relative w-full overflow-hidden rounded-2xl p-4 shadow-xl shadow-[#14245a]/20 sm:p-6" style={{ background: "radial-gradient(120% 100% at 0% 0%, #1d3274 0%, #14245a 45%, #0d1840 100%)" }}>
       {/* Header */}
-      <div className="text-center border-b border-white/10 pb-6 mb-6 py-2">
-        <h3 className="text-white text-lg sm:text-2xl font-bold tracking-widest">
-          EVENT BEGINS IN
+      <div className="text-center border-b border-white/10 pb-5 mb-6 py-2">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#dcb45c]">Don&apos;t miss it</p>
+        <h3 className="mt-1 text-white text-2xl sm:text-3xl font-semibold" style={{ fontFamily: "var(--font-event-serif)" }}>
+          Event begins in
         </h3>
       </div>
 
@@ -76,12 +77,12 @@ const CountdownTimer = ({ targetDate }: CountdownTimerProps) => {
         {units.map(({ label, value }) => (
           <div
             key={label}
-            className="bg-[#2a2a2a] rounded-xl py-4 px-2 flex flex-col items-center justify-center"
+            className="rounded-xl border border-white/10 bg-white/[0.06] py-4 px-2 flex flex-col items-center justify-center"
           >
-            <span className="text-neon-lime text-3xl sm:text-4xl font-extrabold leading-none tabular-nums">
+            <span className="text-[#dcb45c] text-3xl sm:text-4xl font-extrabold leading-none tabular-nums">
               {pad(value)}
             </span>
-            <p className="text-[#aaaaaa] text-[10px] sm:text-xs tracking-widest mt-2 font-medium">
+            <p className="text-white/55 text-[10px] sm:text-xs tracking-widest mt-2 font-medium">
               {label}
             </p>
           </div>
