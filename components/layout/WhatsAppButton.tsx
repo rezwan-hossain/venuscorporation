@@ -36,9 +36,12 @@ export default function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with Venus Corporation on WhatsApp"
-      className="group fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex items-center outline-none sm:right-6 sm:bottom-6"
+      className="group pointer-events-none fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex items-center outline-none sm:right-6 sm:bottom-6"
     >
-      {/* Label card — slides out on hover / keyboard focus (large screens) */}
+      {/* Label card — slides out on hover / keyboard focus (large screens).
+          The link itself ignores the mouse (pointer-events-none); only the
+          round button below catches it, so the card opens only when the
+          cursor is on the button, not over the empty space beside it. */}
       <span className="pointer-events-none mr-3 hidden translate-x-2 rounded-2xl border border-[#c49a3c]/30 bg-white/95 px-4 py-2.5 text-right opacity-0 shadow-xl shadow-[#14245a]/15 backdrop-blur transition duration-300 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 lg:block">
         <span className="block text-[11px] font-semibold tracking-[0.2em] whitespace-nowrap text-[#a8852f] uppercase">
           Chat on WhatsApp
@@ -50,8 +53,11 @@ export default function WhatsAppButton() {
 
       {/* The button: navy medallion, gold logo, fine gold border, green "online" dot */}
       <span
-        className="relative flex h-14 w-14 items-center justify-center rounded-full text-[#dcb45c] shadow-xl shadow-[#14245a]/30 ring-1 ring-[#dcb45c]/70 transition duration-300 group-hover:-translate-y-0.5 group-hover:text-white group-hover:ring-[#dcb45c] group-focus-visible:ring-2 group-focus-visible:ring-[#dcb45c]"
-        style={{ background: "radial-gradient(circle at 30% 25%, #2a3f86 0%, #14245a 55%, #0d1840 100%)" }}
+        className="pointer-events-auto relative flex h-12 w-12 items-center justify-center rounded-full text-[#dcb45c] shadow-xl shadow-[#14245a]/30 ring-1 ring-[#dcb45c]/70 transition duration-300 group-hover:-translate-y-0.5 group-hover:text-white group-hover:ring-[#dcb45c] group-focus-visible:ring-2 group-focus-visible:ring-[#dcb45c]"
+        style={{
+          background:
+            "radial-gradient(circle at 30% 25%, #2a3f86 0%, #14245a 55%, #0d1840 100%)",
+        }}
       >
         {/* Soft gold glow, breathing slowly (off for reduced motion) */}
         <span
@@ -60,7 +66,10 @@ export default function WhatsAppButton() {
         />
         <WhatsAppLogo className="relative h-6 w-6 transition-transform duration-300 group-hover:scale-110" />
         {/* Online dot */}
-        <span className="absolute top-0.5 right-0.5 h-3 w-3 rounded-full border-2 border-white bg-[#25D366]" aria-hidden />
+        <span
+          className="absolute top-0.5 right-0.5 h-3 w-3 rounded-full border-2 border-white bg-[#25D366]"
+          aria-hidden
+        />
       </span>
     </a>
   );
