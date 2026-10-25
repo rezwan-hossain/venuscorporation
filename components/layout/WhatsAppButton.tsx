@@ -2,7 +2,8 @@
 //
 // Floating "Chat on WhatsApp" button, bottom-right on every page (added in
 // AppLayout). Opens WhatsApp with a friendly message already typed.
-//   - WhatsApp-green circle with the logo and a soft pulse ring
+//   - navy medallion with a gold WhatsApp logo, fine gold border, a slow
+//     gold glow and a small green "online" dot
 //   - Large screens: a label card slides out to the left on hover / focus
 // Server component, no JavaScript. The number lives in config/contact.ts
 // (`whatsapp`).
@@ -38,24 +39,28 @@ export default function WhatsAppButton() {
       className="group fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex items-center outline-none sm:right-6 sm:bottom-6"
     >
       {/* Label card — slides out on hover / keyboard focus (large screens) */}
-      <span className="pointer-events-none mr-3 hidden translate-x-2 rounded-2xl border border-[#c49a3c]/30 bg-white px-4 py-2.5 text-right opacity-0 shadow-xl shadow-[#14245a]/15 transition duration-300 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 lg:block">
-        <span className="block text-sm font-semibold whitespace-nowrap text-[#14245a]">
-          Chat with us on WhatsApp
+      <span className="pointer-events-none mr-3 hidden translate-x-2 rounded-2xl border border-[#c49a3c]/30 bg-white/95 px-4 py-2.5 text-right opacity-0 shadow-xl shadow-[#14245a]/15 backdrop-blur transition duration-300 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 lg:block">
+        <span className="block text-[11px] font-semibold tracking-[0.2em] whitespace-nowrap text-[#a8852f] uppercase">
+          Chat on WhatsApp
         </span>
-        <span className="mt-0.5 flex items-center justify-end gap-1.5 text-xs whitespace-nowrap text-slate-500">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#25D366]" aria-hidden />
-          Typically replies within an hour
+        <span className="mt-0.5 block text-sm font-semibold whitespace-nowrap text-[#14245a]">
+          We typically reply within an hour
         </span>
       </span>
 
-      {/* The round button */}
-      <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/40 ring-1 ring-[#dcb45c] ring-offset-2 ring-offset-white transition duration-300 group-hover:scale-105 group-hover:bg-[#1ebe5b] group-hover:ring-[#c49a3c] group-focus-visible:ring-[#14245a]">
-        {/* Soft pulse ring (off for reduced motion) */}
+      {/* The button: navy medallion, gold logo, fine gold border, green "online" dot */}
+      <span
+        className="relative flex h-14 w-14 items-center justify-center rounded-full text-[#dcb45c] shadow-xl shadow-[#14245a]/30 ring-1 ring-[#dcb45c]/70 transition duration-300 group-hover:-translate-y-0.5 group-hover:text-white group-hover:ring-[#dcb45c] group-focus-visible:ring-2 group-focus-visible:ring-[#dcb45c]"
+        style={{ background: "radial-gradient(circle at 30% 25%, #2a3f86 0%, #14245a 55%, #0d1840 100%)" }}
+      >
+        {/* Soft gold glow, breathing slowly (off for reduced motion) */}
         <span
-          className="absolute inset-0 animate-ping rounded-full bg-[#25D366] opacity-30 [animation-duration:2.5s] motion-reduce:hidden"
+          className="absolute -inset-1.5 animate-pulse rounded-full border border-[#dcb45c]/60 [animation-duration:2.5s] motion-reduce:hidden"
           aria-hidden
         />
-        <WhatsAppLogo className="relative h-7 w-7" />
+        <WhatsAppLogo className="relative h-6 w-6 transition-transform duration-300 group-hover:scale-110" />
+        {/* Online dot */}
+        <span className="absolute top-0.5 right-0.5 h-3 w-3 rounded-full border-2 border-white bg-[#25D366]" aria-hidden />
       </span>
     </a>
   );
