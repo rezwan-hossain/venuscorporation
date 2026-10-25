@@ -7,7 +7,8 @@
 //   4. Mission & vision
 //   5. Our values
 //   6. Milestones (timeline)
-//   7. Our team (id="team") — real team members, grouped by category
+//   7. Our team (id="team") — leaders (large cards), then everyone else
+//      in one compact grid tagged by group. Real members from the database.
 //   8. Closing call to action (the homepage's ContactCta)
 //
 // Demo content: module/about/data.ts. Team: database (admin → Team).
@@ -73,16 +74,24 @@ const SOCIALS = [
   { key: "github", icon: Github, label: "GitHub" },
 ] as const;
 
-/** One team member: photo, name, role, bio, social links. */
-function MemberCard({ member }: { member: TeamMember }) {
+/** One team member: photo, name, role, bio, social links.
+ *  `compact`: smaller card without the bio; `tag`: small group label. */
+function MemberCard({ member, compact = false, tag }: { member: TeamMember; compact?: boolean; tag?: string }) {
   const socials = member.socials ?? {};
   const links = SOCIALS.filter((s) => socials[s.key]?.trim());
 
   return (
     <article className="group">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem]" style={{ background: CREAM }}>
+      <div className={`relative aspect-[4/5] overflow-hidden bg-white shadow-sm ring-1 ring-[#c49a3c]/20 transition duration-500 group-hover:shadow-xl group-hover:shadow-[#14245a]/15 ${compact ? "rounded-2xl" : "rounded-[1.75rem]"}`}>
         {member.image ? (
-          <Image src={member.image} alt={member.name} fill sizes="(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 92vw" className="object-cover transition duration-700 group-hover:scale-105" />
+          // Soft black-and-white so every photo matches; colour on hover.
+          <Image
+            src={member.image}
+            alt={member.name}
+            fill
+            sizes={compact ? "(min-width: 1024px) 18vw, 45vw" : "(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"}
+            className="object-cover grayscale-[85%] transition duration-700 group-hover:scale-105 group-hover:grayscale-0"
+          />
         ) : (
           <div className="flex h-full items-center justify-center" style={{ color: `${GOLD}99` }}>
             <Users size={48} aria-hidden />
@@ -106,7 +115,10 @@ function MemberCard({ member }: { member: TeamMember }) {
           </div>
         )}
       </div>
-      <h4 className="mt-5 text-2xl leading-tight font-semibold" style={{ ...SERIF, color: NAVY }}>
+      {tag && (
+        <p className={`${compact ? "mt-4" : "mt-5"} text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400`}>{tag}</p>
+      )}
+      <h4 className={`${tag ? "mt-1" : compact ? "mt-4" : "mt-5"} leading-tight font-semibold ${compact ? "text-xl" : "text-2xl"}`} style={{ ...SERIF, color: NAVY }}>
         {member.name}
       </h4>
       {member.role && (
@@ -114,7 +126,7 @@ function MemberCard({ member }: { member: TeamMember }) {
           {member.role}
         </p>
       )}
-      {member.bio && <p className="mt-3 line-clamp-3 text-sm leading-relaxed">{member.bio}</p>}
+      {member.bio && !compact && <p className="mt-3 hidden line-clamp-3 text-sm leading-relaxed sm:block">{member.bio}</p>}
     </article>
   );
 }
@@ -125,6 +137,8 @@ function MemberCard({ member }: { member: TeamMember }) {
 
 export default function AboutPage({ members }: { members: TeamMember[] }) {
   const groups = teamGroups.map((g) => ({ ...g, members: members.filter((m) => m.category === g.category) })).filter((g) => g.members.length > 0);
+  // First non-empty group (normally Management) gets the large cards.
+  const [leaders, ...others] = groups;
 
   return (
     <div className={`${serif.variable} bg-white text-slate-600`}>
@@ -274,23 +288,45 @@ export default function AboutPage({ members }: { members: TeamMember[] }) {
           {groups.length === 0 ? (
             <p className="mt-14 text-center text-slate-400">Team members coming soon.</p>
           ) : (
-            groups.map((g) => (
-              <div key={g.category} className="mt-20 first-of-type:mt-16">
-                <div className="mb-10 flex flex-col justify-between gap-2 border-b pb-5 sm:flex-row sm:items-end" style={{ borderColor: `${GOLD}40` }}>
+            <>
+              {/* Leadership row: the first group (Management), larger cards */}
+              <div className="mt-16">
+                <div className="mb-8 flex flex-col justify-between gap-2 border-b pb-4 sm:flex-row sm:items-end" style={{ borderColor: `${GOLD}40` }}>
                   <h3 className="text-3xl font-semibold" style={{ ...SERIF, color: NAVY }}>
-                    {g.title}
+                    {leaders.title}
                   </h3>
-                  <p className="text-sm">{g.text}</p>
+                  <p className="text-sm">{leaders.text}</p>
                 </div>
-                <ul className="grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-                  {g.members.map((m) => (
+                <ul className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 sm:gap-y-12 lg:grid-cols-3">
+                  {leaders.members.map((m) => (
                     <li key={m.id}>
                       <MemberCard member={m} />
                     </li>
                   ))}
                 </ul>
               </div>
-            ))
+
+              {/* Everyone else: one compact grid, each card tagged with its group */}
+              {others.length > 0 && (
+                <div className="mt-20">
+                  <div className="mb-8 flex flex-col justify-between gap-2 border-b pb-4 sm:flex-row sm:items-end" style={{ borderColor: `${GOLD}40` }}>
+                    <h3 className="text-3xl font-semibold" style={{ ...SERIF, color: NAVY }}>
+                      The <em className="font-medium" style={{ color: GOLD }}>team</em>
+                    </h3>
+                    <p className="text-sm">{others.map((g) => g.title).join(" · ")}</p>
+                  </div>
+                  <ul className="flex flex-wrap justify-center gap-x-4 gap-y-10 sm:gap-x-5 [&>li]:w-[calc(50%-0.5rem)] sm:[&>li]:w-[calc(33.333%-0.85rem)] lg:[&>li]:w-[calc(20%-1rem)]">
+                    {others.flatMap((g) =>
+                      g.members.map((m) => (
+                        <li key={m.id}>
+                          <MemberCard member={m} compact tag={g.title.replace(/s$/, "")} />
+                        </li>
+                      )),
+                    )}
+                  </ul>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
