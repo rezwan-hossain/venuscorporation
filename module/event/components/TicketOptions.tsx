@@ -30,6 +30,15 @@ const LOW_STOCK = 10;
 
 const formatPrice = (price: number) => `৳${price.toLocaleString("en-IN")}`;
 
+// The big label is usually a short race distance ("5K"), but can be a longer
+// pass name ("Day + networking"). Shrink it as it gets longer so it always fits.
+const labelSize = (label: string) =>
+  label.length <= 5
+    ? "text-[3.25rem] leading-none"
+    : label.length <= 10
+      ? "text-[2.25rem] leading-none"
+      : "text-[1.75rem] leading-[1.05] line-clamp-2 text-balance";
+
 export default function TicketOptions({
   packages,
   eventId,
@@ -126,9 +135,9 @@ function TicketCard({
     >
       {/* Main part: distance and package name */}
       <div className="flex-1 min-w-0 pl-5 pr-4 py-4 flex flex-col justify-center">
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
           <span
-            className={`[font-family:var(--font-heading)] text-[3.25rem] leading-none tracking-wide ${
+            className={`min-w-0 [font-family:var(--font-heading)] tracking-wide ${labelSize(pkg.distance)} ${
               unavailable ? "text-neutral-400" : "text-white"
             }`}
           >
@@ -162,9 +171,10 @@ function TicketCard({
         className={`flex flex-col items-center justify-center gap-1.5 px-3 transition-colors duration-200 ${
           unavailable
             ? "text-neutral-500"
-            : "bg-neon-lime text-neutral-900 group-hover:bg-[#a8d957]"
+            : "text-[#0d1840] group-hover:brightness-110"
         }`}
-        style={{ width: STUB }}
+        // Brand gold, set directly so it doesn't depend on the theme stylesheet.
+        style={{ width: STUB, background: unavailable ? undefined : "linear-gradient(135deg, #dcb45c 0%, #c49a3c 100%)" }}
       >
         <span className="whitespace-nowrap [font-family:var(--font-heading)] text-[2.1rem] leading-none tracking-wide">
           {formatPrice(pkg.price)}

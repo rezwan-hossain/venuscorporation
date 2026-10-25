@@ -16,7 +16,7 @@ export default async function OGImage() {
         alignItems: "center",
         justifyContent: "center",
         background:
-          "linear-gradient(135deg, #99cd43 0%, #7ab532 50%, #5a9a1e 100%)",
+          "linear-gradient(135deg, #c49a3c 0%, #a8852f 50%, #8a6a22 100%)",
         color: "white",
         fontSize: 60,
         fontWeight: "bold",

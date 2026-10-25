@@ -44,7 +44,7 @@ export default async function EventOGImage({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#99cd43",
+          background: "#c49a3c",
           color: "#fff",
           fontSize: 48,
           fontFamily: "Bebas Neue",
@@ -117,7 +117,7 @@ export default async function EventOGImage({
             left: 0,
             width: 1200,
             height: 630,
-            background: "linear-gradient(135deg, #99cd43 0%, #5a9a1e 100%)",
+            background: "linear-gradient(135deg, #c49a3c 0%, #8a6a22 100%)",
             display: "flex",
           }}
         />
@@ -170,7 +170,7 @@ export default async function EventOGImage({
           style={{
             width: 100,
             height: 4,
-            background: "#99cd43",
+            background: "#c49a3c",
             borderRadius: 2,
             display: "flex",
           }}
@@ -206,12 +206,12 @@ export default async function EventOGImage({
                 width="18"
                 height="18"
                 rx="2"
-                stroke="#99cd43"
+                stroke="#c49a3c"
                 strokeWidth="2"
               />
-              <path d="M3 10H21" stroke="#99cd43" strokeWidth="2" />
-              <path d="M8 2V6" stroke="#99cd43" strokeWidth="2" />
-              <path d="M16 2V6" stroke="#99cd43" strokeWidth="2" />
+              <path d="M3 10H21" stroke="#c49a3c" strokeWidth="2" />
+              <path d="M8 2V6" stroke="#c49a3c" strokeWidth="2" />
+              <path d="M16 2V6" stroke="#c49a3c" strokeWidth="2" />
             </svg>
             <div
               style={{
@@ -253,10 +253,10 @@ export default async function EventOGImage({
             >
               <path
                 d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2Z"
-                stroke="#99cd43"
+                stroke="#c49a3c"
                 strokeWidth="2"
               />
-              <circle cx="12" cy="9" r="2.5" fill="#99cd43" />
+              <circle cx="12" cy="9" r="2.5" fill="#c49a3c" />
             </svg>
             <div
               style={{

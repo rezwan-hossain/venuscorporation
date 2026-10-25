@@ -96,8 +96,9 @@ body {
 }
 
 @theme {
-  /* --color-neon-lime: #ccff00; */
-  --color-neon-lime: #99cd43;
+  /* Brand accent. Was lime green (#99cd43); now the Venus gold. The name
+     stays "neon-lime" so the existing bg-/text-/border-neon-lime classes keep working. */
+  --color-neon-lime: #c49a3c;
 }
 
 @media (min-width: 640px) {
