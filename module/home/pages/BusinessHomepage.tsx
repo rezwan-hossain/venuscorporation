@@ -16,9 +16,10 @@
 //      Trusted by — module/home/components/TrustedBy.tsx
 //      Who we are — module/home/components/WhoWeAre.tsx
 //   2. Services — module/home/components/ServiceList.tsx
-//   3. Numbers
+//   3. Stats
 //      Upcoming corporate events — module/home/components/UpcomingCorporateEvents.tsx (database)
 //   4. How we plan — path cards
+//      Venue & vendor partners — module/home/components/VenuePartners.tsx
 //   5. Signature moments — module/home/components/SignatureMoments.tsx
 //      Featured work
 //   6. Testimonials
@@ -42,6 +43,7 @@ import SignatureMoments from "../components/SignatureMoments";
 import SummitHero from "../components/SummitHero";
 import TrustedBy from "../components/TrustedBy";
 import UpcomingCorporateEvents from "../components/UpcomingCorporateEvents";
+import VenuePartners from "../components/VenuePartners";
 import WhoWeAre from "../components/WhoWeAre";
 
 // The business card's elegant serif — loaded for this page only.
@@ -75,8 +77,9 @@ export default function BusinessHomepage() {
       <Suspense fallback={null}>
         <UpcomingCorporateEvents />
       </Suspense>
-      <Numbers />
+      <Stats />
       <PlanningPath />
+      <VenuePartners />
       <SignatureMoments />
       <FeaturedWork />
       <Testimonials />
@@ -158,10 +161,10 @@ function SectionHeading({
 }
 
 // ════════════════════════════════════════════════════════════════════════
-//  3. Numbers — a slim band with gold dividers
+//  3. Stats — a slim band with gold dividers
 // ════════════════════════════════════════════════════════════════════════
 
-function Numbers() {
+function Stats() {
   return (
     <section style={{ background: CREAM }}>
       <dl className={`${container} grid grid-cols-2 py-14 lg:grid-cols-4`}>

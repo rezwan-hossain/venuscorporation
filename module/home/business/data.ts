@@ -38,6 +38,25 @@ export const stats = [
 
 // ─── Clients ("Trusted by") ───────────────────────────
 
+// ─── Venue & vendor partners ─────────────────────────
+// Shown in the homepage "Venue & vendor partners" section, grouped by `type`.
+// DEMO names — replace with the venues and vendors you really work with.
+// Add logo: "/partners/name.png" (in public/partners/) to show a logo instead
+// of the name.
+
+export type PartnerType = "Venues" | "Hotels" | "Catering" | "Décor & production";
+
+export const venuePartners: { name: string; type: PartnerType; place?: string; logo?: string }[] = [
+  { name: "Grand Riverside Convention Hall", type: "Venues", place: "Dhaka" },
+  { name: "Lakeview Expo Centre", type: "Venues", place: "Dhaka" },
+  { name: "The Palm Garden Hotel", type: "Hotels", place: "Gulshan" },
+  { name: "Seashore Bay Resort", type: "Hotels", place: "Cox's Bazar" },
+  { name: "Saffron Table Catering", type: "Catering", place: "Dhaka" },
+  { name: "Golden Spoon Kitchens", type: "Catering", place: "Chattogram" },
+  { name: "Lumen Stage & Sound", type: "Décor & production", place: "Dhaka" },
+  { name: "Petal & Thread Décor", type: "Décor & production", place: "Dhaka" },
+];
+
 // Shown in the homepage "Trusted by" strip. Without a `logo`, the name is shown
 // as a wordmark. To use a real logo, add e.g. logo: "/clients/harbor-bank.png"
 // (put the file in public/clients/; a wide, transparent PNG or SVG works best).
