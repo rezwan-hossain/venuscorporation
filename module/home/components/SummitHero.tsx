@@ -14,7 +14,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Cinzel, Cormorant_Garamond } from "next/font/google";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, CalendarDays, MapPin, Play } from "lucide-react";
 
 import { getNextEvents } from "@/app/actions/event";
 import { brand } from "../business/data-v3";
@@ -87,10 +87,10 @@ export default async function SummitHero() {
 
           <p className="mt-6 line-clamp-3 max-w-md text-base leading-relaxed text-white/85 sm:text-lg lg:mt-[2.5vh]">{text}</p>
 
-          <div className="mt-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-8 lg:mt-[4vh]">
+          <div className="mt-10 flex flex-col items-center gap-6 sm:flex-row sm:gap-8 lg:mt-[4vh]">
             <Link
               href={summitHero.primaryCta.href}
-              className="inline-flex w-full items-center justify-center px-9 py-5 text-xs font-semibold uppercase tracking-[0.2em] transition hover:brightness-110 sm:w-auto"
+              className="inline-flex w-full max-w-xs items-center justify-center px-8 py-4 text-xs sm:max-w-none sm:px-9 sm:py-5 font-semibold uppercase tracking-[0.2em] transition hover:brightness-110 sm:w-auto"
               style={{ background: GOLD_LIGHT, color: NAVY_DEEP }}
             >
               {summitHero.primaryCta.label}
@@ -124,21 +124,28 @@ function HeroBackground() {
         </video>
       )}
 
-      {/* Navy wash: solid behind the text (left), lighter on the right */}
+      {/* Dark wash for the text: near-black with only a hint of navy, strong on
+          the left and fading out on the right so the photo keeps its colours */}
       <div
         aria-hidden
         className="absolute inset-0 -z-10"
-        style={{ background: `linear-gradient(90deg, ${NAVY} 0%, ${NAVY}eb 38%, ${NAVY}a6 68%, ${NAVY}73 100%)` }}
+        style={{
+          background:
+            "linear-gradient(90deg, rgba(9,12,24,0.92) 0%, rgba(9,12,24,0.78) 35%, rgba(9,12,24,0.35) 65%, rgba(9,12,24,0.1) 100%)",
+        }}
       />
 
-      {/* Dotted texture fading in along the bottom */}
+      {/* Subtle golden gradient: a warm glow rising from the bottom-left, a
+          faint gold light in the top-right, and a dark fade at the bottom */}
       <div
         aria-hidden
-        className="absolute inset-x-0 bottom-0 -z-10 h-2/5"
+        className="absolute inset-0 -z-10"
         style={{
-          backgroundImage: "radial-gradient(rgba(255,255,255,0.09) 38%, transparent 40%)",
-          backgroundSize: "26px 26px",
-          maskImage: "linear-gradient(transparent, #000)",
+          background: [
+            `radial-gradient(75% 95% at 0% 100%, ${GOLD}5c, transparent 68%)`,
+            `radial-gradient(50% 65% at 100% 0%, ${GOLD}2e, transparent 70%)`,
+            `linear-gradient(to top, ${NAVY_DEEP}b3, transparent 45%)`,
+          ].join(", "),
         }}
       />
     </>
@@ -164,34 +171,61 @@ type NextEvent = Awaited<ReturnType<typeof getHeroContent>>["next"];
 
 /** White bar: motto · next event (or "coming soon") · link. */
 function NextEventBar({ next }: { next: NextEvent }) {
+  const linkLabel = next ? "Event details" : "Browse events";
+
   return (
     <div className="shrink-0 border-b border-slate-200 bg-white">
-      <div className={`${container} flex flex-col gap-3 py-5 text-center lg:flex-row lg:items-center lg:justify-between lg:gap-8 lg:text-left`}>
-        <p className="shrink-0 text-xl whitespace-nowrap italic" style={{ fontFamily: "var(--font-hero-serif)", color: NAVY }}>
+      <div className={`${container} flex flex-col items-center gap-4 py-6 text-center lg:flex-row lg:justify-between lg:gap-8 lg:py-5 lg:text-left`}>
+        {/* Motto: large screens only */}
+        <p className="hidden shrink-0 text-xl whitespace-nowrap italic lg:block" style={{ fontFamily: "var(--font-hero-serif)", color: NAVY }}>
           {brand.motto.left} <span style={{ color: GOLD }}>|</span> {brand.motto.right}
         </p>
 
         {next ? (
-          <p className="text-sm text-slate-600">
-            <span className="text-slate-400">Next:</span>{" "}
-            <span className="font-semibold" style={{ color: NAVY }}>
-              {next.name}
-            </span>
-            <span className="text-slate-400"> · </span>
-            {next.address}
-            <span className="text-slate-400"> · </span>
-            <span className="lining-nums">{next.date}</span>
-          </p>
+          <>
+            {/* Phones/tablets: stacked — label, name, venue · date */}
+            <div className="lg:hidden">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.25em]" style={{ color: GOLD }}>
+                Next up
+              </p>
+              <p className="mt-1.5 text-lg font-semibold text-balance" style={{ color: NAVY }}>
+                {next.name}
+              </p>
+              <p className="mt-1.5 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-slate-500">
+                <span className="flex items-center gap-1.5">
+                  <MapPin size={14} className="shrink-0" style={{ color: GOLD }} aria-hidden />
+                  {next.address}
+                </span>
+                <span className="flex items-center gap-1.5 lining-nums">
+                  <CalendarDays size={14} className="shrink-0" style={{ color: GOLD }} aria-hidden />
+                  {next.date}
+                </span>
+              </p>
+            </div>
+
+            {/* Large screens: one line */}
+            <p className="hidden text-sm text-slate-600 lg:block">
+              <span className="text-slate-400">Next:</span>{" "}
+              <span className="font-semibold" style={{ color: NAVY }}>
+                {next.name}
+              </span>
+              <span className="text-slate-400"> · </span>
+              {next.address}
+              <span className="text-slate-400"> · </span>
+              <span className="lining-nums">{next.date}</span>
+            </p>
+          </>
         ) : (
           <p className="text-sm text-slate-600">New events coming soon.</p>
         )}
 
+        {/* Phones/tablets: outlined pill; large screens: underlined text link */}
         <Link
           href={next ? next.href : "/events"}
-          className="inline-flex shrink-0 items-center justify-center gap-2 text-xs font-bold whitespace-nowrap uppercase tracking-[0.2em] underline underline-offset-4 lg:justify-start"
-          style={{ color: NAVY, textDecorationColor: GOLD }}
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-6 py-3 text-xs font-bold whitespace-nowrap uppercase tracking-[0.2em] transition hover:bg-[#14245a] hover:text-white lg:rounded-none lg:px-0 lg:py-0 lg:underline lg:underline-offset-4 lg:shadow-none! lg:hover:bg-transparent lg:hover:text-[#14245a]"
+          style={{ color: NAVY, textDecorationColor: GOLD, boxShadow: `inset 0 0 0 1px ${GOLD}99` }}
         >
-          {next ? "Event details" : "Browse events"} <ArrowRight size={14} />
+          {linkLabel} <ArrowRight size={14} />
         </Link>
       </div>
     </div>

@@ -52,7 +52,7 @@ export default function ShowreelButton({ label, video }: Props) {
 
   return (
     <>
-      <button type="button" onClick={open} className="group inline-flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+      <button type="button" onClick={open} className="group inline-flex cursor-pointer items-center gap-4 text-xs font-semibold uppercase tracking-[0.2em] text-white">
         <span
           className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition group-hover:bg-white/10"
           style={{ borderColor: GOLD_LIGHT }}
@@ -77,7 +77,7 @@ export default function ShowreelButton({ label, video }: Props) {
             type="button"
             onClick={() => dialogRef.current?.close()}
             aria-label="Close video"
-            className="absolute -top-12 right-0 flex h-10 w-10 items-center justify-center rounded-full border border-white/30 text-white transition hover:bg-white hover:text-[#0d1840] sm:top-0 sm:-right-12"
+            className="absolute -top-12 right-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-white/30 text-white transition hover:bg-white hover:text-[#0d1840] sm:top-0 sm:-right-12"
           >
             <X size={18} />
           </button>
