@@ -68,7 +68,7 @@ export default function SiteHeader() {
       >
         <div
           className={`mx-auto max-w-[1400px] flex items-center justify-between px-5 sm:px-6 lg:px-8 transition-all duration-300 ${
-            scrolled ? "h-16 md:h-20" : "h-20 md:h-24"
+            scrolled ? "h-16 md:h-20 lg:h-[4.5rem]" : "h-20 md:h-24 lg:h-[5.5rem]"
           }`}
         >
           <Logo scrolled={scrolled} />

@@ -47,13 +47,15 @@ const DesktopNav = memo(function DesktopNav({
           <DesktopUserMenu user={user} onLogout={onLogout} />
         ) : (
           <Link
-            href="/register"
-            // prefetch={true}
-            className="flex items-center gap-3 bg-gray-900 text-white font-bold uppercase tracking-wider text-xs rounded-lg px-5 py-3 hover:bg-gray-800 transition-colors"
+            href="/contact"
+            className="group flex items-center gap-3 whitespace-nowrap bg-[#14245a] text-white font-bold uppercase tracking-wider text-xs rounded-lg px-5 py-3 hover:bg-[#0d1840] transition-colors"
           >
-            <span>Buy Ticket</span>
-            <div className="w-8 h-8 rounded-md bg-white/20 flex items-center justify-center">
-              <ArrowRight size={16} />
+            <span>Plan your event</span>
+            <div className="w-8 h-8 rounded-md bg-[#dcb45c] text-[#0d1840] flex items-center justify-center">
+              <ArrowRight
+                size={16}
+                className="transition-transform duration-300 group-hover:translate-x-0.5"
+              />
             </div>
           </Link>
         )}

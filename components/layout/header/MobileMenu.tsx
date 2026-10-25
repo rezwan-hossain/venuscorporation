@@ -128,11 +128,11 @@ export default function MobileMenu({
               </>
             ) : (
               <Link
-                href="/register"
+                href="/events"
                 onClick={onClose}
-                className="flex items-center justify-center gap-3 bg-gray-900 text-white font-bold uppercase tracking-wider text-sm rounded-lg px-6 py-4 hover:bg-gray-800"
+                className="flex items-center justify-center gap-3 bg-[#14245a] text-white font-bold uppercase tracking-wider text-sm rounded-lg px-6 py-4 hover:bg-[#0d1840]"
               >
-                Buy Ticket
+                Plan your event
                 <ArrowRight size={16} />
               </Link>
             )}

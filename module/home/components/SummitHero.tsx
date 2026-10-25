@@ -96,7 +96,7 @@ export default async function SummitHero() {
   return (
     // pt-*: start below the fixed header (its dark text needs a light background).
     <section
-      className={`${display.variable} ${serif.variable} pt-20 md:pt-24 lg:flex lg:h-[min(100svh,50rem)] lg:min-h-[34rem] lg:flex-col lg:pt-28`}
+      className={`${display.variable} ${serif.variable} pt-20 md:pt-24 lg:flex lg:h-[min(100svh,50rem)] lg:min-h-[34rem] lg:flex-col lg:pt-24`}
     >
       {/* ── 1. Navy panel ── */}
       <div
