@@ -15,7 +15,6 @@ import { useState } from "react";
 import {
   ArrowRight,
   Briefcase,
-  CalendarDays,
   CheckCircle2,
   Heart,
   Mail,
@@ -30,6 +29,7 @@ import {
 } from "lucide-react";
 
 import { services } from "@/module/home/business/data-v3";
+import DatePicker from "./DatePicker";
 
 type FormType = {
   name: string;
@@ -254,9 +254,13 @@ const ContactForm = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_1.5fr]">
-              <Field label="Event date" optional>
-                <IconInput icon={CalendarDays} type="date" name="date" value={form.date} onChange={handleChange} />
-              </Field>
+              {/* Not a <label>: the calendar's buttons sit inside it */}
+              <div className="flex min-w-0 flex-col gap-2">
+                <p className="text-sm font-semibold" style={{ color: NAVY }}>
+                  Event date <span className="font-normal text-slate-400">(optional)</span>
+                </p>
+                <DatePicker name="date" value={form.date} onChange={(date) => setForm((prev) => ({ ...prev, date }))} />
+              </div>
               <div>
                 <p className="mb-2 text-sm font-semibold" style={{ color: NAVY }}>
                   Number of guests <span className="font-normal text-slate-400">(optional)</span>
