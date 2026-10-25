@@ -60,14 +60,18 @@ export const venuePartners: { name: string; type: PartnerType; place?: string; l
 // Shown in the homepage "Trusted by" strip. Without a `logo`, the name is shown
 // as a wordmark. To use a real logo, add e.g. logo: "/clients/harbor-bank.png"
 // (put the file in public/clients/; a wide, transparent PNG or SVG works best).
+// ⚠ DEMO: well-known Bangladeshi companies as placeholders. Keep ONLY
+// companies you have actually worked with (and have permission to name) —
+// listing others implies a client relationship that doesn't exist.
 export const clients: { name: string; logo?: string }[] = [
-  { name: "Harbor Bank" },
-  { name: "Orbit Telecom" },
-  { name: "Crescent Foods" },
-  { name: "Northwind" },
-  { name: "Bluepeak" },
-  { name: "Greenline" },
-  { name: "Meridian" },
+  { name: "Grameenphone" },
+  { name: "BRAC Bank" },
+  { name: "Square Group" },
+  { name: "Beximco" },
+  { name: "PRAN-RFL Group" },
+  { name: "Robi Axiata" },
+  { name: "City Bank" },
+  { name: "Walton" },
 ];
 
 // ─── About ────────────────────────────────────────────
