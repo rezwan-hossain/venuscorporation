@@ -289,18 +289,22 @@ function AtAGlance({
   );
 }
 
-const STATUS_STYLE: Record<string, { label: string; dot: string }> = {
-  ACTIVE: { label: "Upcoming", dot: "bg-green-500" },
-  COMPLETED: { label: "Completed", dot: "bg-gray-400" },
-  CANCELLED: { label: "Cancelled", dot: "bg-red-500" },
-  INACTIVE: { label: "Not open yet", dot: "bg-amber-400" },
+const STATUS_STYLE: Record<string, { label: string; dot: string; pulse?: boolean }> = {
+  ACTIVE: { label: "Upcoming", dot: "bg-emerald-400", pulse: true },
+  COMPLETED: { label: "Completed", dot: "bg-slate-300" },
+  CANCELLED: { label: "Cancelled", dot: "bg-red-400" },
+  INACTIVE: { label: "Not open yet", dot: "bg-amber-300" },
 };
 
+/** Small frosted-navy tag in the banner's corner (smaller on phones). */
 const StatusPill = ({ status }: { status: string }) => {
-  const s = STATUS_STYLE[status] ?? { label: status, dot: "bg-gray-400" };
+  const s = STATUS_STYLE[status] ?? { label: status, dot: "bg-slate-300" };
   return (
-    <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-gray-900 shadow-sm backdrop-blur">
-      <span className={`h-2 w-2 rounded-full ${s.dot}`} aria-hidden />
+    <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-[#0d1840]/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-md sm:top-4 sm:left-4 sm:gap-2 sm:px-3.5 sm:py-1.5 sm:text-xs">
+      <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2" aria-hidden>
+        {s.pulse && <span className={`absolute inset-0 animate-ping rounded-full opacity-70 motion-reduce:hidden ${s.dot}`} />}
+        <span className={`relative h-full w-full rounded-full ${s.dot}`} />
+      </span>
       {s.label}
     </span>
   );
