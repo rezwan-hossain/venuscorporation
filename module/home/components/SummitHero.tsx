@@ -19,6 +19,7 @@ import { ArrowRight, CalendarDays, MapPin, Play } from "lucide-react";
 import { getNextEvents } from "@/app/actions/event";
 import { brand } from "../business/data-v3";
 import { summitHero } from "../business/data-v5";
+import HeroCountdown from "./HeroCountdown";
 import ShowreelButton from "./ShowreelButton";
 
 // Fonts: Roman capitals for the headline, elegant serif for the motto.
@@ -57,6 +58,22 @@ const formatDate = (date: Date) =>
     year: "numeric",
   });
 
+/** The real start moment: event day + start time, Dhaka (UTC+6). */
+function startsAt(date: Date, time: Date) {
+  const d = new Date(date);
+  const t = new Date(time);
+  return new Date(
+    Date.UTC(
+      d.getUTCFullYear(),
+      d.getUTCMonth(),
+      d.getUTCDate(),
+      t.getUTCHours(),
+      t.getUTCMinutes(),
+    ) -
+      6 * 60 * 60 * 1000,
+  );
+}
+
 async function getHeroContent() {
   const { events } = await getNextEvents(1);
   const event = events[0];
@@ -80,6 +97,7 @@ async function getHeroContent() {
       address: event.address,
       date,
       href: `/events/${event.slug}`,
+      startsAt: startsAt(event.date, event.time).toISOString(),
     },
   };
 }
@@ -91,7 +109,9 @@ async function getHeroContent() {
 export default async function SummitHero() {
   const { label, title, text, next } = await getHeroContent();
   // Gold button: tickets for the featured event, or "Plan your event" without one.
-  const primary = next ? { label: "Get tickets", href: next.href } : summitHero.primaryCta;
+  const primary = next
+    ? { label: "Get tickets", href: next.href }
+    : summitHero.primaryCta;
 
   return (
     // pt-*: start below the fixed header (its dark text needs a light background).
@@ -132,13 +152,23 @@ export default async function SummitHero() {
           </p>
 
           <div className="mt-10 flex flex-col items-center gap-6 sm:flex-row sm:gap-8 lg:mt-[4vh]">
-            <Link
-              href={primary.href}
-              className="inline-flex w-full max-w-xs items-center justify-center rounded-md px-8 py-4 text-xs sm:max-w-none sm:px-9 sm:py-5 font-semibold uppercase tracking-[0.2em] transition hover:brightness-110 sm:w-auto"
-              style={{ background: GOLD_LIGHT, color: NAVY_DEEP }}
-            >
-              {primary.label}
-            </Link>
+            {/* Gold button + "Starts in 45 days" underneath */}
+            <div className="relative flex w-full flex-col items-center gap-3 sm:w-auto sm:items-start">
+              <Link
+                href={primary.href}
+                className="inline-flex w-full max-w-xs items-center justify-center rounded-md px-8 py-4 text-xs sm:max-w-none sm:px-9 sm:py-5 font-semibold uppercase tracking-[0.2em] transition hover:brightness-110 sm:w-auto"
+                style={{ background: GOLD_LIGHT, color: NAVY_DEEP }}
+              >
+                {primary.label}
+              </Link>
+              {/* Phones: under the button. Larger: hangs below it without taking up
+                  row space, so the button stays level with "Watch our events". */}
+              {next && (
+                <div className="sm:absolute sm:top-full sm:left-0 sm:mt-3 sm:whitespace-nowrap">
+                  <HeroCountdown startsAt={next.startsAt} />
+                </div>
+              )}
+            </div>
             <WatchButton />
           </div>
         </div>
