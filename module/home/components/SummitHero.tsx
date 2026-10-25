@@ -90,6 +90,8 @@ async function getHeroContent() {
 
 export default async function SummitHero() {
   const { label, title, text, next } = await getHeroContent();
+  // Gold button: tickets for the featured event, or "Plan your event" without one.
+  const primary = next ? { label: "Get tickets", href: next.href } : summitHero.primaryCta;
 
   return (
     // pt-*: start below the fixed header (its dark text needs a light background).
@@ -131,11 +133,11 @@ export default async function SummitHero() {
 
           <div className="mt-10 flex flex-col items-center gap-6 sm:flex-row sm:gap-8 lg:mt-[4vh]">
             <Link
-              href={summitHero.primaryCta.href}
-              className="inline-flex w-full max-w-xs items-center justify-center px-8 py-4 text-xs sm:max-w-none sm:px-9 sm:py-5 font-semibold uppercase tracking-[0.2em] transition hover:brightness-110 sm:w-auto"
+              href={primary.href}
+              className="inline-flex w-full max-w-xs items-center justify-center rounded-md px-8 py-4 text-xs sm:max-w-none sm:px-9 sm:py-5 font-semibold uppercase tracking-[0.2em] transition hover:brightness-110 sm:w-auto"
               style={{ background: GOLD_LIGHT, color: NAVY_DEEP }}
             >
-              {summitHero.primaryCta.label}
+              {primary.label}
             </Link>
             <WatchButton />
           </div>

@@ -44,12 +44,13 @@ export const clients = ["Northwind", "Bluepeak", "Orbit Telecom", "Harbor Bank",
 
 export const about = {
   eyebrow: "Who we are",
-  title: "One group. Many ways to grow your business.",
+  // The title is split at ". " — the second half shows in gold italic.
+  title: "One team. Every kind of event.",
   paragraphs: [
-    "Venus Corporation brings together specialist companies under one roof — events, communication, merchandise and technology. Each runs with its own expert team, and all of them share the same standards for quality and delivery.",
-    "That means one partner can plan your campaign, produce your merchandise, run your event and build the digital product behind it.",
+    "Venus Corporation is an event-management company from Dhaka. We plan and run corporate summits, conferences, exhibitions, race days, weddings and private celebrations — from the first idea to the final applause.",
+    "One dedicated team handles it all: concept, venue, vendors, guests and the day itself, so you can focus on your guests and the moment.",
   ],
-  points: ["Specialist teams, one point of contact", "End-to-end delivery in-house", "Trusted by brands across Bangladesh"],
+  points: ["One planner, one point of contact", "Venues, vendors and production in-house", "Trusted by companies and families across Bangladesh"],
   image: photo("1556761175-5973dc0f32e7", 1100), // team meeting
   badge: { value: "12+", label: "Years of experience" },
 };
@@ -117,32 +118,32 @@ export const steps = [
 
 export const projects = [
   {
-    title: "Dhaka City Marathon",
-    client: "Merch Sports",
-    category: "Event",
-    image: photo("1530143311094-34d807799e8f", 1000),
-    result: "8,000 runners · 4 distances",
-  },
-  {
-    title: "National retail rebrand",
-    client: "Crescent Foods",
-    category: "Branding",
-    image: photo("1460925895917-afdab827c52f", 1000),
-    result: "+38% brand recall",
-  },
-  {
     title: "Annual leadership summit",
     client: "Harbor Bank",
     category: "Corporate event",
-    image: photo("1505373877841-8d25f7d46678", 1000),
-    result: "1,200 attendees",
+    image: photo("1505373877841-8d25f7d46678", 1000), // conference hall
+    result: "1,200 delegates · 3 halls",
   },
   {
-    title: "Race registration platform",
+    title: "Garden wedding & reception",
+    client: "Private client",
+    category: "Wedding",
+    image: photo("1519741497674-611481863552", 1000), // wedding
+    result: "400 guests · 2 days",
+  },
+  {
+    title: "Bangladesh Trade Expo",
+    client: "Orbit Telecom",
+    category: "Exhibition",
+    image: photo("1560439514-4e9645039924", 1000), // expo floor
+    result: "120 stalls · 15,000 visitors",
+  },
+  {
+    title: "Dhaka City Marathon",
     client: "Merch Sports",
-    category: "Technology",
-    image: photo("1551288049-bebda4e38f71", 1000),
-    result: "Online payments in minutes",
+    category: "Sports event",
+    image: photo("1530143311094-34d807799e8f", 1000), // marathon
+    result: "8,000 runners · 4 distances",
   },
 ];
 
@@ -150,19 +151,19 @@ export const projects = [
 
 export const testimonials = [
   {
-    quote: "They planned, branded and ran our annual summit end to end. One team, zero surprises.",
+    quote: "They planned and ran our annual summit end to end — 1,200 delegates, three halls, and every session on time. One team, zero surprises.",
     name: "Farhana Rahman",
     role: "Head of Marketing, Harbor Bank",
   },
   {
-    quote: "From merchandise to the event app, everything arrived on time and looked premium.",
-    name: "Tanvir Ahmed",
-    role: "Brand Manager, Crescent Foods",
+    quote: "From the décor to the last dance, our wedding was exactly how we imagined it. We didn't have to worry about a single thing on the day.",
+    name: "Nusrat & Arif",
+    role: "Wedding, Dhaka",
   },
   {
-    quote: "Our first marathon sold out in weeks. The registration and payment flow just worked.",
-    name: "Sakib Hasan",
-    role: "Founder, Dhaka Runners Club",
+    quote: "Our first trade expo felt effortless — stalls built on time, smooth visitor flow, and exhibitors already asking about next year.",
+    name: "Tanvir Ahmed",
+    role: "Brand Manager, Orbit Telecom",
   },
 ];
 
