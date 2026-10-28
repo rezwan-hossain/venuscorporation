@@ -74,7 +74,8 @@ export async function updateRegistrationDetails(
     // A dropdown value must be a real option — or the value already stored,
     // so legacy data (e.g. "VIRTUAL" t-shirt on virtual events) never blocks
     // an unrelated edit.
-    const oneOf = (value: string, options: readonly string[], was: string) =>
+    // `was` can be null: race fields are empty for non-marathon registrations.
+    const oneOf = (value: string, options: readonly string[], was: string | null) =>
       options.includes(value) || value === was;
 
     const fullName = clean(input.fullName);

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { audit, diff } from "@/lib/audit";
+import { isEventCategory } from "@/lib/event-checkout-form";
 
 const EVENT_AUDIT_FIELDS = [
   "name",
@@ -14,6 +15,7 @@ const EVENT_AUDIT_FIELDS = [
   "time",
   "address",
   "eventType",
+  "category",
   "shortDesc",
   "bannerImage",
   "thumbImage",
@@ -96,6 +98,7 @@ export async function createEvent(formData: {
   time: string;
   address: string;
   eventType: string;
+  category: string;
   description: string;
   shortDesc: string;
   bannerImage: string;
@@ -106,6 +109,11 @@ export async function createEvent(formData: {
 }) {
   const { error } = await requireAdmin();
   if (error) return { success: false, error };
+
+  // The category must be one of ours (it's an enum in the database).
+  if (!isEventCategory(formData.category)) {
+    return { success: false, error: "Choose an event category" };
+  }
 
   try {
     // Check slug uniqueness
@@ -128,6 +136,7 @@ export async function createEvent(formData: {
         time: new Date(`${formData.date}T${formData.time}:00Z`),
         address: formData.address,
         eventType: formData.eventType as "LIVE" | "VIRTUAL",
+        category: formData.category,
         description: formData.description,
         shortDesc: formData.shortDesc || null,
         bannerImage: formData.bannerImage,
@@ -165,6 +174,7 @@ export async function updateEvent(
     time: string;
     address: string;
     eventType: string;
+    category: string;
     description: string;
     shortDesc: string;
     bannerImage: string;
@@ -176,6 +186,11 @@ export async function updateEvent(
 ) {
   const { error } = await requireAdmin();
   if (error) return { success: false, error };
+
+  // The category must be one of ours (it's an enum in the database).
+  if (!isEventCategory(formData.category)) {
+    return { success: false, error: "Choose an event category" };
+  }
 
   try {
     // 1. Fetch current event before updating to know if the slug changed
@@ -201,6 +216,7 @@ export async function updateEvent(
         time: new Date(`${formData.date}T${formData.time}:00Z`),
         address: formData.address,
         eventType: formData.eventType as "LIVE" | "VIRTUAL",
+        category: formData.category,
         description: formData.description,
         shortDesc: formData.shortDesc || null,
         bannerImage: formData.bannerImage,
@@ -777,6 +793,7 @@ export async function duplicateEvent(eventId: string) {
         time: original.time,
         address: original.address,
         eventType: original.eventType,
+        category: original.category,
         description: original.description,
         bannerImage: original.bannerImage,
         thumbImage: original.thumbImage,

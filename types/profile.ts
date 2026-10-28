@@ -39,6 +39,7 @@ export type AdminEvent = {
   time: string;
   address: string;
   eventType: string;
+  category: string; // MARATHON | CONFERENCE | … (see lib/event-checkout-form.ts)
   description: string;
   shortDesc: string | null;
   bannerImage: string;
@@ -83,6 +84,7 @@ export type EventFormData = {
   time: string;
   address: string;
   eventType: string;
+  category: string; // MARATHON | CONFERENCE | … (see lib/event-checkout-form.ts)
   description: string;
   shortDesc: string;
   bannerImage: string;

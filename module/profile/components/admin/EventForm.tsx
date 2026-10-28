@@ -28,6 +28,7 @@ import {
 import { Check, Loader2, Plus, Save, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { ImageVpsUpload } from "./ImageVpsUpload";
+import { DEFAULT_EVENT_CATEGORY, EVENT_CATEGORIES, getCheckoutQuestions } from "@/lib/event-checkout-form";
 
 const RichTextEditor = dynamic(
   () =>
@@ -79,6 +80,7 @@ export function EventForm({
     time: event?.time ? new Date(event.time).toISOString().slice(11, 16) : "",
     address: event?.address || "",
     eventType: event?.eventType || "LIVE",
+    category: event?.category || DEFAULT_EVENT_CATEGORY,
     description: event?.description || "",
     shortDesc: event?.shortDesc || "",
     bannerImage: event?.bannerImage || "",
@@ -239,6 +241,55 @@ export function EventForm({
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        {/* ── Category: what kind of event this is ──────────────────
+            One card per category (list lives in lib/event-checkout-form.ts).
+            It decides which questions checkout asks attendees. */}
+        <fieldset>
+          <legend className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+            Event Category <span className="text-red-500">*</span>
+          </legend>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {EVENT_CATEGORIES.map((category) => {
+              const isSelected = form.category === category.value;
+              return (
+                <label
+                  key={category.value}
+                  className={`flex cursor-pointer flex-col rounded-lg border px-4 py-3 transition-colors ${
+                    isSelected
+                      ? "border-gray-900 bg-gray-900 text-white"
+                      : "border-gray-200 bg-gray-50 hover:border-gray-400"
+                  }`}
+                >
+                  {/* Real radio button (hidden) — keeps keyboard + screen readers working */}
+                  <input
+                    type="radio"
+                    name="category"
+                    value={category.value}
+                    checked={isSelected}
+                    onChange={() => updateField("category", category.value)}
+                    className="sr-only"
+                  />
+                  <span className="text-sm font-semibold">{category.label}</span>
+                  <span className={`text-xs ${isSelected ? "text-white/70" : "text-gray-500"}`}>
+                    {category.description}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          {/* Tell the admin what this choice means for ticket buyers.
+              Depends on category AND format — e.g. a virtual marathon
+              doesn't ask for a T-shirt size. */}
+          <p className="mt-2 text-xs text-gray-500">
+            <span className="font-semibold text-gray-700">
+              Checkout will ask ({form.eventType === "VIRTUAL" ? "virtual" : "in person"}):
+            </span>{" "}
+            {getCheckoutQuestions(form.category, form.eventType)
+              .map((q) => q.label)
+              .join(", ")}
+          </p>
+        </fieldset>
+
         {/* Name & Slug */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
@@ -291,7 +342,7 @@ export function EventForm({
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Event Type
+              Format
             </label>
             <Select
               value={form.eventType}
@@ -301,7 +352,7 @@ export function EventForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200">
-                <SelectItem value="LIVE">Live</SelectItem>
+                <SelectItem value="LIVE">In person</SelectItem>
                 <SelectItem value="VIRTUAL">Virtual</SelectItem>
               </SelectContent>
             </Select>

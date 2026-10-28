@@ -9,12 +9,23 @@ import { BillingFormData, CheckoutItem, AppliedCoupon } from "@/types/checkout";
 import { useRouter } from "next/navigation";
 import { placeOrder } from "@/app/actions/checkout";
 import { initiateShurjoPayPayment } from "@/app/actions/payment";
+import { EventQuestions } from "../components/EventQuestions";
+import {
+  asksQuestion,
+  checkExtraAnswer,
+  getEventCategory,
+  getExtraQuestions,
+  usesRaceFields,
+  type ExtraAnswers,
+} from "@/lib/event-checkout-form";
 
 type CheckoutPageProps = {
   item: CheckoutItem;
   userEmail: string;
   userName: string;
   eventType: string;
+  /** MARATHON, CONFERENCE, … — decides which questions are asked. */
+  category: string;
 };
 
 // Bangladeshi phone number regex for validation
@@ -26,9 +37,36 @@ const CheckoutPage = ({
   userEmail,
   userName,
   eventType,
+  category,
 }: CheckoutPageProps) => {
   const router = useRouter();
   const billingFormRef = useRef<BillingFormRef>(null);
+
+  // What this event asks (rules: lib/event-checkout-form.ts)
+  //   raceFields     — marathons: gender, blood group, T-shirt …
+  //   extraQuestions — other categories: company, guests …
+  const raceFields = usesRaceFields(category);
+  const asksTshirt = raceFields && asksQuestion(category, eventType, "T-shirt size");
+  const extraQuestions = useMemo(() => getExtraQuestions(category, eventType), [category, eventType]);
+
+  // Answers to the extra questions, and their error messages
+  const [extraAnswers, setExtraAnswers] = useState<ExtraAnswers>({});
+  const [extraErrors, setExtraErrors] = useState<Record<string, string>>({});
+
+  const updateExtraAnswer = (key: string, value: string) => {
+    setExtraAnswers((prev) => ({ ...prev, [key]: value }));
+    // Re-check this one answer as the user types
+    const question = extraQuestions.find((q) => q.key === key);
+    if (question) setExtraErrors((prev) => ({ ...prev, [key]: checkExtraAnswer(question, value) }));
+  };
+
+  /** Check every extra question; shows the errors. Returns true if all are fine. */
+  const validateExtraAnswers = () => {
+    const errors: Record<string, string> = {};
+    for (const q of extraQuestions) errors[q.key] = checkExtraAnswer(q, extraAnswers[q.key]);
+    setExtraErrors(errors);
+    return Object.values(errors).every((e) => !e);
+  };
 
   const [paymentMethod, setPaymentMethod] = useState("shurjopay");
   const [loading, setLoading] = useState(false);
@@ -82,14 +120,16 @@ const CheckoutPage = ({
       "fullName",
       "email",
       "phone",
-      "gender",
-      "birthDate",
-      "ageCategory",
-      "bloodGroup",
-      // "tshirtSize",
-      "runnerCategory",
-      ...(eventType !== "VIRTUAL"
-        ? ["tshirtSize" as keyof BillingFormData]
+      // Race fields — marathons only
+      ...(raceFields
+        ? ([
+            "gender",
+            "birthDate",
+            "ageCategory",
+            "bloodGroup",
+            "runnerCategory",
+            ...(asksTshirt ? ["tshirtSize"] : []),
+          ] as (keyof BillingFormData)[])
         : []),
     ];
 
@@ -111,10 +151,13 @@ const CheckoutPage = ({
       return false;
     }
 
-    // Validate birth date is in the past
-    const selectedDate = new Date(formData.birthDate);
-    const today = new Date();
-    if (selectedDate >= today) {
+    // Validate birth date is in the past (marathons only)
+    if (raceFields && new Date(formData.birthDate) >= new Date()) {
+      return false;
+    }
+
+    // Extra questions (non-marathon events) must all be fine
+    if (extraQuestions.some((q) => checkExtraAnswer(q, extraAnswers[q.key]))) {
       return false;
     }
 
@@ -130,7 +173,7 @@ const CheckoutPage = ({
     }
 
     return true;
-  }, [formData, eventType]);
+  }, [formData, asksTshirt, raceFields, extraQuestions, extraAnswers]);
 
   const updateField = (field: keyof BillingFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -152,7 +195,9 @@ const CheckoutPage = ({
     setError("");
 
     // Validate form and focus on first invalid field
-    const isValid = billingFormRef.current?.validateAndFocus();
+    const billingValid = billingFormRef.current?.validateAndFocus();
+    const extrasValid = validateExtraAnswers();
+    const isValid = billingValid && extrasValid;
 
     if (!isValid) {
       setError("Please fill in all required fields correctly");
@@ -171,15 +216,19 @@ const CheckoutPage = ({
           fullName: formData.fullName,
           email: formData.email,
           phone: formData.phone,
+          // Race fields (marathons). The server ignores them for other categories.
           gender: formData.gender,
           birthDate: formData.birthDate,
           ageCategory: formData.ageCategory,
           bloodGroup: formData.bloodGroup,
-          tshirtSize: eventType === "VIRTUAL" ? "VIRTUAL" : formData.tshirtSize,
+          // No T-shirt asked (virtual run) → saved as "VIRTUAL", as before.
+          tshirtSize: asksTshirt ? formData.tshirtSize : "VIRTUAL",
           emergencyContactName: formData.emergencyContactName || "",
           emergencyContactNumber: formData.emergencyContactNumber || "",
           communityName: formData.communityName || "",
           runnerCategory: formData.runnerCategory,
+          // Answers to the extra questions (non-marathon events)
+          details: extraAnswers,
           paymentMethod,
           couponCode: appliedCoupon?.code || undefined,
         }),
@@ -277,6 +326,15 @@ const CheckoutPage = ({
               formData={formData}
               updateField={updateField}
               eventType={eventType}
+              raceFields={raceFields}
+            />
+            {/* Non-marathon events: their own questions (company, guests …) */}
+            <EventQuestions
+              title={`${getEventCategory(category).label.split(" /")[0]} details`}
+              questions={extraQuestions}
+              answers={extraAnswers}
+              errors={extraErrors}
+              onChange={updateExtraAnswer}
             />
           </div>
 

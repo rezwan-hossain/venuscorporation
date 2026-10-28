@@ -279,7 +279,9 @@ export async function getAnalytics(
       .slice(0, 8);
 
     const AGE_BANDS = ["Under 18", "18–29", "30–39", "40–49", "50–59", "60+"];
-    const ageBand = (birth: Date) => {
+    // No birth date (non-marathon registrations) → not counted in any band.
+    const ageBand = (birth: Date | null) => {
+      if (!birth) return null;
       const age = Math.floor((now.getTime() - birth.getTime()) / (365.25 * DAY_MS));
       if (age < 18) return AGE_BANDS[0];
       if (age < 30) return AGE_BANDS[1];

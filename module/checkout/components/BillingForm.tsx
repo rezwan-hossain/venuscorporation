@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { tshirtSizes } from "../data/tshirtSizes";
+import { asksQuestion } from "@/lib/event-checkout-form";
 import { BillingFormData } from "@/types/checkout";
 import {
   useState,
@@ -24,6 +25,8 @@ type BillingFormProps = {
   updateField: (field: keyof BillingFormData, value: string) => void;
   onValidationChange?: (isValid: boolean) => void;
   eventType: string;
+  /** false = only name, email and phone (non-marathon events). Default true. */
+  raceFields?: boolean;
 };
 
 export type BillingFormRef = {
@@ -43,7 +46,14 @@ type ValidationErrors = {
 };
 
 export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
-  ({ formData, updateField, onValidationChange, eventType }, ref) => {
+  (
+    { formData, updateField, onValidationChange, eventType, raceFields = true },
+    ref,
+  ) => {
+    // T-shirt size is only asked for in-person runs (rule: lib/event-checkout-form.ts).
+    // Checkout is marathon-only for now, hence "MARATHON".
+    const asksTshirt = asksQuestion("MARATHON", eventType, "T-shirt size");
+
     const [errors, setErrors] = useState<ValidationErrors>({});
     const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
 
@@ -69,16 +79,19 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
         "fullName",
         "email",
         "phone",
-        "gender",
-        "birthDate",
-        "ageCategory",
-        "bloodGroup",
-        "runnerCategory",
-        ...(eventType !== "VIRTUAL"
-          ? ["tshirtSize" as keyof BillingFormData]
-          : []),
+        // Everything below is for marathons only.
+        ...(!raceFields
+          ? []
+          : ([
+              "gender",
+              "birthDate",
+              "ageCategory",
+              "bloodGroup",
+              "runnerCategory",
+              ...(asksTshirt ? ["tshirtSize" as keyof BillingFormData] : []),
+            ] as (keyof BillingFormData)[])),
       ],
-      [eventType],
+      [asksTshirt, raceFields],
     );
 
     // Refs for all input fields
@@ -145,8 +158,7 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
 
           case "tshirtSize":
             // if (!value) return "T-Shirt size is required";
-            if (eventType !== "VIRTUAL" && !value)
-              return "T-Shirt size is required";
+            if (asksTshirt && !value) return "T-Shirt size is required";
 
             return "";
 
@@ -351,236 +363,254 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
             />
             <ErrorMessage field="phone" />
           </div>
-          <div>
-            <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
-              GENDER <span className="text-red-500 font-semibold">*</span>
-            </label>
-            <Select
-              value={formData.gender}
-              onValueChange={(val) => handleSelectChange("gender", val)}
-            >
-              <SelectTrigger
-                ref={inputRefs.gender}
-                className={`h-10 sm:h-11 rounded-md border ${
-                  touched.gender && errors.gender
-                    ? "border-red-500"
-                    : "border-gray-200"
-                } bg-background text-sm sm:text-base`}
-              >
-                <SelectValue placeholder="Select Gender" />
-              </SelectTrigger>
-
-              <SelectContent className="bg-white border border-gray-200">
-                <SelectItem value="Male">Male</SelectItem>
-                <SelectItem value="Female">Female</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-            <ErrorMessage field="gender" />
-          </div>
-        </div>
-
-        <div className="mb-4 sm:mb-5 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
-              DATE OF BIRTH{" "}
-              <span className="text-red-500 font-semibold">*</span>
-            </label>
-            <Input
-              ref={inputRefs.birthDate}
-              type="date"
-              className={`h-10 sm:h-11 border ${
-                touched.birthDate && errors.birthDate
-                  ? "border-red-500 focus:ring-red-500"
-                  : "border-gray-200"
-              } bg-background rounded-md text-sm sm:text-base`}
-              placeholder="Enter Date of Birth"
-              value={formData.birthDate}
-              onChange={(e) => handleFieldChange("birthDate", e.target.value)}
-              onBlur={() => handleBlur("birthDate")}
-              required
-            />
-            <ErrorMessage field="birthDate" />
-          </div>
-          <div>
-            <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
-              AGE CATEGORY <span className="text-red-500 font-semibold">*</span>
-            </label>
-            <Select
-              value={formData.ageCategory}
-              onValueChange={(val) => handleSelectChange("ageCategory", val)}
-            >
-              <SelectTrigger
-                ref={inputRefs.ageCategory}
-                className={`h-10 sm:h-11 rounded-md border ${
-                  touched.ageCategory && errors.ageCategory
-                    ? "border-red-500"
-                    : "border-gray-200"
-                } bg-background text-sm sm:text-base`}
-              >
-                <SelectValue placeholder="Select Age Category" />
-              </SelectTrigger>
-
-              <SelectContent className="bg-white border border-gray-200">
-                <SelectItem value="General">General</SelectItem>
-                <SelectItem value="Veteran (47+)">Veteran (47+)</SelectItem>
-              </SelectContent>
-            </Select>
-            <ErrorMessage field="ageCategory" />
-          </div>
-        </div>
-
-        <div className="mb-4 sm:mb-5 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
-              Blood Group <span className="text-red-500 font-semibold">*</span>
-            </label>
-            <Select
-              value={formData.bloodGroup}
-              onValueChange={(val) => handleSelectChange("bloodGroup", val)}
-            >
-              <SelectTrigger
-                ref={inputRefs.bloodGroup}
-                className={`h-10 sm:h-11 rounded-md border ${
-                  touched.bloodGroup && errors.bloodGroup
-                    ? "border-red-500"
-                    : "border-gray-200"
-                } bg-background text-sm sm:text-base`}
-              >
-                <SelectValue placeholder="Select Blood Group" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200">
-                <SelectItem value="A+">A+</SelectItem>
-                <SelectItem value="A-">A-</SelectItem>
-                <SelectItem value="B+">B+</SelectItem>
-                <SelectItem value="B-">B-</SelectItem>
-                <SelectItem value="O+">O+</SelectItem>
-                <SelectItem value="O-">O-</SelectItem>
-                <SelectItem value="AB+">AB+</SelectItem>
-                <SelectItem value="AB-">AB-</SelectItem>
-              </SelectContent>
-            </Select>
-            <ErrorMessage field="bloodGroup" />
-          </div>
-
-          {eventType !== "VIRTUAL" && (
+          {raceFields && (
             <div>
               <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
-                T-Shirt Size{" "}
-                <span className="text-red-500 font-semibold">*</span>
+                GENDER <span className="text-red-500 font-semibold">*</span>
               </label>
-
               <Select
-                value={formData.tshirtSize}
-                onValueChange={(val) => handleSelectChange("tshirtSize", val)}
+                value={formData.gender}
+                onValueChange={(val) => handleSelectChange("gender", val)}
               >
                 <SelectTrigger
-                  ref={inputRefs.tshirtSize}
+                  ref={inputRefs.gender}
                   className={`h-10 sm:h-11 rounded-md border ${
-                    touched.tshirtSize && errors.tshirtSize
+                    touched.gender && errors.gender
                       ? "border-red-500"
                       : "border-gray-200"
                   } bg-background text-sm sm:text-base`}
                 >
-                  <SelectValue placeholder="Select T-Shirt Size" />
+                  <SelectValue placeholder="Select Gender" />
                 </SelectTrigger>
 
                 <SelectContent className="bg-white border border-gray-200">
-                  {tshirtSizes.map((size) => (
-                    <SelectItem key={size.value} value={size.value}>
-                      {size.chest && size.length
-                        ? `${size.value} (Chest: ${size.chest}", Length: ${size.length}")`
-                        : size.value}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
-              <ErrorMessage field="tshirtSize" />
+              <ErrorMessage field="gender" />
             </div>
           )}
         </div>
 
-        <div className="mb-4 sm:mb-5 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
-              Emergency Contact Name
-            </label>
-            <Input
-              ref={inputRefs.emergencyContactName}
-              className="h-10 sm:h-11 border border-gray-200 bg-background rounded-md text-sm sm:text-base"
-              placeholder="Enter Emergency Contact Name"
-              value={formData.emergencyContactName}
-              onChange={(e) =>
-                handleFieldChange("emergencyContactName", e.target.value)
-              }
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
-              Emergency Contact Number
-            </label>
-            <Input
-              ref={inputRefs.emergencyContactNumber}
-              className={`h-10 sm:h-11 border ${
-                touched.emergencyContactNumber && errors.emergencyContactNumber
-                  ? "border-red-500 focus:ring-red-500"
-                  : "border-gray-200"
-              } bg-background rounded-md text-sm sm:text-base`}
-              type="text"
-              placeholder="e.g., 01712345678"
-              value={formData.emergencyContactNumber}
-              onChange={(e) =>
-                handleFieldChange("emergencyContactNumber", e.target.value)
-              }
-              onBlur={() => handleBlur("emergencyContactNumber")}
-            />
-            <ErrorMessage field="emergencyContactNumber" />
-          </div>
-        </div>
+        {/* Race fields — marathons only (other events ask their own questions below) */}
+        {raceFields && (
+          <>
+            <div className="mb-4 sm:mb-5 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+                  DATE OF BIRTH{" "}
+                  <span className="text-red-500 font-semibold">*</span>
+                </label>
+                <Input
+                  ref={inputRefs.birthDate}
+                  type="date"
+                  className={`h-10 sm:h-11 border ${
+                    touched.birthDate && errors.birthDate
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-200"
+                  } bg-background rounded-md text-sm sm:text-base`}
+                  placeholder="Enter Date of Birth"
+                  value={formData.birthDate}
+                  onChange={(e) =>
+                    handleFieldChange("birthDate", e.target.value)
+                  }
+                  onBlur={() => handleBlur("birthDate")}
+                  required
+                />
+                <ErrorMessage field="birthDate" />
+              </div>
+              <div>
+                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+                  AGE CATEGORY{" "}
+                  <span className="text-red-500 font-semibold">*</span>
+                </label>
+                <Select
+                  value={formData.ageCategory}
+                  onValueChange={(val) =>
+                    handleSelectChange("ageCategory", val)
+                  }
+                >
+                  <SelectTrigger
+                    ref={inputRefs.ageCategory}
+                    className={`h-10 sm:h-11 rounded-md border ${
+                      touched.ageCategory && errors.ageCategory
+                        ? "border-red-500"
+                        : "border-gray-200"
+                    } bg-background text-sm sm:text-base`}
+                  >
+                    <SelectValue placeholder="Select Age Category" />
+                  </SelectTrigger>
 
-        <div className="mb-4 sm:mb-5 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800 uppercase">
-              Community Name
-            </label>
-            <Input
-              ref={inputRefs.communityName}
-              className="h-10 sm:h-11 border border-gray-200 bg-background rounded-md text-sm sm:text-base"
-              placeholder="Enter Community Name"
-              value={formData.communityName}
-              onChange={(e) =>
-                handleFieldChange("communityName", e.target.value)
-              }
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
-              Runner Category{" "}
-              <span className="text-red-500 font-semibold">*</span>
-            </label>
-            <Select
-              value={formData.runnerCategory}
-              onValueChange={(val) => handleSelectChange("runnerCategory", val)}
-            >
-              <SelectTrigger
-                ref={inputRefs.runnerCategory}
-                className={`h-10 sm:h-11 rounded-md border ${
-                  touched.runnerCategory && errors.runnerCategory
-                    ? "border-red-500"
-                    : "border-gray-200"
-                } bg-background text-sm sm:text-base`}
-              >
-                <SelectValue placeholder="Select Runner Category" />
-              </SelectTrigger>
+                  <SelectContent className="bg-white border border-gray-200">
+                    <SelectItem value="General">General</SelectItem>
+                    <SelectItem value="Veteran (47+)">Veteran (47+)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <ErrorMessage field="ageCategory" />
+              </div>
+            </div>
 
-              <SelectContent className="bg-white border border-gray-200">
-                <SelectItem value="Amateur">Amateur</SelectItem>
-                {/* <SelectItem value="Elite">Elite</SelectItem> */}
-              </SelectContent>
-            </Select>
-            <ErrorMessage field="runnerCategory" />
-          </div>
-        </div>
+            <div className="mb-4 sm:mb-5 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+                  Blood Group{" "}
+                  <span className="text-red-500 font-semibold">*</span>
+                </label>
+                <Select
+                  value={formData.bloodGroup}
+                  onValueChange={(val) => handleSelectChange("bloodGroup", val)}
+                >
+                  <SelectTrigger
+                    ref={inputRefs.bloodGroup}
+                    className={`h-10 sm:h-11 rounded-md border ${
+                      touched.bloodGroup && errors.bloodGroup
+                        ? "border-red-500"
+                        : "border-gray-200"
+                    } bg-background text-sm sm:text-base`}
+                  >
+                    <SelectValue placeholder="Select Blood Group" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-gray-200">
+                    <SelectItem value="A+">A+</SelectItem>
+                    <SelectItem value="A-">A-</SelectItem>
+                    <SelectItem value="B+">B+</SelectItem>
+                    <SelectItem value="B-">B-</SelectItem>
+                    <SelectItem value="O+">O+</SelectItem>
+                    <SelectItem value="O-">O-</SelectItem>
+                    <SelectItem value="AB+">AB+</SelectItem>
+                    <SelectItem value="AB-">AB-</SelectItem>
+                  </SelectContent>
+                </Select>
+                <ErrorMessage field="bloodGroup" />
+              </div>
+
+              {asksTshirt && (
+                <div>
+                  <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+                    T-Shirt Size{" "}
+                    <span className="text-red-500 font-semibold">*</span>
+                  </label>
+
+                  <Select
+                    value={formData.tshirtSize}
+                    onValueChange={(val) =>
+                      handleSelectChange("tshirtSize", val)
+                    }
+                  >
+                    <SelectTrigger
+                      ref={inputRefs.tshirtSize}
+                      className={`h-10 sm:h-11 rounded-md border ${
+                        touched.tshirtSize && errors.tshirtSize
+                          ? "border-red-500"
+                          : "border-gray-200"
+                      } bg-background text-sm sm:text-base`}
+                    >
+                      <SelectValue placeholder="Select T-Shirt Size" />
+                    </SelectTrigger>
+
+                    <SelectContent className="bg-white border border-gray-200">
+                      {tshirtSizes.map((size) => (
+                        <SelectItem key={size.value} value={size.value}>
+                          {size.chest && size.length
+                            ? `${size.value} (Chest: ${size.chest}", Length: ${size.length}")`
+                            : size.value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <ErrorMessage field="tshirtSize" />
+                </div>
+              )}
+            </div>
+
+            <div className="mb-4 sm:mb-5 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+                  Emergency Contact Name
+                </label>
+                <Input
+                  ref={inputRefs.emergencyContactName}
+                  className="h-10 sm:h-11 border border-gray-200 bg-background rounded-md text-sm sm:text-base"
+                  placeholder="Enter Emergency Contact Name"
+                  value={formData.emergencyContactName}
+                  onChange={(e) =>
+                    handleFieldChange("emergencyContactName", e.target.value)
+                  }
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+                  Emergency Contact Number
+                </label>
+                <Input
+                  ref={inputRefs.emergencyContactNumber}
+                  className={`h-10 sm:h-11 border ${
+                    touched.emergencyContactNumber &&
+                    errors.emergencyContactNumber
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-200"
+                  } bg-background rounded-md text-sm sm:text-base`}
+                  type="text"
+                  placeholder="e.g., 01712345678"
+                  value={formData.emergencyContactNumber}
+                  onChange={(e) =>
+                    handleFieldChange("emergencyContactNumber", e.target.value)
+                  }
+                  onBlur={() => handleBlur("emergencyContactNumber")}
+                />
+                <ErrorMessage field="emergencyContactNumber" />
+              </div>
+            </div>
+
+            <div className="mb-4 sm:mb-5 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800 uppercase">
+                  Community Name
+                </label>
+                <Input
+                  ref={inputRefs.communityName}
+                  className="h-10 sm:h-11 border border-gray-200 bg-background rounded-md text-sm sm:text-base"
+                  placeholder="Enter Community Name"
+                  value={formData.communityName}
+                  onChange={(e) =>
+                    handleFieldChange("communityName", e.target.value)
+                  }
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+                  Runner Category{" "}
+                  <span className="text-red-500 font-semibold">*</span>
+                </label>
+                <Select
+                  value={formData.runnerCategory}
+                  onValueChange={(val) =>
+                    handleSelectChange("runnerCategory", val)
+                  }
+                >
+                  <SelectTrigger
+                    ref={inputRefs.runnerCategory}
+                    className={`h-10 sm:h-11 rounded-md border ${
+                      touched.runnerCategory && errors.runnerCategory
+                        ? "border-red-500"
+                        : "border-gray-200"
+                    } bg-background text-sm sm:text-base`}
+                  >
+                    <SelectValue placeholder="Select Runner Category" />
+                  </SelectTrigger>
+
+                  <SelectContent className="bg-white border border-gray-200">
+                    <SelectItem value="Amateur">Amateur</SelectItem>
+                    {/* <SelectItem value="Elite">Elite</SelectItem> */}
+                  </SelectContent>
+                </Select>
+                <ErrorMessage field="runnerCategory" />
+              </div>
+            </div>
+          </>
+        )}
       </div>
     );
   },

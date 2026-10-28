@@ -54,6 +54,9 @@ model Event {
   time            DateTime
   address         String
   eventType       EventType      @default(LIVE)
+  // What kind of event this is. Decides which questions checkout asks
+  // (see lib/event-checkout-form.ts). Existing events default to MARATHON.
+  category        EventCategory  @default(MARATHON)
   organizerId     Int
   description     String
   shortDesc       String?        @db.VarChar(255)
@@ -155,15 +158,19 @@ model Registration {
   bibNumber              String?
   fullName               String
   phone                  String
-  gender                 String
-  birthDate              DateTime
-  ageCategory            String
-  bloodGroup             String
-  tshirtSize             String
+  // Race fields: filled for MARATHON events only (empty for other categories).
+  gender                 String?
+  birthDate              DateTime?
+  ageCategory            String?
+  bloodGroup             String?
+  tshirtSize             String?
   emergencyContactName   String?
   emergencyContactNumber String?
   communityName          String?
-  runnerCategory         String
+  runnerCategory         String?
+  // Answers to the other categories' checkout questions, by field key,
+  // e.g. { "company": "BRAC Bank", "jobTitle": "CFO" }. Null for marathons.
+  details                Json?
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
   email                  String?
@@ -290,6 +297,17 @@ enum Role {
 enum EventType {
   LIVE
   VIRTUAL
+}
+
+// The kind of event. LIVE/VIRTUAL (EventType) is *how* people attend;
+// this is *what* the event is. Labels and checkout questions per category
+// live in lib/event-checkout-form.ts.
+enum EventCategory {
+  MARATHON    // runs, marathons, races — today's checkout
+  CONFERENCE  // summits, seminars
+  EXHIBITION  // expos, trade shows
+  SOCIAL      // weddings, galas, private events
+  WORKSHOP    // trainings, workshops
 }
 
 enum Status {

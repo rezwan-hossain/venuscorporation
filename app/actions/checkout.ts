@@ -15,6 +15,7 @@
 "use server";
 
 import { syncUser } from "@/lib/auth/syncUser"; // ← NEW
+import { checkExtraAnswer, getExtraQuestions, usesRaceFields } from "@/lib/event-checkout-form";
 import { Prisma } from "@/lib/generated/prisma/client"; // ← NEW: for the P2002 race check
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
@@ -230,15 +231,18 @@ export async function placeOrder(formData: {
   fullName: string;
   email: string;
   phone: string;
-  gender: string;
-  birthDate: string;
-  ageCategory: string;
-  bloodGroup: string;
-  tshirtSize: string;
+  // Race fields — used for MARATHON events only, ignored for other categories
+  gender?: string;
+  birthDate?: string;
+  ageCategory?: string;
+  bloodGroup?: string;
+  tshirtSize?: string;
   emergencyContactName?: string;
   emergencyContactNumber?: string;
   communityName?: string;
-  runnerCategory: string;
+  runnerCategory?: string;
+  // Answers to the extra questions (non-marathon events), by question key
+  details?: Record<string, string>;
   paymentMethod: string;
   couponCode?: string;
 }) {
@@ -408,6 +412,35 @@ export async function placeOrder(formData: {
         "order:package_not_available",
       );
       return { error: "This package is not available" };
+    }
+
+    // ─── WHAT THIS EVENT ASKS (category + format) ──────────
+    // Never trust the browser for this: read the event, then check the
+    // answers with the same rules the checkout form uses
+    // (lib/event-checkout-form.ts).
+    const eventInfo = await prisma.event.findUnique({
+      where: { id: pkg.eventId },
+      select: { category: true, eventType: true },
+    });
+    if (!eventInfo) return { error: "Event not found" };
+
+    const isMarathon = usesRaceFields(eventInfo.category);
+    let details: Record<string, string> | null = null;
+
+    if (isMarathon) {
+      // Marathons must have the race fields.
+      if (!formData.gender || !formData.birthDate || !formData.ageCategory || !formData.bloodGroup || !formData.runnerCategory) {
+        return { error: "Please fill in all required fields" };
+      }
+    } else {
+      // Other categories: keep only known answers, and check each one.
+      details = {};
+      for (const question of getExtraQuestions(eventInfo.category, eventInfo.eventType)) {
+        const answer = formData.details?.[question.key]?.trim() ?? "";
+        const problem = checkExtraAnswer(question, answer);
+        if (problem) return { error: problem };
+        if (answer) details[question.key] = answer;
+      }
     }
 
     // ─── FREE EXPIRED HOLDS ────────────────────────────────
@@ -591,15 +624,21 @@ export async function placeOrder(formData: {
           email: formData.email || null, // real email still stored here too
           fullName: formData.fullName,
           phone: formData.phone.trim(),
-          gender: formData.gender,
-          birthDate: new Date(formData.birthDate),
-          ageCategory: formData.ageCategory,
-          bloodGroup: formData.bloodGroup,
-          tshirtSize: formData.tshirtSize,
-          emergencyContactName: formData.emergencyContactName || null,
-          emergencyContactNumber: formData.emergencyContactNumber || null,
-          communityName: formData.communityName || null,
-          runnerCategory: formData.runnerCategory,
+          // Marathons → race fields. Other categories → race fields empty,
+          // answers in `details`.
+          ...(isMarathon
+            ? {
+                gender: formData.gender,
+                birthDate: new Date(formData.birthDate!),
+                ageCategory: formData.ageCategory,
+                bloodGroup: formData.bloodGroup,
+                tshirtSize: formData.tshirtSize,
+                emergencyContactName: formData.emergencyContactName || null,
+                emergencyContactNumber: formData.emergencyContactNumber || null,
+                communityName: formData.communityName || null,
+                runnerCategory: formData.runnerCategory,
+              }
+            : { details: details ?? undefined }),
         },
       });
 

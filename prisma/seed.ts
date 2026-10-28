@@ -93,6 +93,9 @@ const PHOTOS = [
   "1551698618-1dfe5d97d256",
   "1483721310020-03333e577078",
   "1540575467063-178a50c2df87", // 15: conference audience (business summit)
+  "1560439514-4e9645039924", // 16: expo / trade show floor
+  "1511795409834-ef04bbd61622", // 17: gala dinner / celebration
+  "1552664730-d307ca884978", // 18: workshop / team session
 ];
 
 // Bangladeshi mobile, the format checkout stores (BD_PHONE_REGEX).
@@ -101,6 +104,14 @@ const bdPhone = () => `01${int(3, 9)}${String(int(0, 99999999)).padStart(8, "0")
 const FIRST_NAMES_M = ["Rahim", "Karim", "Tanvir", "Sakib", "Arif", "Imran", "Fahim", "Nayeem", "Rafiq", "Mahmud", "Shuvo", "Hasan", "Rakib", "Sabbir", "Jahid", "Mehedi"];
 const FIRST_NAMES_F = ["Nusrat", "Farhana", "Tasnim", "Sadia", "Ayesha", "Mim", "Riya", "Sharmin", "Lamia", "Jannat", "Sumaiya", "Tahmina"];
 const LAST_NAMES = ["Hossain", "Rahman", "Ahmed", "Islam", "Chowdhury", "Khan", "Uddin", "Akter", "Sarker", "Talukder", "Mia", "Haque", "Siddique", "Kabir"];
+// Answers for non-marathon registrations (saved in Registration.details).
+const COMPANIES = ["Harbor Bank", "Orbit Telecom", "Crescent Foods", "Bluepeak Ltd", "Meridian Textiles", "Greenline Pharma", "Northwind Logistics"];
+const JOB_TITLES = ["CEO", "Managing Director", "Head of Marketing", "Sales Manager", "Founder", "Operations Lead", "Finance Manager"];
+const DIETARY = ["None", "None", "None", "Vegetarian", "Halal", "Other"];
+const VISITOR_TYPES = ["Buyer", "Exhibitor", "Visitor"];
+const MEALS = ["Chicken", "Beef", "Fish", "Vegetarian"];
+const EXPERIENCE = ["Beginner", "Intermediate", "Advanced"];
+
 const COMMUNITIES = ["Dhaka Runners Club", "Bangladesh Running Community", "Chattogram Striders", "Uttara Runners", "Mirpur Morning Joggers", "Run Bangladesh"];
 const PAY_METHODS = ["bKash", "Nagad", "Rocket", "VISA", "MasterCard", "DBBL Nexus", "Upay"];
 // Adult sizes only; kids' sizes would not match an adult birth date.
@@ -180,6 +191,7 @@ type EventSeed = {
   time: string;
   address: string;
   eventType: "LIVE" | "VIRTUAL";
+  category?: "MARATHON" | "CONFERENCE" | "EXHIBITION" | "SOCIAL" | "WORKSHOP"; // default MARATHON
   organizer: number; // index into ORGANIZERS
   status: "ACTIVE" | "COMPLETED";
   photo: number; // index into PHOTOS
@@ -211,6 +223,7 @@ const EVENTS: EventSeed[] = [
     time: "09:30",
     address: "Narsingdi Sadar, Narsingdi, Bangladesh",
     eventType: "LIVE",
+    category: "CONFERENCE",
     organizer: 3,
     status: "ACTIVE",
     photo: 15,
@@ -305,7 +318,124 @@ const EVENTS: EventSeed[] = [
     ],
     orders: 36,
   },
+
+  // ── Non-marathon events: one per category, so every checkout can be tested ──
+  {
+    name: "Bangladesh Trade Expo 2026",
+    slug: "bangladesh-trade-expo-2026",
+    day: eventDay(60),
+    time: "10:00",
+    address: "International Convention City Bashundhara, Dhaka",
+    eventType: "LIVE",
+    category: "EXHIBITION",
+    organizer: 3,
+    status: "ACTIVE",
+    photo: 16,
+    shortDesc: "Three halls of manufacturers, retailers and buyers under one roof.",
+    description:
+      "The Bangladesh Trade Expo brings together manufacturers, retailers, exporters and buyers across textiles, food, packaging and technology. Walk the halls, meet suppliers face to face and join the buyer-seller meetings on both days.",
+    packages: [
+      { name: "Visitor Pass", distance: "1 day", price: 300, availableSlots: 2000 },
+      { name: "Trade Buyer Pass", distance: "2 days + B2B meetings", price: 1500, availableSlots: 300 },
+    ],
+    orders: 30,
+  },
+  {
+    name: "Venus Corporate Gala Night",
+    slug: "venus-corporate-gala-night",
+    day: eventDay(35),
+    time: "19:00",
+    address: "Radisson Blu Water Garden, Dhaka",
+    eventType: "LIVE",
+    category: "SOCIAL",
+    organizer: 3,
+    status: "ACTIVE",
+    photo: 17,
+    shortDesc: "An evening of dinner, music and awards for partners and friends.",
+    description:
+      "Celebrate the year with partners and friends at the Venus Corporate Gala Night — a three-course dinner, live music and the annual partner awards. Black-tie optional.",
+    packages: [
+      { name: "Single Seat", distance: "1 guest", price: 5000, availableSlots: 200 },
+      { name: "Couple", distance: "2 guests", price: 9000, availableSlots: 80 },
+    ],
+    orders: 20,
+  },
+  {
+    name: "Event Planning Masterclass",
+    slug: "event-planning-masterclass",
+    day: eventDay(25),
+    time: "15:00",
+    address: "Online — Zoom",
+    eventType: "VIRTUAL",
+    category: "WORKSHOP",
+    organizer: 3,
+    status: "ACTIVE",
+    photo: 18,
+    shortDesc: "A live online workshop on planning and running memorable events.",
+    description:
+      "Learn how our team plans events end to end — budgets, vendors, timelines and the event day itself. A live, interactive online session with Q&A and a downloadable planning toolkit.",
+    packages: [
+      { name: "Standard", distance: "Live session", price: 800, availableSlots: 150 },
+      { name: "Plus", distance: "Session + toolkit", price: 1200, availableSlots: 100 },
+    ],
+    orders: 18,
+  },
 ];
+
+// ─── registration fields per category ─────────────────
+//
+// MARATHON → the race columns (gender, birth date, blood group, T-shirt …).
+// Others   → race columns left empty; answers go in `details` (JSON),
+//            matching the questions in lib/event-checkout-form.ts.
+// T-shirt follows the same rule as checkout: in-person runs only;
+// virtual runs save "VIRTUAL".
+
+type Runner = { gender: string; birthDate: Date };
+
+function registrationFields(
+  category: NonNullable<EventSeed["category"]>,
+  eventType: EventSeed["eventType"],
+  runner: Runner,
+  eventDate: Date,
+) {
+  if (category === "MARATHON") {
+    return {
+      gender: runner.gender,
+      birthDate: runner.birthDate,
+      ageCategory: ageCategory(runner.birthDate, eventDate),
+      bloodGroup: pick(BLOOD_GROUPS),
+      tshirtSize: eventType === "LIVE" ? pick(ADULT_SIZES) : "VIRTUAL",
+      emergencyContactName: `${pick([...FIRST_NAMES_M, ...FIRST_NAMES_F])} ${pick(LAST_NAMES)}`,
+      emergencyContactNumber: bdPhone(),
+      communityName: chance(0.4) ? pick(COMMUNITIES) : null,
+      runnerCategory: RUNNER_CATEGORIES[0],
+      details: undefined, // nothing extra for marathons
+    };
+  }
+
+  // Non-marathon: no race data, only the category's answers.
+  const details =
+    category === "CONFERENCE"
+      ? { company: pick(COMPANIES), jobTitle: pick(JOB_TITLES), ...(eventType === "LIVE" ? { dietary: pick(DIETARY) } : {}) }
+      : category === "EXHIBITION"
+        ? { company: pick(COMPANIES), visitorType: pick(VISITOR_TYPES) }
+        : category === "SOCIAL"
+          ? { guests: chance(0.4) ? 2 : 1, ...(eventType === "LIVE" ? { meal: pick(MEALS) } : {}), ...(chance(0.3) ? { message: "Looking forward to it!" } : {}) }
+          : { organisation: pick(COMPANIES), experience: pick(EXPERIENCE) }; // WORKSHOP
+
+  return {
+    gender: null,
+    birthDate: null,
+    ageCategory: null,
+    bloodGroup: null,
+    tshirtSize: null,
+    emergencyContactName: null,
+    emergencyContactNumber: null,
+    communityName: null,
+    runnerCategory: null,
+    details,
+  };
+}
 
 // ─── seed steps ───────────────────────────────────────
 
@@ -329,6 +459,7 @@ async function seedContent() {
         time: new Date(`${e.day}T${e.time}:00Z`),
         address: e.address,
         eventType: e.eventType,
+        category: e.category ?? "MARATHON",
         organizerId: organizers[e.organizer].id,
         status: e.status,
         shortDesc: e.shortDesc,
@@ -626,8 +757,9 @@ async function seedOrders(
 
       // ── order + registration + payment ──
       const confirmed = status === "CONFIRMED";
+      const category = seed.category ?? "MARATHON";
       let bibNumber: string | null = null;
-      if (confirmed) {
+      if (confirmed && category === "MARATHON") {
         const n = (bibCounter.get(pkg.id) ?? 0) + 1;
         bibCounter.set(pkg.id, n);
         bibNumber = `${prefixes.get(pkg.id)}${String(n).padStart(4, "0")}`;
@@ -667,15 +799,8 @@ async function seedOrders(
               fullName: `${runner.firstName} ${runner.lastName}`,
               email: runner.email,
               phone: runner.phone,
-              gender: runner.gender,
-              birthDate: runner.birthDate,
-              ageCategory: ageCategory(runner.birthDate, eventDate),
-              bloodGroup: pick(BLOOD_GROUPS),
-              tshirtSize: pick(ADULT_SIZES),
-              emergencyContactName: `${pick([...FIRST_NAMES_M, ...FIRST_NAMES_F])} ${pick(LAST_NAMES)}`,
-              emergencyContactNumber: bdPhone(),
-              communityName: chance(0.4) ? pick(COMMUNITIES) : null,
-              runnerCategory: RUNNER_CATEGORIES[0],
+              // Race fields for marathons, `details` for other categories.
+              ...registrationFields(category, seed.eventType, runner, eventDate),
               createdAt,
             },
           },

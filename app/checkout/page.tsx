@@ -63,6 +63,7 @@ async function CheckoutContent({
         userEmail={user?.email ?? ""}
         userName={user?.user_metadata?.full_name ?? ""}
         eventType={pkg.event.eventType}
+        category={pkg.event.category}
       />
     </>
   );
