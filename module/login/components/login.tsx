@@ -1,12 +1,12 @@
-// app/(auth)/login/page.tsx
+// module/login/components/login.tsx — login form (shared look: AuthLayout.tsx)
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { loginUser } from "@/app/(auth)/login/actions";
 import { signInWithGoogle } from "@/app/(auth)/register/actions";
 import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
+import { AuthCard, AuthHeader, AuthShell, GoogleButton, OrDivider } from "./AuthLayout";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -14,6 +14,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,66 +35,29 @@ export default function Login() {
 
   const handleGoogleSignIn = async () => {
     setError("");
+    setGoogleLoading(true);
     const result = await signInWithGoogle();
     if (result?.error) {
       setError(result.error);
+      setGoogleLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-20">
-      <div className="mt-12 w-full max-w-[480px]">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-6">
-            <Image
-              src="/MerchSports-small.png"
-              alt="MerchSports"
-              width={72}
-              height={72}
-              className="rounded-full object-cover mx-auto"
-              priority
-            />
-          </Link>
-          <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-wider text-gray-900">
-            Welcome Back
-          </h1>
-          <p className="text-sm text-gray-500 mt-2">Sign in to your account</p>
-        </div>
+    <AuthShell>
+        <AuthHeader label="Welcome back" title="Sign in to" italic="your account." subtitle="Manage your tickets and registrations in one place." />
 
-        {/* Form Card */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8 shadow-sm">
+        <AuthCard>
           {/* Google Sign In */}
-          <button
-            onClick={handleGoogleSignIn}
-            type="button"
-            className="w-full flex items-center justify-center gap-3 h-14 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
-          >
-            <Image
-              src="https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/login/googleLogo.svg"
-              alt="Google"
-              width={84}
-              height={84}
-            />
-            <span className="text-sm font-semibold text-gray-700">
-              Continue with Google
-            </span>
-          </button>
+          <GoogleButton onClick={handleGoogleSignIn} loading={googleLoading} />
 
-          {/* Divider */}
-          <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-              or
-            </span>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
+          <OrDivider />
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[#14245a] mb-1.5">
                 Email
               </label>
               <input
@@ -105,19 +69,19 @@ export default function Login() {
                   setError("");
                 }}
                 required
-                className="w-full h-11 px-4 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+                className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 transition-all"
               />
             </div>
 
             {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[#14245a]">
                   Password
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
+                  className="text-xs font-medium text-[#a8852f] hover:underline"
                 >
                   Forgot?
                 </Link>
@@ -132,7 +96,7 @@ export default function Login() {
                     setError("");
                   }}
                   required
-                  className="w-full h-11 px-4 pr-11 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+                  className="w-full h-12 px-4 pr-11 rounded-xl border border-slate-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 transition-all"
                 />
                 <button
                   type="button"
@@ -155,7 +119,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 h-12 bg-gray-900 text-white font-bold uppercase tracking-wider text-sm rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full flex items-center justify-center gap-3 h-13 bg-[#14245a] text-white font-semibold uppercase tracking-[0.15em] text-sm rounded-xl shadow-lg shadow-[#14245a]/20 hover:bg-[#0d1840] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading ? (
                 <>
@@ -165,26 +129,25 @@ export default function Login() {
               ) : (
                 <>
                   Sign In
-                  <div className="w-7 h-7 rounded-md bg-white/20 flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-md bg-[#dcb45c] text-[#0d1840] flex items-center justify-center">
                     <ArrowRight size={14} />
                   </div>
                 </>
               )}
             </button>
           </form>
-        </div>
+        </AuthCard>
 
         {/* Register Link */}
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-slate-500 mt-7">
           Don&apos;t have an account?{" "}
           <Link
             href="/register"
-            className="font-bold text-gray-900 hover:underline uppercase tracking-wider text-xs"
+            className="font-semibold text-[#14245a] underline decoration-[#c49a3c] underline-offset-4 hover:decoration-2"
           >
             Create Account
           </Link>
         </p>
-      </div>
-    </div>
+    </AuthShell>
   );
 }
