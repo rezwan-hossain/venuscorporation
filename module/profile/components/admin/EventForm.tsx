@@ -15,20 +15,16 @@ import {
   getAdminEvents,
   createOrganizer,
 } from "@/app/actions/admin";
-import { ImageUpload } from "./ImageUpload";
 import { EditablePackageRow } from "./EditablePackageRow";
 import Input from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Check, Loader2, Plus, Save, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { ImageVpsUpload } from "./ImageVpsUpload";
-import { DEFAULT_EVENT_CATEGORY, EVENT_CATEGORIES, getCheckoutQuestions } from "@/lib/event-checkout-form";
+import {
+  DEFAULT_EVENT_CATEGORY,
+  EVENT_CATEGORIES,
+  getCheckoutQuestions,
+} from "@/lib/event-checkout-form";
 
 const RichTextEditor = dynamic(
   () =>
@@ -38,13 +34,36 @@ const RichTextEditor = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="border border-gray-200 rounded-xl overflow-hidden">
-        <div className="h-10 bg-gray-50 border-b border-gray-200 animate-pulse" />
+      <div className="overflow-hidden rounded-xl border border-slate-200">
+        <div className="h-10 animate-pulse border-b border-slate-200 bg-slate-50" />
         <div className="h-[200px] bg-white animate-pulse" />
       </div>
     ),
   },
 );
+
+// Names shown in "… is required" messages
+const FIELD_LABELS: Partial<Record<keyof EventFormData, string>> = {
+  name: "Event name",
+  slug: "Page link",
+  date: "Date",
+  time: "Start time",
+  address: "Venue / address",
+  description: "Description",
+  bannerImage: "Banner image",
+  organizerId: "Organizer",
+};
+
+const STATUS_OPTIONS = [
+  { value: "ACTIVE", label: "Active", hint: "On sale" },
+  { value: "INACTIVE", label: "Inactive", hint: "Hidden from sale" },
+  { value: "COMPLETED", label: "Completed", hint: "Shown as a past event" },
+  { value: "CANCELLED", label: "Cancelled", hint: "Called off" },
+];
+
+// Shared styles
+const inputClass =
+  "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15";
 
 type EventFormProps = {
   event: AdminEvent | null;
@@ -131,7 +150,7 @@ export function EventForm({
   const refreshPackages = async () => {
     if (!event) return;
     const { events } = await getAdminEvents();
-    const updated = events.find((e: any) => e.id === event.id);
+    const updated = events.find((e: AdminEvent) => e.id === event.id);
     if (updated) {
       setPackages(updated.packages);
     }
@@ -154,7 +173,7 @@ export function EventForm({
     ];
     for (const field of required) {
       if (!form[field]) {
-        setError(`${field} is required`);
+        setError(`${FIELD_LABELS[field] ?? field} is required`);
         return;
       }
     }
@@ -234,175 +253,169 @@ export function EventForm({
     }
   };
 
+  const checkoutQuestions = getCheckoutQuestions(form.category, form.eventType);
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">
-        {isEditing ? "Edit Event" : "Create New Event"}
-      </h2>
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* ── Category: what kind of event this is ──────────────────
-            One card per category (list lives in lib/event-checkout-form.ts).
-            It decides which questions checkout asks attendees. */}
-        <fieldset>
-          <legend className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-            Event Category <span className="text-red-500">*</span>
-          </legend>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-            {EVENT_CATEGORIES.map((category) => {
-              const isSelected = form.category === category.value;
-              return (
-                <label
-                  key={category.value}
-                  className={`flex cursor-pointer flex-col rounded-lg border px-4 py-3 transition-colors ${
-                    isSelected
-                      ? "border-gray-900 bg-gray-900 text-white"
-                      : "border-gray-200 bg-gray-50 hover:border-gray-400"
-                  }`}
-                >
-                  {/* Real radio button (hidden) — keeps keyboard + screen readers working */}
-                  <input
-                    type="radio"
-                    name="category"
-                    value={category.value}
-                    checked={isSelected}
-                    onChange={() => updateField("category", category.value)}
-                    className="sr-only"
-                  />
-                  <span className="text-sm font-semibold">{category.label}</span>
-                  <span className={`text-xs ${isSelected ? "text-white/70" : "text-gray-500"}`}>
-                    {category.description}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-          {/* Tell the admin what this choice means for ticket buyers.
-              Depends on category AND format — e.g. a virtual marathon
-              doesn't ask for a T-shirt size. */}
-          <p className="mt-2 text-xs text-gray-500">
-            <span className="font-semibold text-gray-700">
-              Checkout will ask ({form.eventType === "VIRTUAL" ? "virtual" : "in person"}):
-            </span>{" "}
-            {getCheckoutQuestions(form.category, form.eventType)
-              .map((q) => q.label)
-              .join(", ")}
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* ─── Header ─── */}
+      <div>
+        <p className="text-[11px] font-semibold tracking-[0.2em] text-[#a8852f] uppercase">
+          Events
+        </p>
+        <p className="mt-1 text-2xl font-semibold text-[#14245a]">
+          {isEditing ? `Edit ${event.name}` : "New event"}
+        </p>
+        {!isEditing && (
+          <p className="mt-1 text-sm text-slate-500">
+            Fill in the details, create the event, then add its packages.
           </p>
-        </fieldset>
+        )}
+      </div>
 
-        {/* Name & Slug */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Event Name <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={form.name}
-              onChange={(e) => updateField("name", e.target.value)}
-              placeholder="e.g. Dhaka City Marathon 2026"
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
+      {/* ─── 1. Kind of event ───
+          Category + format decide which questions checkout asks
+          (lib/event-checkout-form.ts). */}
+      <FormSection number={1} title="Kind of event">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+          {EVENT_CATEGORIES.map((category) => (
+            <ChoiceCard
+              key={category.value}
+              selected={form.category === category.value}
+              onClick={() => updateField("category", category.value)}
+              title={category.label}
+              text={category.description}
             />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Slug <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={form.slug}
-              onChange={(e) => updateField("slug", e.target.value)}
-              placeholder="dhaka-city-marathon-2026"
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
+          ))}
+        </div>
+
+        <div>
+          <p className={labelClass}>Format</p>
+          <div className="grid grid-cols-2 gap-2.5">
+            <ChoiceCard
+              selected={form.eventType === "LIVE"}
+              onClick={() => updateField("eventType", "LIVE")}
+              title="In person"
+              text="At a venue"
+            />
+            <ChoiceCard
+              selected={form.eventType === "VIRTUAL"}
+              onClick={() => updateField("eventType", "VIRTUAL")}
+              title="Virtual"
+              text="Online / from anywhere"
             />
           </div>
         </div>
 
-        {/* Date, Time, Type */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Date <span className="text-red-500">*</span>
-            </label>
+        {/* What ticket buyers will be asked */}
+        <div className="rounded-xl bg-[#faf8f3] p-3 ring-1 ring-[#c49a3c]/20">
+          <p className="text-xs font-semibold text-[#14245a]">
+            Checkout will ask
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {checkoutQuestions.map((q) => (
+              <span
+                key={q.label}
+                className="rounded-full bg-white px-2.5 py-0.5 text-xs text-slate-600 ring-1 ring-slate-200"
+              >
+                {q.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </FormSection>
+
+      {/* ─── 2. Basics ─── */}
+      <FormSection number={2} title="Basics">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField label="Event name" required>
+            <Input
+              value={form.name}
+              onChange={(e) => updateField("name", e.target.value)}
+              placeholder="e.g. Narsingdi Business Summit 2026"
+              className={inputClass}
+            />
+          </FormField>
+          <FormField label="Page link" required hint="Filled in from the name">
+            <div className="flex items-center rounded-xl border border-slate-200 bg-white focus-within:border-[#c49a3c] focus-within:ring-4 focus-within:ring-[#c49a3c]/15">
+              <span className="pl-3 text-sm text-slate-400">/events/</span>
+              <input
+                value={form.slug}
+                onChange={(e) => updateField("slug", e.target.value)}
+                placeholder="narsingdi-business-summit-2026"
+                className="h-11 min-w-0 flex-1 bg-transparent pr-3 text-sm outline-none"
+              />
+            </div>
+          </FormField>
+          <FormField label="Date" required>
             <Input
               type="date"
               value={form.date}
               onChange={(e) => updateField("date", e.target.value)}
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
+              className={inputClass}
             />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Time <span className="text-red-500">*</span>
-            </label>
+          </FormField>
+          <FormField label="Start time" required>
             <Input
               type="time"
               value={form.time}
               onChange={(e) => updateField("time", e.target.value)}
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
+              className={inputClass}
             />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Format
-            </label>
-            <Select
-              value={form.eventType}
-              onValueChange={(val) => updateField("eventType", val)}
+          </FormField>
+          <div className="sm:col-span-2">
+            <FormField
+              label={
+                form.eventType === "VIRTUAL"
+                  ? "Where (e.g. Zoom)"
+                  : "Venue / address"
+              }
+              required
             >
-              <SelectTrigger className="h-11 rounded-lg border border-gray-200 bg-gray-50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200">
-                <SelectItem value="LIVE">In person</SelectItem>
-                <SelectItem value="VIRTUAL">Virtual</SelectItem>
-              </SelectContent>
-            </Select>
+              <Input
+                value={form.address}
+                onChange={(e) => updateField("address", e.target.value)}
+                placeholder={
+                  form.eventType === "VIRTUAL"
+                    ? "Online — Zoom"
+                    : "ICCB, Purbachal, Dhaka"
+                }
+                className={inputClass}
+              />
+            </FormField>
           </div>
         </div>
 
-        {/* Address */}
+        {/* Organizer: pick one, or add a new one */}
         <div>
-          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-            Address <span className="text-red-500">*</span>
-          </label>
-          <Input
-            value={form.address}
-            onChange={(e) => updateField("address", e.target.value)}
-            placeholder="Hatirjheel, Dhaka, Bangladesh"
-            className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
-          />
-        </div>
-
-        {/* Organizer */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
-              Organizer <span className="text-red-500">*</span>
-            </label>
+          <div className="mb-1.5 flex items-center justify-between">
+            <p className={labelClass.replace("mb-1.5 ", "")}>
+              Organizer <span className="text-[#c49a3c]">*</span>
+            </p>
             <button
               type="button"
               onClick={() => setShowNewOrg(!showNewOrg)}
-              className="text-xs text-neon-lime font-bold uppercase tracking-wider hover:underline cursor-pointer"
+              className="cursor-pointer text-xs font-semibold text-[#a8852f] hover:underline"
             >
-              {showNewOrg ? "Cancel" : "+ New Organizer"}
+              {showNewOrg ? "Cancel" : "+ New organizer"}
             </button>
           </div>
 
           {showNewOrg ? (
-            <div className="border border-gray-200 rounded-lg p-4 space-y-3 bg-gray-50">
+            <div className="space-y-3 rounded-xl bg-[#faf8f3] p-4 ring-1 ring-[#c49a3c]/20">
               <Input
                 value={newOrg.name}
                 onChange={(e) => setNewOrg({ ...newOrg, name: e.target.value })}
                 placeholder="Organizer name"
-                className="h-10 border border-gray-200 bg-white rounded-lg"
+                className={inputClass}
               />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Input
                   value={newOrg.email}
                   onChange={(e) =>
                     setNewOrg({ ...newOrg, email: e.target.value })
                   }
                   placeholder="Email (optional)"
-                  className="h-10 border border-gray-200 bg-white rounded-lg"
+                  className={inputClass}
                 />
                 <Input
                   value={newOrg.phone}
@@ -410,51 +423,46 @@ export function EventForm({
                     setNewOrg({ ...newOrg, phone: e.target.value })
                   }
                   placeholder="Phone (optional)"
-                  className="h-10 border border-gray-200 bg-white rounded-lg"
+                  className={inputClass}
                 />
               </div>
               <button
                 type="button"
                 onClick={handleCreateOrganizer}
-                className="text-xs font-bold bg-gray-900 text-white px-4 py-2 rounded-lg cursor-pointer"
+                className="cursor-pointer rounded-xl bg-[#14245a] px-4 py-2 text-xs font-semibold text-white hover:bg-[#1d3274]"
               >
-                Create Organizer
+                Create organizer
               </button>
             </div>
           ) : (
-            <Select
+            <select
               value={form.organizerId}
-              onValueChange={(val) => updateField("organizerId", val)}
+              onChange={(e) => updateField("organizerId", e.target.value)}
+              className={`${inputClass} cursor-pointer`}
             >
-              <SelectTrigger className="h-11 rounded-lg border border-gray-200 bg-gray-50">
-                <SelectValue placeholder="Select organizer" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200">
-                {orgList.map((org) => (
-                  <SelectItem key={org.id} value={String(org.id)}>
-                    {org.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <option value="">Select organizer</option>
+              {orgList.map((org) => (
+                <option key={org.id} value={String(org.id)}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
           )}
         </div>
-        {/* Short Description */}
+      </FormSection>
+
+      {/* ─── 3. Description ─── */}
+      <FormSection number={3} title="Description">
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
-              Short Description{" "}
-              <span className="text-gray-400 font-normal normal-case">
-                (optional)
-              </span>
-            </label>
+          <div className="mb-1.5 flex items-center justify-between">
+            <p className={labelClass.replace("mb-1.5 ", "")}>
+              Short description
+            </p>
             <span
-              className={`text-[10px] font-medium ${
-                form.shortDesc.length > 255
-                  ? "text-red-500"
-                  : form.shortDesc.length > 200
-                    ? "text-yellow-500"
-                    : "text-gray-400"
+              className={`text-[11px] tabular-nums ${
+                form.shortDesc.length > 200
+                  ? "text-amber-600"
+                  : "text-slate-400"
               }`}
             >
               {form.shortDesc.length}/255
@@ -467,51 +475,29 @@ export function EventForm({
                 updateField("shortDesc", e.target.value);
               }
             }}
-            placeholder="Brief one-liner for cards and previews..."
-            className="w-full h-11 px-3 border border-gray-200 bg-gray-50 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all"
+            placeholder="One line for event cards and the homepage hero"
+            className={inputClass}
           />
         </div>
-
-        {/* Description */}
-        {/* <div>
-          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-            Description <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={form.description}
-            onChange={(e) => updateField("description", e.target.value)}
-            rows={4}
-            placeholder="Describe your event..."
-            className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
-          />
-        </div> */}
         <div>
-          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-            Description <span className="text-red-500">*</span>
-          </label>
+          <p className={labelClass}>
+            Full description <span className="text-[#c49a3c]">*</span>
+          </p>
           <RichTextEditor
             value={form.description}
             onChange={(html) => updateField("description", html)}
             placeholder="Write your full event description..."
           />
         </div>
+      </FormSection>
 
-        {/* Images */}
-        <div className="space-y-5">
+      {/* ─── 4. Images ─── */}
+      <FormSection number={4} title="Images">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-[1fr_11rem]">
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Banner Image <span className="text-red-500">*</span>
-            </label>
-            {/* <ImageUpload
-              value={form.bannerImage}
-              onChange={(url) => updateField("bannerImage", url)}
-              bucket="event-images"
-              folder="banners"
-              label="Upload Banner Image"
-              aspectRatio="aspect-[16/7]"
-              maxSizeMB={5}
-            /> */}
-
+            <p className={labelClass}>
+              Banner <span className="text-[#c49a3c]">*</span>
+            </p>
             <ImageVpsUpload
               value={form.bannerImage}
               onChange={(url) => updateField("bannerImage", url)}
@@ -519,24 +505,12 @@ export function EventForm({
               aspectRatio="aspect-[16/7]"
               maxSizeMB={5}
             />
+            <p className="mt-1 text-xs text-slate-400">
+              Wide photo for the event page and homepage.
+            </p>
           </div>
-
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Thumbnail Image{" "}
-              <span className="text-gray-400 font-normal normal-case">
-                (optional)
-              </span>
-            </label>
-            {/* <ImageUpload
-              value={form.thumbImage}
-              onChange={(url) => updateField("thumbImage", url)}
-              bucket="event-images"
-              folder="thumbnails"
-              label="Upload Thumbnail"
-              aspectRatio="aspect-square"
-              maxSizeMB={2}
-            /> */}
+            <p className={labelClass}>Thumbnail</p>
             <ImageVpsUpload
               value={form.thumbImage}
               onChange={(url) => updateField("thumbImage", url)}
@@ -544,114 +518,105 @@ export function EventForm({
               aspectRatio="aspect-square"
               maxSizeMB={2}
             />
+            <p className="mt-1 text-xs text-slate-400">Optional, square.</p>
           </div>
         </div>
+      </FormSection>
 
-        {/* Min Package Price & Status */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Min Package Price
-            </label>
+      {/* ─── 5. Publishing ─── */}
+      <FormSection number={5} title="Publishing">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          {STATUS_OPTIONS.map((option) => (
+            <ChoiceCard
+              key={option.value}
+              selected={form.status === option.value}
+              onClick={() => updateField("status", option.value)}
+              title={option.label}
+              text={option.hint}
+            />
+          ))}
+        </div>
+        <div className="max-w-xs">
+          <FormField
+            label="“From” price ৳"
+            hint="Shown as “From ৳…” on event cards"
+          >
             <Input
               type="number"
               value={form.minPackagePrice}
               onChange={(e) => updateField("minPackagePrice", e.target.value)}
               placeholder="500"
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
+              className={inputClass}
             />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Status
-            </label>
-            <Select
-              value={form.status}
-              onValueChange={(val) => updateField("status", val)}
-            >
-              <SelectTrigger className="h-11 rounded-lg border border-gray-200 bg-gray-50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200">
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="INACTIVE">Inactive</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                <SelectItem value="COMPLETED">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          </FormField>
         </div>
+      </FormSection>
 
-        {!isEditing && (
-          <h2 className="text-[20px] text-gray-400 mt-2 text-center">
-            You can add Event packages after you create the event.
-          </h2>
-        )}
+      {/* ─── 6. Packages (after the event exists) ─── */}
+      {!isEditing ? (
+        <p className="rounded-2xl border border-dashed border-[#c49a3c]/40 bg-[#faf8f3] p-5 text-center text-sm text-slate-500">
+          Packages (tickets, prices, slots) are added after the event is
+          created.
+        </p>
+      ) : (
+        <FormSection number={6} title={`Packages (${packages.length})`}>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-slate-500">
+              The tickets people can buy. Edit a row with the pencil.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowAddPackage(!showAddPackage)}
+              className="flex shrink-0 cursor-pointer items-center gap-1 rounded-xl bg-[#14245a] px-3 py-2 text-xs font-semibold text-white hover:bg-[#1d3274]"
+            >
+              {showAddPackage ? (
+                <>
+                  <X size={13} /> Cancel
+                </>
+              ) : (
+                <>
+                  <Plus size={13} /> Add package
+                </>
+              )}
+            </button>
+          </div>
 
-        {/* ─── Packages Section (Edit Mode Only) ─── */}
-        {isEditing && (
-          <div className="border-t border-gray-200 pt-6 mt-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
-                  Packages ({packages.length})
-                </h3>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Click the edit icon to modify a package inline
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAddPackage(!showAddPackage)}
-                className="text-xs font-bold text-neon-lime uppercase tracking-wider hover:underline cursor-pointer flex items-center gap-1"
-              >
-                {showAddPackage ? (
-                  <>
-                    <X size={12} /> Cancel
-                  </>
-                ) : (
-                  <>
-                    <Plus size={12} /> Add Package
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Add Package Form */}
-            {showAddPackage && (
-              <div className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">
-                  New Package
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* New package */}
+          {showAddPackage && (
+            <div className="rounded-xl bg-[#faf8f3] p-4 ring-1 ring-[#c49a3c]/20">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <FormField label="Name">
                   <Input
                     value={newPackage.name}
                     onChange={(e) =>
                       setNewPackage({ ...newPackage, name: e.target.value })
                     }
-                    placeholder="Name (e.g. 5K Fun Run)"
-                    className="h-10 border border-gray-200 bg-white rounded-lg"
+                    placeholder="General Pass"
+                    className={inputClass}
                   />
+                </FormField>
+                <FormField label="Distance / duration">
                   <Input
                     value={newPackage.distance}
                     onChange={(e) =>
-                      setNewPackage({
-                        ...newPackage,
-                        distance: e.target.value,
-                      })
+                      setNewPackage({ ...newPackage, distance: e.target.value })
                     }
-                    placeholder="Distance (e.g. 5K)"
-                    className="h-10 border border-gray-200 bg-white rounded-lg"
+                    placeholder="Day pass / 5K"
+                    className={inputClass}
                   />
+                </FormField>
+                <FormField label="Price ৳">
                   <Input
                     type="number"
                     value={newPackage.price}
                     onChange={(e) =>
                       setNewPackage({ ...newPackage, price: e.target.value })
                     }
-                    placeholder="Price"
-                    className="h-10 border border-gray-200 bg-white rounded-lg"
+                    placeholder="1500"
+                    className={inputClass}
                   />
+                </FormField>
+                <FormField label="Slots">
                   <Input
                     type="number"
                     value={newPackage.availableSlots}
@@ -661,135 +626,196 @@ export function EventForm({
                         availableSlots: e.target.value,
                       })
                     }
-                    placeholder="Slots"
-                    className="h-10 border border-gray-200 bg-white rounded-lg"
+                    placeholder="200"
+                    className={inputClass}
                   />
-                </div>
-                <button
-                  type="button"
-                  onClick={handleAddPackage}
-                  disabled={pkgLoading === -1}
-                  className="mt-3 flex items-center gap-2 text-xs font-bold bg-gray-900 text-white px-4 py-2 rounded-lg cursor-pointer disabled:opacity-50"
-                >
-                  {pkgLoading === -1 && (
-                    <Loader2 size={12} className="animate-spin" />
-                  )}
-                  Add Package
-                </button>
+                </FormField>
               </div>
-            )}
+              <button
+                type="button"
+                onClick={handleAddPackage}
+                disabled={pkgLoading === -1}
+                className="mt-3 flex cursor-pointer items-center gap-2 rounded-xl bg-[#14245a] px-4 py-2 text-xs font-semibold text-white hover:bg-[#1d3274] disabled:opacity-50"
+              >
+                {pkgLoading === -1 && (
+                  <Loader2 size={12} className="animate-spin" />
+                )}
+                Save package
+              </button>
+            </div>
+          )}
 
-            {/* ─── Editable Package Rows ─── */}
-            {packages.length === 0 ? (
-              <div className="border border-dashed border-gray-200 rounded-lg p-8 text-center">
-                <p className="text-sm text-gray-400">No packages yet</p>
-                <p className="text-xs text-gray-300 mt-1">
-                  Add a package to get started
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {packages.map((pkg) => (
-                  <EditablePackageRow
-                    key={pkg.id}
-                    pkg={pkg}
-                    onUpdate={refreshPackages}
-                    onDelete={() =>
-                      setPackages((prev) => prev.filter((p) => p.id !== pkg.id))
-                    }
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Packages Summary */}
-            {packages.length > 0 && (
-              <div className="mt-4 flex items-center justify-between px-3 py-2.5 bg-gray-50 rounded-lg border border-gray-100">
-                <div className="flex items-center gap-4 text-xs text-gray-500">
-                  <span>
-                    <span className="font-bold text-gray-700">
-                      {packages.length}
-                    </span>{" "}
-                    packages
-                  </span>
-                  <span>
-                    <span className="font-bold text-gray-700">
-                      {packages.reduce((sum, p) => sum + p.availableSlots, 0)}
-                    </span>{" "}
-                    total slots
-                  </span>
-                  <span>
-                    <span className="font-bold text-gray-700">
-                      {packages.reduce((sum, p) => sum + p.usedSlots, 0)}
-                    </span>{" "}
-                    used
-                  </span>
-                </div>
-                <div className="text-xs text-gray-500">
-                  Price range:{" "}
-                  <span className="font-bold text-gray-700">
-                    ৳
-                    {Math.min(
-                      ...packages.map((p) => Number(p.price)),
-                    ).toLocaleString()}
-                  </span>
-                  {" – "}
-                  <span className="font-bold text-gray-700">
-                    ৳
-                    {Math.max(
-                      ...packages.map((p) => Number(p.price)),
-                    ).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Messages */}
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm">{error}</p>
-          </div>
-        )}
-
-        {success && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-            <Check className="w-4 h-4 text-green-600" />
-            <p className="text-green-600 text-sm font-medium">
-              Event {isEditing ? "updated" : "created"} successfully!
+          {/* Package rows */}
+          {packages.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
+              No packages yet — add the first one.
             </p>
-          </div>
-        )}
+          ) : (
+            <div className="space-y-2">
+              {packages.map((pkg) => (
+                <EditablePackageRow
+                  key={pkg.id}
+                  pkg={pkg}
+                  onUpdate={refreshPackages}
+                  onDelete={() =>
+                    setPackages((prev) => prev.filter((p) => p.id !== pkg.id))
+                  }
+                />
+              ))}
+            </div>
+          )}
 
-        {/* Submit */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-5 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-2.5 text-sm font-bold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer uppercase tracking-wider"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                {isEditing ? "Updating..." : "Creating..."}
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                {isEditing ? "Update Event" : "Create Event"}
-              </>
-            )}
-          </button>
-        </div>
-      </form>
-    </div>
+          {/* Totals */}
+          {packages.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#faf8f3] px-4 py-3 text-xs text-slate-500 ring-1 ring-[#c49a3c]/20">
+              <span>
+                <b className="text-[#14245a]">
+                  {packages.reduce((sum, p) => sum + p.usedSlots, 0)}
+                </b>{" "}
+                of{" "}
+                <b className="text-[#14245a]">
+                  {packages.reduce((sum, p) => sum + p.availableSlots, 0)}
+                </b>{" "}
+                slots sold
+              </span>
+              <span>
+                Prices{" "}
+                <b className="text-[#14245a]">
+                  ৳
+                  {Math.min(
+                    ...packages.map((p) => Number(p.price)),
+                  ).toLocaleString()}
+                  {" – "}৳
+                  {Math.max(
+                    ...packages.map((p) => Number(p.price)),
+                  ).toLocaleString()}
+                </b>
+              </span>
+            </div>
+          )}
+        </FormSection>
+      )}
+
+      {/* ─── Save ─── */}
+      {error && (
+        <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-100">
+          {error}
+        </p>
+      )}
+      {success && (
+        <p className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 ring-1 ring-emerald-100">
+          <Check className="h-4 w-4" />
+          Event {isEditing ? "updated" : "created"}.
+        </p>
+      )}
+      <div className="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="cursor-pointer rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 hover:border-slate-300"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex cursor-pointer items-center gap-2 rounded-xl bg-[#14245a] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#1d3274] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          {isEditing ? "Save changes" : "Create event"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  Small pieces
+// ════════════════════════════════════════════════════════════════════════
+
+const labelClass =
+  "mb-1.5 block text-[11px] font-semibold tracking-[0.15em] text-[#14245a] uppercase";
+
+/** A white card with a numbered title. */
+function FormSection({
+  number,
+  title,
+  children,
+}: {
+  number: number;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-4 rounded-2xl bg-white p-5 ring-1 ring-slate-200/70 sm:p-6">
+      <div className="flex items-center gap-3">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[#c49a3c] text-xs font-semibold text-[#a8852f]">
+          {number}
+        </span>
+        <p className="text-lg font-semibold text-[#14245a]">{title}</p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/** A label above an input, with an optional hint below. */
+function FormField({
+  label,
+  required,
+  hint,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block min-w-0">
+      <span className={labelClass}>
+        {label}
+        {required && <span className="ml-0.5 text-[#c49a3c]">*</span>}
+      </span>
+      {children}
+      {hint && (
+        <span className="mt-1 block text-xs text-slate-400">{hint}</span>
+      )}
+    </label>
+  );
+}
+
+/** A clickable card for choosing one option (category, format, status). */
+function ChoiceCard({
+  selected,
+  onClick,
+  title,
+  text,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  title: string;
+  text: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={`cursor-pointer rounded-xl p-3 text-left ring-1 transition ${
+        selected
+          ? "bg-[#faf8f3] ring-2 ring-[#c49a3c]"
+          : "bg-white ring-slate-200 hover:ring-slate-300"
+      }`}
+    >
+      <span className="block text-sm font-semibold text-[#14245a]">
+        {title}
+      </span>
+      <span className="mt-0.5 block text-xs text-slate-500">{text}</span>
+    </button>
   );
 }
