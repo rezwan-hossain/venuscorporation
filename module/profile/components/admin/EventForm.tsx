@@ -493,7 +493,7 @@ export function EventForm({
 
       {/* ─── 4. Images ─── */}
       <FormSection number={4} title="Images">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-[1fr_11rem]">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-[1fr_13rem]">
           <div>
             <p className={labelClass}>
               Banner <span className="text-[#c49a3c]">*</span>
@@ -502,6 +502,7 @@ export function EventForm({
               value={form.bannerImage}
               onChange={(url) => updateField("bannerImage", url)}
               folder="banners"
+              label="Upload banner"
               aspectRatio="aspect-[16/7]"
               maxSizeMB={5}
             />
@@ -515,6 +516,7 @@ export function EventForm({
               value={form.thumbImage}
               onChange={(url) => updateField("thumbImage", url)}
               folder="thumbnails"
+              label="Upload thumbnail"
               aspectRatio="aspect-square"
               maxSizeMB={2}
             />

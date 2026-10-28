@@ -239,7 +239,7 @@ export function ImageVpsUpload({
       {/* ─── Preview state ─── */}
       {value ? (
         <div
-          className={`relative ${aspectRatio} rounded-xl overflow-hidden border border-gray-200 group`}
+          className={`relative ${aspectRatio} group overflow-hidden rounded-xl ring-1 ring-slate-200`}
         >
           {/* toSrc() handles relative paths, legacy Supabase URLs and pasted URLs */}
           <img
@@ -253,7 +253,7 @@ export function ImageVpsUpload({
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="px-4 py-2 bg-white text-gray-900 text-xs font-bold rounded-lg cursor-pointer hover:bg-gray-100 transition-colors uppercase tracking-wider"
+              className="cursor-pointer rounded-lg bg-white px-4 py-2 text-xs font-semibold text-[#14245a] transition-colors hover:bg-[#faf8f3]"
             >
               Replace
             </button>
@@ -296,49 +296,57 @@ export function ImageVpsUpload({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`${aspectRatio} border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-all duration-200 ${
+          className={`${aspectRatio} flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center transition-all duration-200 ${
             uploadState === "uploading"
-              ? "border-gray-300 bg-gray-50 cursor-wait"
+              ? "cursor-wait border-[#c49a3c]/40 bg-[#faf8f3]"
               : dragOver
-                ? "border-gray-900 bg-gray-50 scale-[1.01]"
+                ? "scale-[1.01] border-[#c49a3c] bg-[#faf8f3]"
                 : uploadState === "error"
-                  ? "border-red-300 bg-red-50/30 cursor-pointer hover:border-red-400"
-                  : "border-gray-300 cursor-pointer hover:border-gray-400 hover:bg-gray-50"
+                  ? "cursor-pointer border-red-300 bg-red-50/40 hover:border-red-400"
+                  : "cursor-pointer border-[#c49a3c]/35 bg-[#faf8f3]/60 hover:border-[#c49a3c] hover:bg-[#faf8f3]"
           }`}
         >
           {uploadState === "uploading" ? (
-            <div className="flex flex-col items-center">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-400 mb-2" />
-              <p className="text-sm font-medium text-gray-600">Uploading...</p>
-              <div className="w-32 h-1.5 bg-gray-200 rounded-full mt-2 overflow-hidden">
+            <div className="flex w-full flex-col items-center">
+              <Loader2 className="mb-2 h-7 w-7 animate-spin text-[#c49a3c]" />
+              <p className="text-sm font-medium text-[#14245a]">Uploading…</p>
+              <div className="mt-2 h-1.5 w-full max-w-32 overflow-hidden rounded-full bg-[#c49a3c]/15">
                 <div
-                  className="h-full bg-gray-900 rounded-full transition-all duration-300"
+                  className="h-full rounded-full bg-[#c49a3c] transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-1">{progress}%</p>
+              <p className="mt-1 text-xs text-slate-400">{progress}%</p>
             </div>
           ) : (
             <>
-              <Upload
-                className={`w-8 h-8 mb-2 ${
-                  uploadState === "error" ? "text-red-400" : "text-gray-400"
+              <span
+                className={`mb-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                  uploadState === "error"
+                    ? "bg-red-100 text-red-500"
+                    : "bg-white text-[#c49a3c] ring-1 ring-[#c49a3c]/30"
                 }`}
-              />
+              >
+                <Upload className="h-4 w-4" />
+              </span>
               <p
-                className={`text-sm font-medium ${
-                  uploadState === "error" ? "text-red-600" : "text-gray-600"
+                className={`text-sm font-semibold ${
+                  uploadState === "error" ? "text-red-600" : "text-[#14245a]"
                 }`}
               >
                 {uploadState === "error" ? "Try again" : label}
               </p>
-              <p className="text-xs text-gray-400 mt-1">
-                Drag &amp; drop or click · Max {maxSizeMB}MB
+              <p className="mt-1 text-xs text-balance text-slate-500">
+                Click or drop a photo
               </p>
-              <p className="text-[10px] text-gray-300 mt-0.5">
+              <p className="mt-0.5 text-[11px] text-slate-400">
                 {acceptedTypes
-                  .map((t) => t.split("/")[1].toUpperCase())
-                  .join(" · ")}
+                  .map((t) =>
+                    t.split("/")[1].toUpperCase().replace("JPEG", "JPG"),
+                  )
+                  .join(", ")}
+                <br />
+                Up to {maxSizeMB} MB
               </p>
             </>
           )}
@@ -372,16 +380,16 @@ export function ImageVpsUpload({
       {!value && uploadState === "idle" && (
         <>
           <div className="flex items-center gap-2">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-              or paste URL
+            <div className="h-px flex-1 bg-slate-200" />
+            <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+              or paste a link
             </span>
-            <div className="flex-1 h-px bg-gray-200" />
+            <div className="h-px flex-1 bg-slate-200" />
           </div>
           <input
             type="text"
-            placeholder="https://example.com/image.jpg"
-            className="w-full h-10 px-3 border border-gray-200 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all placeholder:text-gray-300"
+            placeholder="https://…"
+            className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition placeholder:text-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
