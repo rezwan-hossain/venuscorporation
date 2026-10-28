@@ -1,24 +1,31 @@
 "use client";
 
-// module/contact/components/DatePicker.tsx
+// components/ui/DatePicker.tsx
 //
 // Brand-styled date picker (replaces the browser's plain <input type="date">).
+// Used by the Contact form (event date) and the profile form (date of birth).
 //   - The field shows the chosen date ("Wed, 9 Dec 2026") or a placeholder.
-//   - Click it → a calendar pops up: month arrows, past days greyed out,
-//     today marked with a ring, the chosen day in navy + gold.
+//   - Click it → a calendar pops up: month arrows (or month + year dropdowns
+//     with `yearSelect`), blocked days greyed out (`disallow`), today marked
+//     with a ring, the chosen day in navy + gold.
 //   - Keyboard: arrow keys move by day/week, Enter picks, Esc closes.
 //   - Click outside or Esc closes it. "Clear" and "Today" shortcuts.
 // Value in / out is a "YYYY-MM-DD" string ("" = no date), like a date input.
 // A hidden input carries the value under `name`, for normal form submits.
 
 import { useEffect, useId, useRef, useState } from "react";
+import { Cormorant_Garamond } from "next/font/google";
 import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
+
+// The brand serif for the month title.
+const serif = Cormorant_Garamond({ subsets: ["latin"], weight: ["600"], display: "swap" });
 
 const NAVY = "#14245a";
 const GOLD = "#c49a3c";
 const GOLD_LIGHT = "#dcb45c";
 
 const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 // ── Date helpers (local dates, no time zones involved) ─────────────────
 const toKey = (d: Date) =>
@@ -45,27 +52,33 @@ type Props = {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  /** Disallow days before today (default true). */
-  disablePast?: boolean;
+  /** Which days can't be picked: "past" (default — e.g. an event date),
+   *  "future" (e.g. a date of birth) or "none". */
+  disallow?: "past" | "future" | "none";
+  /** Show month + year dropdowns in the header — for dates far from today. */
+  yearSelect?: boolean;
+  /** Month the calendar opens on when there's no value ("YYYY-MM-DD"). */
+  openTo?: string;
 };
 
-export default function DatePicker({ name, value, onChange, placeholder = "Choose a date", disablePast = true }: Props) {
+export default function DatePicker({ name, value, onChange, placeholder = "Choose a date", disallow = "past", yearSelect = false, openTo }: Props) {
   const today = startOfToday();
   const selected = value ? fromKey(value) : null;
+  const startDay = selected ?? (openTo ? fromKey(openTo) : today);
 
   const [open, setOpen] = useState(false);
-  const [view, setView] = useState(() => selected ?? today); // month being shown (any day in it)
-  const [focusDay, setFocusDay] = useState(() => selected ?? today); // day with keyboard focus
+  const [view, setView] = useState(() => startDay); // month being shown (any day in it)
+  const [focusDay, setFocusDay] = useState(() => startDay); // day with keyboard focus
 
   const rootRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const popupId = useId();
 
-  const isDisabled = (d: Date) => disablePast && d < today;
+  const isDisabled = (d: Date) => (disallow === "past" && d < today) || (disallow === "future" && d > today);
 
   // 1. Open / close
   const openPicker = () => {
-    const start = selected ?? today;
+    const start = startDay;
     setView(start);
     setFocusDay(start);
     setOpen(true);
@@ -110,7 +123,19 @@ export default function DatePicker({ name, value, onChange, placeholder = "Choos
   };
 
   const shiftMonth = (n: number) => setView((v) => new Date(v.getFullYear(), v.getMonth() + n, 1));
-  const canGoBack = !disablePast || view.getFullYear() > today.getFullYear() || view.getMonth() > today.getMonth();
+  const sameOrBefore = view.getFullYear() < today.getFullYear() || (view.getFullYear() === today.getFullYear() && view.getMonth() <= today.getMonth());
+  const sameOrAfter = view.getFullYear() > today.getFullYear() || (view.getFullYear() === today.getFullYear() && view.getMonth() >= today.getMonth());
+  const canGoBack = disallow !== "past" || !sameOrBefore;
+  const canGoForward = disallow !== "future" || !sameOrAfter;
+
+  // Years in the dropdown: 100 back for birthdays, otherwise a few around today.
+  const thisYear = today.getFullYear();
+  const years =
+    disallow === "future"
+      ? Array.from({ length: 101 }, (_, i) => thisYear - i)
+      : disallow === "past"
+        ? Array.from({ length: 6 }, (_, i) => thisYear + i)
+        : Array.from({ length: 111 }, (_, i) => thisYear + 10 - i);
 
   const days = monthGrid(view.getFullYear(), view.getMonth());
   const label = selected?.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
@@ -169,14 +194,45 @@ export default function DatePicker({ name, value, onChange, placeholder = "Choos
             >
               <ChevronLeft size={18} />
             </button>
-            <p className="text-lg font-semibold" style={{ color: NAVY, fontFamily: "var(--font-contact-serif)" }} aria-live="polite">
-              {view.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
-            </p>
+            {yearSelect ? (
+              // Month + year dropdowns: jump straight to e.g. March 1994.
+              <div className="flex items-center gap-1.5">
+                <select
+                  aria-label="Month"
+                  value={view.getMonth()}
+                  onChange={(e) => setView(new Date(view.getFullYear(), Number(e.target.value), 1))}
+                  className="cursor-pointer rounded-lg border border-[#c49a3c]/30 bg-white py-1 pr-1 pl-2 text-sm font-semibold text-[#14245a] outline-none focus:border-[#c49a3c]"
+                >
+                  {MONTHS.map((m, i) => (
+                    <option key={m} value={i}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-label="Year"
+                  value={view.getFullYear()}
+                  onChange={(e) => setView(new Date(Number(e.target.value), view.getMonth(), 1))}
+                  className="cursor-pointer rounded-lg border border-[#c49a3c]/30 bg-white py-1 pr-1 pl-2 text-sm font-semibold text-[#14245a] tabular-nums outline-none focus:border-[#c49a3c]"
+                >
+                  {years.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <p className={`${serif.className} text-lg font-semibold`} style={{ color: NAVY }} aria-live="polite">
+                {view.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
+              </p>
+            )}
             <button
               type="button"
               onClick={() => shiftMonth(1)}
+              disabled={!canGoForward}
               aria-label="Next month"
-              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full transition hover:bg-[#faf8f3]"
+              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full transition hover:bg-[#faf8f3] disabled:cursor-not-allowed disabled:opacity-30"
               style={{ color: NAVY }}
             >
               <ChevronRight size={18} />
@@ -239,9 +295,11 @@ export default function DatePicker({ name, value, onChange, placeholder = "Choos
             >
               Clear
             </button>
-            <button type="button" onClick={() => pick(today)} className="cursor-pointer font-semibold transition hover:underline" style={{ color: GOLD }}>
-              Today
-            </button>
+            {!yearSelect && (
+              <button type="button" onClick={() => pick(today)} className="cursor-pointer font-semibold transition hover:underline" style={{ color: GOLD }}>
+                Today
+              </button>
+            )}
           </div>
         </div>
       )}

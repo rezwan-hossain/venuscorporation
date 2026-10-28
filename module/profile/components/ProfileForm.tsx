@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Check, Loader2 } from "lucide-react";
+import DatePicker from "@/components/ui/DatePicker";
 
 type ProfileFormProps = {
   profile: UserProfile;
@@ -58,9 +59,11 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
+    <div className="relative rounded-[1.75rem] border border-[#c49a3c]/25 bg-white p-6 shadow-xl shadow-[#14245a]/5 md:p-8">
+      {/* Gold top line, rounded to the card (no overflow-hidden, so pop-ups like the date picker aren't clipped) */}
+      <span aria-hidden className="absolute inset-x-0 top-0 h-1 rounded-t-[1.75rem] bg-linear-to-r from-[#c49a3c] via-[#dcb45c] to-[#c49a3c]" />
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Profile Information</h2>
+        <h2 className="text-3xl font-semibold text-[#14245a]" style={{ fontFamily: "var(--font-profile-serif)" }}>Profile Information</h2>
         <p className="text-sm text-gray-500 mt-1">
           Update your personal details and public profile
         </p>
@@ -69,14 +72,14 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Email (Read Only) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[#14245a] mb-2">
             Email Address
           </label>
           <Input
             type="email"
             value={profile.email}
             disabled
-            className="h-11 border border-gray-200 bg-gray-50 rounded-lg text-gray-500 cursor-not-allowed"
+            className="h-11 border border-slate-200 bg-slate-50 rounded-xl text-gray-500 cursor-not-allowed"
           />
           <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
         </div>
@@ -84,7 +87,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         {/* First Name & Last Name */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[#14245a] mb-2">
               First Name
             </label>
             <Input
@@ -92,11 +95,11 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               placeholder="Enter first name"
               value={formData.firstName}
               onChange={(e) => updateField("firstName", e.target.value)}
-              className="h-11 border border-gray-200 bg-background rounded-lg"
+              className="h-11 border border-slate-200 bg-white rounded-xl transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 focus:outline-none"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[#14245a] mb-2">
               Last Name
             </label>
             <Input
@@ -104,14 +107,14 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               placeholder="Enter last name"
               value={formData.lastName}
               onChange={(e) => updateField("lastName", e.target.value)}
-              className="h-11 border border-gray-200 bg-background rounded-lg"
+              className="h-11 border border-slate-200 bg-white rounded-xl transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 focus:outline-none"
             />
           </div>
         </div>
 
         {/* Username */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[#14245a] mb-2">
             Username
           </label>
           <div className="relative">
@@ -128,7 +131,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""),
                 )
               }
-              className="h-11 border border-gray-200 bg-background rounded-lg pl-8"
+              className="h-11 border border-slate-200 bg-white rounded-xl transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 focus:outline-none pl-8"
             />
           </div>
           <p className="text-xs text-gray-400 mt-1">
@@ -139,7 +142,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         {/* Phone & Gender */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[#14245a] mb-2">
               Phone Number
             </label>
             <Input
@@ -147,18 +150,18 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               placeholder="+880 1XXXXXXXXX"
               value={formData.phone}
               onChange={(e) => updateField("phone", e.target.value)}
-              className="h-11 border border-gray-200 bg-background rounded-lg"
+              className="h-11 border border-slate-200 bg-white rounded-xl transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 focus:outline-none"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[#14245a] mb-2">
               Gender
             </label>
             <Select
               value={formData.gender}
               onValueChange={(val) => updateField("gender", val)}
             >
-              <SelectTrigger className="h-11 rounded-lg border border-gray-200 bg-background">
+              <SelectTrigger className="h-11 rounded-xl border border-slate-200 bg-white">
                 <SelectValue placeholder="Select Gender" />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200">
@@ -170,22 +173,27 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           </div>
         </div>
 
-        {/* Date of Birth */}
+        {/* Date of Birth — same picker as the Contact form; no future dates,
+            month + year dropdowns to jump back quickly. Not a <label>: the
+            calendar's buttons sit inside it. */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <p className="block text-xs font-semibold uppercase tracking-[0.15em] text-[#14245a] mb-2">
             Date of Birth
-          </label>
-          <Input
-            type="date"
+          </p>
+          <DatePicker
+            name="birthDate"
             value={formData.birthDate}
-            onChange={(e) => updateField("birthDate", e.target.value)}
-            className="h-11 border border-gray-200 bg-background rounded-lg"
+            onChange={(date) => updateField("birthDate", date)}
+            placeholder="Choose your date of birth"
+            disallow="future"
+            yearSelect
+            openTo="2000-01-01"
           />
         </div>
 
         {/* Address */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[#14245a] mb-2">
             Address
           </label>
           <textarea
@@ -193,19 +201,19 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             value={formData.address}
             onChange={(e) => updateField("address", e.target.value)}
             rows={3}
-            className="w-full border border-gray-200 bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+            className="w-full border border-slate-200 bg-white rounded-xl transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 focus:outline-none px-3 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-[#c49a3c]/15 focus:border-[#c49a3c] resize-none"
           />
         </div>
 
         {/* Messages */}
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
             <p className="text-red-600 text-sm">{error}</p>
           </div>
         )}
 
         {success && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+          <div className="p-3 bg-green-50 border border-green-200 rounded-xl flex items-center gap-2">
             <Check className="w-4 h-4 text-green-600" />
             <p className="text-green-600 text-sm font-medium">
               Profile updated successfully!
@@ -214,7 +222,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         )}
 
         {/* Submit */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#c49a3c]/15">
           <button
             type="button"
             onClick={() => {
@@ -230,14 +238,14 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               setSuccess(false);
               setError("");
             }}
-            className="px-5 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-5 py-2.5 text-sm font-medium text-[#14245a] border border-[#c49a3c]/50 rounded-full hover:bg-[#faf8f3] transition-colors"
           >
             Reset
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-2.5 text-sm font-medium text-white bg-[#14245a] rounded-full shadow-lg shadow-[#14245a]/20 hover:bg-[#0d1840] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             {loading ? "Saving..." : "Save Changes"}

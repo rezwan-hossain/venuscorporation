@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 
 import { services } from "@/module/home/business/data-v3";
-import DatePicker from "./DatePicker";
+import DatePicker from "@/components/ui/DatePicker";
 
 type FormType = {
   name: string;
@@ -209,9 +209,9 @@ const ContactForm = () => {
 
   // ── The form ────────────────────────────────────────────────────────
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border bg-white p-7 shadow-xl shadow-[#14245a]/10 sm:p-10" style={{ borderColor: `${GOLD}33` }}>
-      {/* Gold accent along the top */}
-      <span aria-hidden className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-[#c49a3c] via-[#dcb45c] to-[#c49a3c]" />
+    <div className="relative rounded-[2rem] border bg-white p-7 shadow-xl shadow-[#14245a]/10 sm:p-10" style={{ borderColor: `${GOLD}33` }}>
+      {/* Gold accent along the top (rounded to the card; no overflow-hidden, so the date picker isn't clipped) */}
+      <span aria-hidden className="absolute inset-x-0 top-0 h-1 rounded-t-[2rem] bg-linear-to-r from-[#c49a3c] via-[#dcb45c] to-[#c49a3c]" />
 
       <h2 className="text-3xl leading-tight font-semibold sm:text-4xl" style={{ ...SERIF, color: NAVY }}>
         Plan your <em className="font-medium" style={{ color: GOLD }}>event</em>

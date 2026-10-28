@@ -77,9 +77,11 @@ export function PasswordForm() {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
+    <div className="relative rounded-[1.75rem] border border-[#c49a3c]/25 bg-white p-6 shadow-xl shadow-[#14245a]/5 md:p-8">
+      {/* Gold top line, rounded to the card (no overflow-hidden, so pop-ups like the date picker aren't clipped) */}
+      <span aria-hidden className="absolute inset-x-0 top-0 h-1 rounded-t-[1.75rem] bg-linear-to-r from-[#c49a3c] via-[#dcb45c] to-[#c49a3c]" />
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Change Password</h2>
+        <h2 className="text-3xl font-semibold text-[#14245a]" style={{ fontFamily: "var(--font-profile-serif)" }}>Change Password</h2>
         <p className="text-sm text-gray-500 mt-1">
           Ensure your account uses a strong password for security
         </p>
@@ -88,7 +90,7 @@ export function PasswordForm() {
       <form onSubmit={handleSubmit} className="space-y-5 max-w-md">
         {/* Current Password */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[#14245a] mb-2">
             Current Password
           </label>
           <div className="relative">
@@ -97,7 +99,7 @@ export function PasswordForm() {
               placeholder="Enter current password"
               value={formData.currentPassword}
               onChange={(e) => updateField("currentPassword", e.target.value)}
-              className="w-full h-11 border border-gray-200 bg-background rounded-lg px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full h-11 border border-slate-200 bg-white rounded-xl transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 focus:outline-none px-3 pr-10 text-sm"
             />
             <button
               type="button"
@@ -115,7 +117,7 @@ export function PasswordForm() {
 
         {/* New Password */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[#14245a] mb-2">
             New Password
           </label>
           <div className="relative">
@@ -124,7 +126,7 @@ export function PasswordForm() {
               placeholder="Enter new password"
               value={formData.newPassword}
               onChange={(e) => updateField("newPassword", e.target.value)}
-              className="w-full h-11 border border-gray-200 bg-background rounded-lg px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full h-11 border border-slate-200 bg-white rounded-xl transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 focus:outline-none px-3 pr-10 text-sm"
             />
             <button
               type="button"
@@ -173,7 +175,7 @@ export function PasswordForm() {
 
         {/* Confirm Password */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-[0.15em] text-[#14245a] mb-2">
             Confirm New Password
           </label>
           <div className="relative">
@@ -182,7 +184,7 @@ export function PasswordForm() {
               placeholder="Confirm new password"
               value={formData.confirmPassword}
               onChange={(e) => updateField("confirmPassword", e.target.value)}
-              className={`w-full h-11 border rounded-lg px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+              className={`w-full h-11 border rounded-xl px-3 pr-10 text-sm transition focus:outline-none focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 ${
                 formData.confirmPassword &&
                 formData.confirmPassword !== formData.newPassword
                   ? "border-red-300 bg-red-50"
@@ -211,13 +213,13 @@ export function PasswordForm() {
 
         {/* Messages */}
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
             <p className="text-red-600 text-sm">{error}</p>
           </div>
         )}
 
         {success && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+          <div className="p-3 bg-green-50 border border-green-200 rounded-xl flex items-center gap-2">
             <Check className="w-4 h-4 text-green-600" />
             <p className="text-green-600 text-sm font-medium">
               Password updated successfully!
@@ -226,11 +228,11 @@ export function PasswordForm() {
         )}
 
         {/* Submit */}
-        <div className="pt-4 border-t border-gray-100">
+        <div className="pt-4 border-t border-[#c49a3c]/15">
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-2.5 text-sm font-medium text-white bg-[#14245a] rounded-full shadow-lg shadow-[#14245a]/20 hover:bg-[#0d1840] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             {loading ? "Updating..." : "Update Password"}

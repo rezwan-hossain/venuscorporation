@@ -1,4 +1,8 @@
 // module/profile/components/ProfileSidebar.tsx
+//
+// Profile card at the top of the profile page's sidebar: navy card with the
+// avatar (gold ring), name, @username, role badge, email and join date.
+
 import type { UserProfile } from "@/types/profile";
 import { Mail, Calendar, Shield } from "lucide-react";
 
@@ -7,65 +11,57 @@ type ProfileSidebarProps = {
 };
 
 export function ProfileSidebar({ profile }: ProfileSidebarProps) {
-  const displayName =
-    [profile.firstName, profile.lastName].filter(Boolean).join(" ") ||
-    profile.userName ||
-    profile.email.split("@")[0];
-
-  const joinDate = new Date(profile.createdAt).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
+  const displayName = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || profile.userName || profile.email.split("@")[0];
+  const joinDate = new Date(profile.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
-      {/* Avatar */}
-      <div className="w-24 h-24 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden mx-auto">
-        {profile.image ? (
-          <img
-            src={profile.image}
-            alt={displayName}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <span className="text-3xl font-bold text-indigo-600">
-            {displayName.charAt(0).toUpperCase()}
-          </span>
-        )}
-      </div>
+    <div
+      className="relative overflow-hidden rounded-2xl p-6 text-center text-white shadow-xl shadow-[#14245a]/20"
+      style={{ background: "radial-gradient(120% 100% at 0% 0%, #1d3274 0%, #14245a 50%, #0d1840 100%)" }}
+    >
+      {/* Gold swoosh, bottom right (decorative) */}
+      <svg viewBox="0 0 400 160" className="pointer-events-none absolute right-0 bottom-0 w-56 opacity-60" aria-hidden>
+        <path d="M40 160 C175 132 280 82 400 34" fill="none" stroke="#c49a3c" strokeWidth="2.5" />
+        <path d="M120 160 C225 138 305 104 400 66" fill="none" stroke="#c49a3c" strokeWidth="1.25" opacity="0.7" />
+      </svg>
 
-      {/* Name */}
-      <h2 className="text-lg font-bold text-gray-900 mt-4">{displayName}</h2>
+      <div className="relative">
+        {/* Avatar with a gold ring */}
+        <div className="mx-auto flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-white/10 ring-2 ring-[#dcb45c] ring-offset-4 ring-offset-[#14245a]">
+          {profile.image ? (
+            // Plain <img>: profile photos can come from any host (e.g. Google).
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.image} alt={displayName} className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-4xl font-semibold text-[#dcb45c]" style={{ fontFamily: "var(--font-profile-serif)" }}>
+              {displayName.charAt(0).toUpperCase()}
+            </span>
+          )}
+        </div>
 
-      {profile.userName && (
-        <p className="text-sm text-gray-400">@{profile.userName}</p>
-      )}
+        <h2 className="mt-5 text-2xl leading-tight font-semibold" style={{ fontFamily: "var(--font-profile-serif)" }}>
+          {displayName}
+        </h2>
+        {profile.userName && <p className="mt-0.5 text-sm text-white/50">@{profile.userName}</p>}
 
-      {/* Role Badge */}
-      <div className="mt-2">
         <span
-          className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full ${
-            profile.role === "ADMIN"
-              ? "bg-purple-100 text-purple-700"
-              : profile.role === "ORGANIZER"
-                ? "bg-blue-100 text-blue-700"
-                : "bg-gray-100 text-gray-600"
+          className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-semibold tracking-[0.2em] uppercase ${
+            profile.role === "ADMIN" ? "bg-[#dcb45c] text-[#0d1840]" : "bg-white/10 text-white/80 ring-1 ring-white/15"
           }`}
         >
-          <Shield className="w-3 h-3" />
-          {profile.role}
+          <Shield className="h-3 w-3" aria-hidden />
+          {profile.role.toLowerCase()}
         </span>
-      </div>
 
-      {/* Meta Info */}
-      <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Mail className="w-4 h-4 text-gray-400" />
-          <span className="truncate">{profile.email}</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Calendar className="w-4 h-4 text-gray-400" />
-          <span>Joined {joinDate}</span>
+        <div className="mt-5 space-y-2.5 border-t border-white/10 pt-5 text-left text-sm text-white/70">
+          <p className="flex items-center gap-2.5">
+            <Mail className="h-4 w-4 shrink-0 text-[#dcb45c]" aria-hidden />
+            <span className="truncate">{profile.email}</span>
+          </p>
+          <p className="flex items-center gap-2.5">
+            <Calendar className="h-4 w-4 shrink-0 text-[#dcb45c]" aria-hidden />
+            Joined {joinDate}
+          </p>
         </div>
       </div>
     </div>
