@@ -7,7 +7,7 @@ export type CountItem = { label: string; value: number };
 export type DailyPoint = {
   /** Bucket start, YYYY-MM-DD in Asia/Dhaka. */
   date: string;
-  registrations: number; // confirmed runners (qty)
+  registrations: number; // confirmed attendees (qty)
   revenue: number; // BDT from paid payments
 };
 
@@ -33,12 +33,17 @@ export type CouponRow = {
   revenue: number;
 };
 
+export type AnswerBreakdown = {
+  title: string; // e.g. "Dietary needs", or "Conference · Dietary needs" for all events
+  items: CountItem[];
+};
+
 export type AnalyticsData = {
   generatedAt: string;
   bucket: "day" | "week";
   kpis: {
     revenue: number;
-    paidRunners: number;
+    paidAttendees: number; // confirmed tickets (qty), all event types
     paidOrders: number;
     avgOrderValue: number;
     conversionRate: number | null; // online paid / online settled, 0..1
@@ -51,6 +56,10 @@ export type AnalyticsData = {
   packages: PackageRow[];
   coupons: CouponRow[];
   breakdowns: {
+    /** Paid attendees per event type (Marathon, Conference, …). */
+    categories: CountItem[];
+    /** Paid attendees of marathon events — the runner charts below only count these. */
+    runners: number;
     tshirt: CountItem[];
     gender: CountItem[];
     ageCategory: CountItem[];
@@ -59,5 +68,7 @@ export type AnalyticsData = {
     communities: CountItem[];
     paymentMethods: CountItem[];
     source: CountItem[];
+    /** One chart per checkout question (non-marathon events), from registration.details. */
+    answers: AnswerBreakdown[];
   };
 };

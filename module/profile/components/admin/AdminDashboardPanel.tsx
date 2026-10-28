@@ -1,6 +1,15 @@
 // module/profile/components/admin/AdminDashboardPanel.tsx
 "use client";
 
+// Admin dashboard. Data: getAnalytics() in app/actions/analytics.ts.
+//
+// Sections, top to bottom:
+//   headline numbers · trends · pace · traffic · packages
+//   attendees by event type        (all events, when there's more than one type)
+//   marathon runners               (only when the selection has marathon sign-ups)
+//   checkout answers               (conference, expo, gala, workshop questions)
+//   money · coupons · returning attendees
+
 import { useCallback, useEffect, useState } from "react";
 import { getAnalytics } from "@/app/actions/analytics";
 import { AdminReturningRunnersPanel } from "./AdminReturningRunnersPanel";
@@ -31,12 +40,25 @@ const RANGES: { value: AnalyticsRange; label: string }[] = [
   { value: "all", label: "All time" },
 ];
 
+/** A small heading between groups of cards. */
+function SectionTitle({ title, note }: { title: string; note?: string }) {
+  return (
+    <div className="flex items-baseline gap-2 pt-2">
+      <h3 className="text-sm font-bold text-gray-900">{title}</h3>
+      {note && <span className="text-xs text-gray-400">{note}</span>}
+    </div>
+  );
+}
+
 function DashboardSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-[88px] bg-white border border-gray-200 rounded-xl" />
+          <div
+            key={i}
+            className="h-[88px] bg-white border border-gray-200 rounded-xl"
+          />
         ))}
       </div>
       <div className="h-64 bg-white border border-gray-200 rounded-xl" />
@@ -75,8 +97,7 @@ export function AdminDashboardPanel({ events }: Props) {
   };
 
   const k = data?.kpis;
-  const rangeText =
-    range === "all" ? "all time" : `last ${range} days`;
+  const rangeText = range === "all" ? "all time" : `last ${range} days`;
 
   return (
     <div className="space-y-4">
@@ -85,11 +106,13 @@ export function AdminDashboardPanel({ events }: Props) {
         <div>
           <h2 className="text-xl font-bold text-gray-900">Dashboard</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Registrations, revenue and runners · {rangeText}
+            Registrations, revenue and attendees · {rangeText}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="dash-event" className="sr-only">Event</label>
+          <label htmlFor="dash-event" className="sr-only">
+            Event
+          </label>
           <select
             id="dash-event"
             value={eventId}
@@ -98,17 +121,25 @@ export function AdminDashboardPanel({ events }: Props) {
           >
             <option value="all">All events</option>
             {events.map((e) => (
-              <option key={e.id} value={e.id}>{e.name}</option>
+              <option key={e.id} value={e.id}>
+                {e.name}
+              </option>
             ))}
           </select>
-          <div className="flex rounded-lg border border-gray-200 bg-white p-0.5" role="group" aria-label="Time range">
+          <div
+            className="flex rounded-lg border border-gray-200 bg-white p-0.5"
+            role="group"
+            aria-label="Time range"
+          >
             {RANGES.map((r) => (
               <button
                 key={r.value}
                 onClick={() => change(eventId, r.value)}
                 aria-pressed={range === r.value}
                 className={`px-2.5 h-8 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
-                  range === r.value ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-50"
+                  range === r.value
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 {r.label}
@@ -133,9 +164,13 @@ export function AdminDashboardPanel({ events }: Props) {
       )}
 
       {!data || !k ? (
-        loading ? <DashboardSkeleton /> : null
+        loading ? (
+          <DashboardSkeleton />
+        ) : null
       ) : (
-        <div className={`space-y-4 transition-opacity ${loading ? "opacity-60" : ""}`}>
+        <div
+          className={`space-y-4 transition-opacity ${loading ? "opacity-60" : ""}`}
+        >
           {/* Headline numbers */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <StatTile
@@ -144,19 +179,27 @@ export function AdminDashboardPanel({ events }: Props) {
               note={`${num(k.paidOrders)} paid order${k.paidOrders === 1 ? "" : "s"} · avg ${taka(k.avgOrderValue)}`}
             />
             <StatTile
-              label="Paid runners"
-              value={num(k.paidRunners)}
+              label="Paid attendees"
+              value={num(k.paidAttendees)}
               note={`${num(k.pendingOrders)} unpaid · ${num(k.cancelledOrders)} cancelled`}
             />
             <StatTile
               label="Checkout conversion"
-              value={k.conversionRate === null ? "—" : `${Math.round(k.conversionRate * 100)}%`}
+              value={
+                k.conversionRate === null
+                  ? "—"
+                  : `${Math.round(k.conversionRate * 100)}%`
+              }
               note="Online orders that got paid"
             />
             <StatTile
               label="Discounts given"
               value={taka(k.discounts)}
-              note={k.refunded > 0 ? `${taka(k.refunded)} refunded` : "Coupons on paid orders"}
+              note={
+                k.refunded > 0
+                  ? `${taka(k.refunded)} refunded`
+                  : "Coupons on paid orders"
+              }
             />
           </div>
 
@@ -164,19 +207,28 @@ export function AdminDashboardPanel({ events }: Props) {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             <Card
               title="Paid registrations"
-              subtitle={`Runners per ${data.bucket} by order date (Dhaka time)`}
+              subtitle={`Attendees per ${data.bucket} by order date (Dhaka time)`}
             >
               <ColumnChart
-                points={data.series.map((p) => ({ date: p.date, value: p.registrations }))}
+                points={data.series.map((p) => ({
+                  date: p.date,
+                  value: p.registrations,
+                }))}
                 format={num}
                 unitLabel="paid registrations"
                 bucket={data.bucket}
                 color={SERIES_1}
               />
             </Card>
-            <Card title="Revenue" subtitle={`Paid amount per ${data.bucket} by order date`}>
+            <Card
+              title="Revenue"
+              subtitle={`Paid amount per ${data.bucket} by order date`}
+            >
               <ColumnChart
-                points={data.series.map((p) => ({ date: p.date, value: p.revenue }))}
+                points={data.series.map((p) => ({
+                  date: p.date,
+                  value: p.revenue,
+                }))}
                 format={taka}
                 unitLabel="revenue"
                 bucket={data.bucket}
@@ -192,38 +244,85 @@ export function AdminDashboardPanel({ events }: Props) {
           <TrafficCard eventId={eventId} range={range} />
 
           {/* Packages */}
-          <Card title="Packages" subtitle="All-time capacity, sales and sell-out forecast">
+          <Card
+            title="Packages"
+            subtitle="All-time capacity, sales and sell-out forecast"
+          >
             <PackageTable rows={data.packages} showEvent={eventId === "all"} />
           </Card>
 
-          {/* Runners */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card title="T-shirt sizes" subtitle="Paid runners · for the print order">
-              <BarList items={data.breakdowns.tshirt} />
+          {/* Attendees per event type: only useful with more than one type */}
+          {data.breakdowns.categories.length > 1 && (
+            <Card title="Attendees by event type" subtitle="Paid attendees">
+              <BarList items={data.breakdowns.categories} />
             </Card>
-            <Card title="Age groups" subtitle="From date of birth">
-              <BarList items={data.breakdowns.ageGroups} />
-            </Card>
-            <Card title="Gender">
-              <BarList items={data.breakdowns.gender} />
-            </Card>
-            <Card title="Blood group" subtitle="For the medical team">
-              <BarList items={data.breakdowns.bloodGroup} />
-            </Card>
-            <Card title="Top communities" subtitle="Running clubs and groups">
-              <BarList items={data.breakdowns.communities} empty="No community names given" />
-            </Card>
-            <Card title="Age category">
-              <BarList items={data.breakdowns.ageCategory} />
-            </Card>
-          </div>
+          )}
+
+          {/* Runners: marathon sign-ups only (other events don't ask these) */}
+          {data.breakdowns.runners > 0 && (
+            <>
+              <SectionTitle
+                title="Runners"
+                note={`${num(data.breakdowns.runners)} paid marathon runner${data.breakdowns.runners === 1 ? "" : "s"}`}
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card
+                  title="T-shirt sizes"
+                  subtitle="In-person runs · for the print order"
+                >
+                  <BarList items={data.breakdowns.tshirt} />
+                </Card>
+                <Card title="Age groups" subtitle="From date of birth">
+                  <BarList items={data.breakdowns.ageGroups} />
+                </Card>
+                <Card title="Gender">
+                  <BarList items={data.breakdowns.gender} />
+                </Card>
+                <Card title="Blood group" subtitle="For the medical team">
+                  <BarList items={data.breakdowns.bloodGroup} />
+                </Card>
+                <Card
+                  title="Top communities"
+                  subtitle="Running clubs and groups"
+                >
+                  <BarList
+                    items={data.breakdowns.communities}
+                    empty="No community names given"
+                  />
+                </Card>
+                <Card title="Age category">
+                  <BarList items={data.breakdowns.ageCategory} />
+                </Card>
+              </div>
+            </>
+          )}
+
+          {/* Checkout answers: one card per question (non-marathon events) */}
+          {data.breakdowns.answers.length > 0 && (
+            <>
+              <SectionTitle
+                title="Checkout answers"
+                note="One answer per paid order"
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {data.breakdowns.answers.map((answer) => (
+                  <Card key={answer.title} title={answer.title}>
+                    <BarList items={answer.items} />
+                  </Card>
+                ))}
+              </div>
+            </>
+          )}
 
           {/* Money */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card title="Payment methods" subtitle="Paid orders">
-              <BarList items={data.breakdowns.paymentMethods} empty="No paid orders yet" />
+              <BarList
+                items={data.breakdowns.paymentMethods}
+                empty="No paid orders yet"
+              />
             </Card>
-            <Card title="Registration source" subtitle="Paid runners">
+            <Card title="Registration source" subtitle="Paid attendees">
               <BarList items={data.breakdowns.source} />
             </Card>
           </div>
@@ -233,7 +332,11 @@ export function AdminDashboardPanel({ events }: Props) {
 
           {/* Follows the event filter at the top; always all-time. */}
           <section className="bg-white border border-gray-200 rounded-xl p-5">
-            <AdminReturningRunnersPanel events={events} eventId={eventId} embedded />
+            <AdminReturningRunnersPanel
+              events={events}
+              eventId={eventId}
+              embedded
+            />
           </section>
 
           <p className="text-[11px] text-gray-400">
@@ -243,7 +346,8 @@ export function AdminDashboardPanel({ events }: Props) {
               minute: "2-digit",
               timeZone: "Asia/Dhaka",
             })}{" "}
-            (Dhaka). Revenue counts PAID payments only; refunded money is excluded.
+            (Dhaka). Revenue counts PAID payments only; refunded money is
+            excluded.
           </p>
         </div>
       )}

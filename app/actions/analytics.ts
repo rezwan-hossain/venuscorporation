@@ -3,14 +3,26 @@
 
 // Admin dashboard analytics. Read-only. Everything is computed from existing
 // order / payment / registration data — no tracking tables needed.
+//
+// Events have a category (lib/event-checkout-form.ts):
+//   • Marathons save race fields (gender, T-shirt, blood group …) → the
+//     runner charts, counted from marathon registrations only.
+//   • Other categories save their checkout answers in registration.details
+//     (company, dietary needs …) → one chart per question.
 
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { BLOOD_GROUPS } from "@/lib/registration-options";
 import { tshirtSizes } from "@/module/checkout/data/tshirtSizes";
+import {
+  EVENT_CATEGORIES,
+  getEventCategory,
+  getExtraQuestions,
+} from "@/lib/event-checkout-form";
 import type {
   AnalyticsData,
   AnalyticsRange,
+  AnswerBreakdown,
   CountItem,
   CouponRow,
   DailyPoint,
@@ -30,7 +42,9 @@ const dhakaDay = new Intl.DateTimeFormat("en-CA", {
 });
 const dayKey = (d: Date) => dhakaDay.format(d);
 const addDays = (key: string, n: number) =>
-  new Date(Date.parse(`${key}T00:00:00Z`) + n * DAY_MS).toISOString().slice(0, 10);
+  new Date(Date.parse(`${key}T00:00:00Z`) + n * DAY_MS)
+    .toISOString()
+    .slice(0, 10);
 // Monday of the week containing `key`.
 const weekKey = (key: string) => {
   const dow = (new Date(`${key}T00:00:00Z`).getUTCDay() + 6) % 7;
@@ -52,10 +66,43 @@ function tally(
       const i = order.indexOf(l);
       return i === -1 ? order.length : i;
     };
-    return items.sort((a, b) => rank(a.label) - rank(b.label) || b.value - a.value);
+    return items.sort(
+      (a, b) => rank(a.label) - rank(b.label) || b.value - a.value,
+    );
   }
   return items.sort((a, b) => b.value - a.value);
 }
+
+/**
+ * The most common free-text answers (e.g. community or company names).
+ * Groups case/spacing variants and shows the most common spelling.
+ */
+function topAnswers(
+  values: (string | null | undefined)[],
+  limit = 8,
+): CountItem[] {
+  const groups = new Map<string, Map<string, number>>();
+  for (const value of values) {
+    const raw = value?.trim();
+    if (!raw) continue;
+    const key = raw.toLowerCase().replace(/\s+/g, " ");
+    const spellings = groups.get(key) ?? new Map<string, number>();
+    spellings.set(raw, (spellings.get(raw) ?? 0) + 1);
+    groups.set(key, spellings);
+  }
+  return [...groups.values()]
+    .map((spellings) => {
+      const [label] = [...spellings].sort((a, b) => b[1] - a[1])[0];
+      const value = [...spellings.values()].reduce((s, n) => s + n, 0);
+      return { label, value };
+    })
+    .sort((a, b) => b.value - a.value)
+    .slice(0, limit);
+}
+
+/** "Conference / summit" → "Conference" */
+const categoryName = (category: string) =>
+  getEventCategory(category).label.split(" /")[0];
 
 export async function getAnalytics(
   eventId: string | "all",
@@ -86,11 +133,13 @@ export async function getAnalytics(
           discount: true,
           createdAt: true,
           couponId: true,
+          event: { select: { category: true, eventType: true } },
           payment: {
             select: { status: true, amount: true, paymentMethod: true },
           },
           registration: {
             select: {
+              details: true,
               gender: true,
               tshirtSize: true,
               ageCategory: true,
@@ -153,7 +202,7 @@ export async function getAnalytics(
 
     const kpis: AnalyticsData["kpis"] = {
       revenue,
-      paidRunners: confirmed.reduce((s, o) => s + o.qty, 0),
+      paidAttendees: confirmed.reduce((s, o) => s + o.qty, 0),
       paidOrders: paid.length,
       avgOrderValue: paid.length ? Math.round(revenue / paid.length) : 0,
       conversionRate: settled.length ? onlinePaid / settled.length : null,
@@ -179,7 +228,8 @@ export async function getAnalytics(
     const startKey = since ? dayKey(since) : firstKey;
     const todayKey = dayKey(now);
     const spanDays =
-      (Date.parse(`${todayKey}T00:00:00Z`) - Date.parse(`${startKey}T00:00:00Z`)) /
+      (Date.parse(`${todayKey}T00:00:00Z`) -
+        Date.parse(`${startKey}T00:00:00Z`)) /
         DAY_MS +
       1;
     const bucket: AnalyticsData["bucket"] = spanDays > 92 ? "week" : "day";
@@ -202,8 +252,13 @@ export async function getAnalytics(
     const series = [...points.values()];
 
     // ─── Packages ───────────────────────────────────
-    const pace = new Map(recentSales.map((r) => [r.packageId, (r._sum.qty ?? 0) / 7]));
-    const totals = new Map<number, { sold: number; held: number; revenue: number }>();
+    const pace = new Map(
+      recentSales.map((r) => [r.packageId, (r._sum.qty ?? 0) / 7]),
+    );
+    const totals = new Map<
+      number,
+      { sold: number; held: number; revenue: number }
+    >();
     for (const r of packageTotals) {
       const t = totals.get(r.packageId) ?? { sold: 0, held: 0, revenue: 0 };
       if (r.status === "CONFIRMED") {
@@ -233,7 +288,9 @@ export async function getAnalytics(
     });
 
     // ─── Coupons ────────────────────────────────────
-    const couponIds = [...new Set(confirmed.map((o) => o.couponId).filter(Boolean))] as string[];
+    const couponIds = [
+      ...new Set(confirmed.map((o) => o.couponId).filter(Boolean)),
+    ] as string[];
     const couponCodes = new Map(
       (
         await prisma.coupon.findMany({
@@ -246,7 +303,12 @@ export async function getAnalytics(
     for (const o of confirmed) {
       if (!o.couponId) continue;
       const code = couponCodes.get(o.couponId) ?? "Deleted coupon";
-      const row = couponMap.get(code) ?? { code, uses: 0, discount: 0, revenue: 0 };
+      const row = couponMap.get(code) ?? {
+        code,
+        uses: 0,
+        discount: 0,
+        revenue: 0,
+      };
       row.uses += 1;
       row.discount += Math.round(o.discount);
       row.revenue += Math.round(o.total);
@@ -254,35 +316,65 @@ export async function getAnalytics(
     }
     const coupons = [...couponMap.values()].sort((a, b) => b.uses - a.uses);
 
-    // ─── Runner breakdowns (confirmed only) ─────────
-    const regs = confirmed.map((o) => o.registration).filter(Boolean) as NonNullable<
-      (typeof confirmed)[number]["registration"]
-    >[];
+    // ─── Attendees per event type (confirmed only) ──
+    const categories = tally(
+      confirmed.flatMap((o) =>
+        Array(o.qty).fill(categoryName(o.event.category)),
+      ),
+      EVENT_CATEGORIES.map((c) => categoryName(c.value)),
+    );
 
-    // Community: group case/spacing variants, show the most common spelling.
-    const communityGroups = new Map<string, Map<string, number>>();
-    for (const r of regs) {
-      const raw = r.communityName?.trim();
-      if (!raw) continue;
-      const key = raw.toLowerCase().replace(/\s+/g, " ");
-      const spellings = communityGroups.get(key) ?? new Map<string, number>();
-      spellings.set(raw, (spellings.get(raw) ?? 0) + 1);
-      communityGroups.set(key, spellings);
+    // ─── Runner breakdowns (confirmed marathon registrations only) ───
+    const marathonOrders = confirmed.filter(
+      (o) => o.event.category === "MARATHON",
+    );
+    const regs = marathonOrders
+      .map((o) => o.registration)
+      .filter((r) => r !== null);
+    const communities = topAnswers(regs.map((r) => r.communityName));
+
+    // T-shirts are printed for in-person runs only (virtual runs get none)
+    const tshirtSizesNeeded = marathonOrders
+      .filter((o) => o.event.eventType === "LIVE")
+      .map((o) => o.registration?.tshirtSize);
+
+    // ─── Checkout answers (other categories, from registration.details) ───
+    // One chart per question: select questions count every option, text
+    // questions show the most common answers. Long messages and numbers
+    // aren't charted.
+    const answers: AnswerBreakdown[] = [];
+    const usedCategories = [...new Set(confirmed.map((o) => o.event.category))];
+    for (const category of usedCategories) {
+      if (category === "MARATHON") continue;
+      const details = confirmed
+        .filter((o) => o.event.category === category)
+        .map((o) => (o.registration?.details ?? {}) as Record<string, string>);
+
+      for (const question of getExtraQuestions(category, "LIVE")) {
+        const values = details.map((d) => d[question.key]);
+        let items: CountItem[] = [];
+        if (question.type === "select") items = tally(values, question.options);
+        if (question.type === "text") items = topAnswers(values);
+        if (items.length === 0) continue;
+
+        answers.push({
+          // With every event shown, say which kind of event it's from
+          title:
+            eventId === "all"
+              ? `${categoryName(category)} · ${question.label}`
+              : question.label,
+          items,
+        });
+      }
     }
-    const communities = [...communityGroups.values()]
-      .map((spellings) => {
-        const [label] = [...spellings].sort((a, b) => b[1] - a[1])[0];
-        const value = [...spellings.values()].reduce((s, n) => s + n, 0);
-        return { label, value };
-      })
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 8);
 
     const AGE_BANDS = ["Under 18", "18–29", "30–39", "40–49", "50–59", "60+"];
     // No birth date (non-marathon registrations) → not counted in any band.
     const ageBand = (birth: Date | null) => {
       if (!birth) return null;
-      const age = Math.floor((now.getTime() - birth.getTime()) / (365.25 * DAY_MS));
+      const age = Math.floor(
+        (now.getTime() - birth.getTime()) / (365.25 * DAY_MS),
+      );
       if (age < 18) return AGE_BANDS[0];
       if (age < 30) return AGE_BANDS[1];
       if (age < 40) return AGE_BANDS[2];
@@ -302,19 +394,30 @@ export async function getAnalytics(
         packages: packageRows,
         coupons,
         breakdowns: {
+          categories,
+          runners: marathonOrders.reduce((s, o) => s + o.qty, 0),
           tshirt: tally(
-            regs.map((r) => r.tshirtSize),
+            tshirtSizesNeeded,
             tshirtSizes.map((s) => s.value),
           ),
           gender: tally(regs.map((r) => r.gender)),
           ageCategory: tally(regs.map((r) => r.ageCategory)),
-          ageGroups: tally(regs.map((r) => ageBand(r.birthDate)), AGE_BANDS),
-          bloodGroup: tally(regs.map((r) => r.bloodGroup), BLOOD_GROUPS),
+          ageGroups: tally(
+            regs.map((r) => ageBand(r.birthDate)),
+            AGE_BANDS,
+          ),
+          bloodGroup: tally(
+            regs.map((r) => r.bloodGroup),
+            BLOOD_GROUPS,
+          ),
           communities,
           paymentMethods: methodCounts,
           source: tally(
-            confirmed.map((o) => (o.source === "MANUAL" ? "Manual (admin)" : "Online")),
+            confirmed.map((o) =>
+              o.source === "MANUAL" ? "Manual (admin)" : "Online",
+            ),
           ),
+          answers,
         },
       },
       error: null,
