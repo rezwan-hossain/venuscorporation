@@ -187,6 +187,8 @@ export type EventOrder = {
     bibNumber: string | null;
     email: string | null;
     birthDate: string | null;
+    /** Answers to the extra checkout questions (non-marathon events). */
+    details: Record<string, string> | null;
   } | null;
   payment: {
     id: string;

@@ -16,6 +16,7 @@ import { OrderStatsRow } from "./OrderStatsRow";
 import { OrderFilters } from "./OrderFilters";
 import { OrderCard } from "./OrderCard";
 import { ManualRegistrationForm } from "./ManualRegistrationForm";
+import { buildOrdersCsv, downloadCsv } from "@/lib/orders-csv";
 import {
   X,
   Loader2,
@@ -46,20 +47,6 @@ const DEFAULT_FILTERS: OrderFilterState = {
   orderStatus: "all",
   source: "all",
   sortBy: "newest",
-};
-
-const formatBirthDate = (date: Date | string): string => {
-  const d = new Date(date);
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const year = d.getUTCFullYear();
-  return `${day}-${month}-${year}`;
-};
-
-/** RFC-4180 escaping — quote only when needed, double any inner quotes. */
-const esc = (value: unknown): string => {
-  const s = value === null || value === undefined ? "" : String(value);
-  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
 export function EventOrdersModal({ event, onClose, initialView }: Props) {
@@ -199,16 +186,17 @@ export function EventOrdersModal({ event, onClose, initialView }: Props) {
   const exportCSV = async () => {
     setExporting(true);
 
-    const { orders: all, error: exportError } = await getEventOrdersForExport(
-      event.id,
-      {
-        search: debouncedSearch,
-        paymentStatus: filters.paymentStatus,
-        orderStatus: filters.orderStatus,
-        source: filters.source,
-        sortBy: filters.sortBy,
-      },
-    );
+    const {
+      orders: all,
+      truncated,
+      error: exportError,
+    } = await getEventOrdersForExport(event.id, {
+      search: debouncedSearch,
+      paymentStatus: filters.paymentStatus,
+      orderStatus: filters.orderStatus,
+      source: filters.source,
+      sortBy: filters.sortBy,
+    });
 
     if (exportError) {
       setError(exportError);
@@ -216,84 +204,15 @@ export function EventOrdersModal({ event, onClose, initialView }: Props) {
       return;
     }
 
-    const headers = [
-      "Order ID",
-      "Source",
-      "BIB Number",
-      "Order Status",
-      "Registration Name",
-      "User Email",
-      "Registration Email",
-      "Phone",
-      "Gender",
-      "Age Category",
-      "Birth Date",
-      "Blood Group",
-      "T-Shirt Size",
-      "Runner Category",
-      "Community",
-      "Package",
-      "Distance",
-      "Qty",
-      "Package Price",
-      "Payment Amount",
-      "Payment Status",
-      "Payment Method",
-      "Transaction ID",
-      "Emergency Contact",
-      "Emergency Phone",
-      "Admin Note",
-      "Order Date",
-    ];
-
-    const rows = all.map((order) => [
-      order.id,
-      order.source,
-      order.registration?.bibNumber || "",
-      order.status,
-      order.registration?.fullName || "",
-      order.user.email,
-      order.registration?.email || "",
-      order.registration?.phone || order.user.phone || "",
-      order.registration?.gender || "",
-      order.registration?.ageCategory || "",
-      order.registration?.birthDate
-        ? formatBirthDate(order.registration.birthDate)
+    downloadCsv(
+      `${event.slug}-orders-${new Date().toISOString().split("T")[0]}.csv`,
+      buildOrdersCsv(all, event),
+    );
+    setError(
+      truncated
+        ? `Only the first ${all.length.toLocaleString()} orders were exported. Use the filters to export the rest in parts.`
         : "",
-      order.registration?.bloodGroup || "",
-      order.registration?.tshirtSize || "",
-      order.registration?.runnerCategory || "",
-      order.registration?.communityName || "",
-      order.package.name,
-      order.package.distance,
-      order.qty,
-      order.package.price,
-      order.payment?.amount ?? "",
-      order.payment?.status || "N/A",
-      order.payment?.paymentMethod || "",
-      order.payment?.transactionId || "",
-      order.registration?.emergencyContactName || "",
-      order.registration?.emergencyContactNumber || "",
-      order.adminNote || "",
-      new Date(order.createdAt).toISOString(),
-    ]);
-
-    const csv = [
-      headers.map(esc).join(","),
-      ...rows.map((r) => r.map(esc).join(",")),
-    ].join("\r\n");
-
-    const BOM = "\uFEFF"; // makes Excel read it as UTF-8
-    const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${event.slug}-orders-${
-      new Date().toISOString().split("T")[0]
-    }.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-
+    );
     setExporting(false);
   };
 
@@ -312,52 +231,51 @@ export function EventOrdersModal({ event, onClose, initialView }: Props) {
       {/* Backdrop — inert while the form is open so a stray click can't throw
           away a half-filled registration. */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-[#0d1840]/60 backdrop-blur-sm"
         onClick={isCreating ? undefined : onClose}
       />
 
       <div
         ref={modalRef}
-        className="relative bg-white rounded-2xl w-full max-w-3xl mx-4 max-h-[90vh] flex flex-col shadow-2xl"
+        className="relative mx-3 flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-[#faf8f3] shadow-2xl ring-1 ring-[#c49a3c]/20 sm:mx-4"
       >
         {/* ─── Header ─── */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+        <div className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-[#c49a3c]/15 bg-white px-4 py-4 sm:px-6">
           {isCreating ? (
             <button
               onClick={() => setView("list")}
-              className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+              className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-[#14245a] transition-colors cursor-pointer"
             >
               <ArrowLeft size={16} />
               Back to orders
             </button>
           ) : (
             <div className="min-w-0">
-              <h3 className="text-lg font-bold text-gray-900 truncate">
+              <p className="text-[10px] font-semibold tracking-[0.2em] text-[#a8852f] uppercase">
+                Orders · {stats ? `${stats.total.toLocaleString()} total` : "…"}
+              </p>
+              <p className="mt-0.5 truncate text-lg font-semibold text-[#14245a] sm:text-xl">
                 {event.name}
-              </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Order Management ·{" "}
-                {stats ? `${stats.total.toLocaleString()} total orders` : "…"}
               </p>
             </div>
           )}
 
-          <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+          <div className="flex flex-shrink-0 items-center gap-1.5 sm:gap-2">
             {!isCreating && (
               <>
                 <button
                   onClick={() => setView("create")}
-                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer uppercase tracking-wider"
+                  className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-[#14245a] px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#1d3274]"
                   title="Register a participant manually"
                 >
                   <UserPlus size={13} />
-                  Manual
+                  <span className="hidden sm:inline">Add</span> Manual
                 </button>
 
                 <button
                   onClick={handleRefresh}
                   disabled={fetching}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  className="cursor-pointer rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-[#14245a] disabled:opacity-50"
                   title="Refresh orders"
                 >
                   <RefreshCw
@@ -370,7 +288,7 @@ export function EventOrdersModal({ event, onClose, initialView }: Props) {
                   <button
                     onClick={exportCSV}
                     disabled={exporting}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer uppercase tracking-wider disabled:opacity-50"
+                    className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-[#14245a] transition-colors hover:border-[#c49a3c] disabled:opacity-50"
                     title={`Export all ${total.toLocaleString()} matching orders`}
                   >
                     {exporting ? (
@@ -386,7 +304,8 @@ export function EventOrdersModal({ event, onClose, initialView }: Props) {
 
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+              className="cursor-pointer rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-[#14245a]"
+              title="Close"
             >
               <X size={18} />
             </button>
@@ -394,7 +313,7 @@ export function EventOrdersModal({ event, onClose, initialView }: Props) {
         </div>
 
         {/* ─── Body ─── */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
           {isCreating ? (
             <ManualRegistrationForm
               event={event}
@@ -403,21 +322,23 @@ export function EventOrdersModal({ event, onClose, initialView }: Props) {
             />
           ) : firstLoad ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-300 mb-3" />
-              <p className="text-sm text-gray-400">Loading orders...</p>
+              <Loader2 className="w-8 h-8 animate-spin text-[#c49a3c] mb-3" />
+              <p className="text-sm text-slate-400">Loading orders...</p>
             </div>
           ) : eventHasNoOrders ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
-                <ShoppingBag className="w-8 h-8 text-gray-300" />
+              <div className="w-16 h-16 bg-white ring-1 ring-[#c49a3c]/30 rounded-2xl flex items-center justify-center mb-4">
+                <ShoppingBag className="w-7 h-7 text-[#c49a3c]" />
               </div>
-              <p className="text-gray-900 font-bold text-lg">No orders yet</p>
-              <p className="text-gray-400 text-sm mt-1">
+              <p className="text-[#14245a] font-semibold text-lg">
+                No orders yet
+              </p>
+              <p className="text-slate-500 text-sm mt-1">
                 Orders appear here once people register
               </p>
               <button
                 onClick={() => setView("create")}
-                className="mt-5 flex items-center gap-2 px-5 py-3 bg-gray-900 text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
+                className="mt-5 flex items-center gap-2 px-5 py-3 bg-[#14245a] text-white text-xs font-semibold rounded-lg hover:bg-[#1d3274] transition-colors cursor-pointer"
               >
                 <UserPlus size={14} />
                 Register someone manually
@@ -441,13 +362,13 @@ export function EventOrdersModal({ event, onClose, initialView }: Props) {
               />
 
               {total === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 font-medium">
+                <div className="rounded-xl border border-dashed border-slate-300 bg-white py-12 text-center">
+                  <p className="text-slate-500 font-medium">
                     No orders match your filters
                   </p>
                   <button
                     onClick={() => handleFilterChange(DEFAULT_FILTERS)}
-                    className="text-sm text-gray-900 font-bold mt-2 hover:underline cursor-pointer"
+                    className="text-sm text-[#14245a] font-semibold mt-2 underline decoration-[#c49a3c] cursor-pointer"
                   >
                     Clear filters
                   </button>
@@ -456,7 +377,7 @@ export function EventOrdersModal({ event, onClose, initialView }: Props) {
                 // Dim rather than blank while a page loads — the list doesn't
                 // jump and the admin keeps their place.
                 <div
-                  className={`space-y-3 transition-opacity ${
+                  className={`space-y-2 transition-opacity ${
                     fetching ? "opacity-50" : "opacity-100"
                   }`}
                 >
@@ -482,8 +403,8 @@ export function EventOrdersModal({ event, onClose, initialView }: Props) {
 
         {/* ─── Footer ─── */}
         {!isCreating && !firstLoad && !eventHasNoOrders && (
-          <div className="px-6 py-3 border-t border-gray-100 flex items-center justify-between gap-3 flex-shrink-0 bg-gray-50/50 rounded-b-2xl">
-            <p className="text-xs text-gray-400 whitespace-nowrap">
+          <div className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-[#c49a3c]/15 bg-white px-4 py-3 sm:px-6">
+            <p className="text-xs text-slate-400 whitespace-nowrap tabular-nums">
               {rangeStart}–{rangeEnd} of {total.toLocaleString()}
             </p>
 
@@ -492,18 +413,18 @@ export function EventOrdersModal({ event, onClose, initialView }: Props) {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1 || fetching}
-                  className="p-1.5 text-gray-500 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="p-1.5 text-[#14245a] rounded-lg border border-slate-200 hover:border-[#c49a3c] transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                   title="Previous page"
                 >
                   <ChevronLeft size={16} />
                 </button>
-                <span className="text-xs font-bold text-gray-600 px-2 tabular-nums">
+                <span className="text-xs font-semibold text-[#14245a] px-2 tabular-nums">
                   {page} / {totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages || fetching}
-                  className="p-1.5 text-gray-500 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="p-1.5 text-[#14245a] rounded-lg border border-slate-200 hover:border-[#c49a3c] transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                   title="Next page"
                 >
                   <ChevronRight size={16} />
@@ -511,8 +432,11 @@ export function EventOrdersModal({ event, onClose, initialView }: Props) {
               </div>
             )}
 
-            <p className="text-xs font-bold text-gray-600 whitespace-nowrap">
-              Paid: ৳{(stats?.paidRevenue ?? 0).toLocaleString()}
+            <p className="text-xs whitespace-nowrap text-slate-500">
+              Collected{" "}
+              <span className="font-semibold text-[#14245a] tabular-nums">
+                ৳{(stats?.paidRevenue ?? 0).toLocaleString("en-IN")}
+              </span>
             </p>
           </div>
         )}

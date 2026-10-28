@@ -425,22 +425,22 @@ export async function placeOrder(formData: {
     if (!eventInfo) return { error: "Event not found" };
 
     const isMarathon = usesRaceFields(eventInfo.category);
-    let details: Record<string, string> | null = null;
 
+    // Marathons must have the race fields.
     if (isMarathon) {
-      // Marathons must have the race fields.
       if (!formData.gender || !formData.birthDate || !formData.ageCategory || !formData.bloodGroup || !formData.runnerCategory) {
         return { error: "Please fill in all required fields" };
       }
-    } else {
-      // Other categories: keep only known answers, and check each one.
-      details = {};
-      for (const question of getExtraQuestions(eventInfo.category, eventInfo.eventType)) {
-        const answer = formData.details?.[question.key]?.trim() ?? "";
-        const problem = checkExtraAnswer(question, answer);
-        if (problem) return { error: problem };
-        if (answer) details[question.key] = answer;
-      }
+    }
+
+    // Extra questions (any category, marathons too): keep only known
+    // answers, and check each one.
+    const details: Record<string, string> = {};
+    for (const question of getExtraQuestions(eventInfo.category, eventInfo.eventType)) {
+      const answer = formData.details?.[question.key]?.trim() ?? "";
+      const problem = checkExtraAnswer(question, answer);
+      if (problem) return { error: problem };
+      if (answer) details[question.key] = answer;
     }
 
     // ─── FREE EXPIRED HOLDS ────────────────────────────────
@@ -624,8 +624,9 @@ export async function placeOrder(formData: {
           email: formData.email || null, // real email still stored here too
           fullName: formData.fullName,
           phone: formData.phone.trim(),
-          // Marathons → race fields. Other categories → race fields empty,
-          // answers in `details`.
+          // Marathons → race fields. Other categories → race fields empty.
+          // Answers to extra questions go in `details` for every category.
+          details: Object.keys(details).length > 0 ? details : undefined,
           ...(isMarathon
             ? {
                 gender: formData.gender,
@@ -638,7 +639,7 @@ export async function placeOrder(formData: {
                 communityName: formData.communityName || null,
                 runnerCategory: formData.runnerCategory,
               }
-            : { details: details ?? undefined }),
+            : {}),
         },
       });
 

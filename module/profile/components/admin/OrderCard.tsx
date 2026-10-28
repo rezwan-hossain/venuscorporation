@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { EditRegistrationForm } from "./EditRegistrationForm";
 import { OrderDeliveries } from "./OrderDeliveries";
+import { getAnswerLabel } from "@/lib/event-checkout-form";
 
 type Props = {
   order: EventOrder;
@@ -47,20 +48,20 @@ const ORDER_STATUS: Record<
 > = {
   CONFIRMED: {
     icon: CheckCircle,
-    color: "text-green-600",
-    bg: "bg-green-50 border-green-200",
+    color: "text-emerald-700",
+    bg: "bg-emerald-50 border-emerald-100",
     label: "Confirmed",
   },
   PENDING: {
     icon: Clock,
-    color: "text-yellow-600",
-    bg: "bg-yellow-50 border-yellow-200",
+    color: "text-amber-700",
+    bg: "bg-amber-50 border-amber-100",
     label: "Pending",
   },
   CANCELLED: {
     icon: XCircle,
     color: "text-red-600",
-    bg: "bg-red-50 border-red-200",
+    bg: "bg-red-50 border-red-100",
     label: "Cancelled",
   },
 };
@@ -69,8 +70,8 @@ const PAYMENT_STATUS: Record<
   string,
   { color: string; bg: string; label: string }
 > = {
-  PAID: { color: "text-green-700", bg: "bg-green-100", label: "Paid" },
-  PENDING: { color: "text-yellow-700", bg: "bg-yellow-100", label: "Pending" },
+  PAID: { color: "text-emerald-700", bg: "bg-emerald-100/70", label: "Paid" },
+  PENDING: { color: "text-amber-700", bg: "bg-amber-100/70", label: "Pending" },
   FAILED: { color: "text-red-700", bg: "bg-red-100", label: "Failed" },
   REFUNDED: {
     color: "text-orange-700",
@@ -119,10 +120,13 @@ export function OrderCard({
   const orderAmount = order.payment?.amount || order.package.price * order.qty;
 
   const cardBg = expanded
-    ? isGuest
-      ? "bg-amber-50 border-amber-200"
-      : orderConfig.bg
-    : "border-gray-200 bg-white";
+    ? "ring-[#c49a3c]/50 shadow-lg shadow-[#14245a]/5"
+    : "ring-slate-200/70 hover:ring-slate-300";
+
+  // Answers to the extra checkout questions (conference, gala, …).
+  const answers = Object.entries(order.registration?.details ?? {}).filter(
+    ([, value]) => value,
+  );
 
   const [editing, setEditing] = useState(false);
 
@@ -148,12 +152,12 @@ export function OrderCard({
 
   return (
     <div
-      className={`border rounded-xl overflow-hidden transition-all ${cardBg}`}
+      className={`overflow-hidden rounded-xl bg-white ring-1 transition ${cardBg}`}
     >
       {/* ─── Header Row ─── */}
       <div
         onClick={onToggle}
-        className="flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50/50 transition-colors"
+        className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3 cursor-pointer sm:flex-nowrap sm:p-4"
       >
         {/* Avatar */}
         <div className="flex-shrink-0 relative">
@@ -161,19 +165,17 @@ export function OrderCard({
             <img
               src={order.user.image}
               alt={displayName}
-              className="w-9 h-9 rounded-full object-cover border border-gray-200"
+              className="w-10 h-10 rounded-full object-cover ring-2 ring-[#c49a3c]/30"
             />
           ) : (
             <div
-              className={`w-9 h-9 rounded-full border flex items-center justify-center ${
-                isGuest
-                  ? "bg-amber-100 border-amber-200"
-                  : "bg-gray-100 border-gray-200"
+              className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                isGuest ? "bg-amber-100" : "bg-[#14245a]"
               }`}
             >
               <span
-                className={`text-xs font-bold ${
-                  isGuest ? "text-amber-600" : "text-gray-500"
+                className={`text-xs font-semibold ${
+                  isGuest ? "text-amber-700" : "text-[#dcb45c]"
                 }`}
               >
                 {userInitials}
@@ -192,10 +194,10 @@ export function OrderCard({
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-bold text-gray-900 truncate">
+            <p className="text-sm font-semibold text-[#14245a] truncate">
               {displayName}
             </p>
-            <span className="px-1.5 py-0.5 text-[10px] bg-indigo-50 text-indigo-600 rounded-full font-bold flex-shrink-0">
+            <span className="px-1.5 py-0.5 text-[10px] bg-[#c49a3c]/10 text-[#a8852f] rounded-full font-semibold flex-shrink-0">
               {order.package.distance}
             </span>
 
@@ -207,7 +209,7 @@ export function OrderCard({
             )}
           </div>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-slate-500">
               {order.package.name}
               {order.qty > 1 ? ` × ${order.qty}` : ""}
             </span>
@@ -223,14 +225,14 @@ export function OrderCard({
         </div>
 
         {/* Amount + Statuses */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-sm font-bold text-gray-900">
+        <div className="flex w-full flex-shrink-0 items-center justify-end gap-1.5 sm:ml-auto sm:w-auto sm:gap-2">
+          <span className="mr-1 text-sm font-semibold text-[#14245a] tabular-nums">
             ৳{orderAmount.toLocaleString()}
           </span>
 
           {/* Order Status */}
           <span
-            className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border ${orderConfig.bg} ${orderConfig.color}`}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full border ${orderConfig.bg} ${orderConfig.color}`}
           >
             <OrderIcon size={11} />
             {orderConfig.label}
@@ -239,7 +241,7 @@ export function OrderCard({
           {/* Payment Status */}
           {paymentConfig && (
             <span
-              className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${paymentConfig.bg} ${paymentConfig.color}`}
+              className={`px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full ${paymentConfig.bg} ${paymentConfig.color}`}
             >
               {paymentConfig.label}
             </span>
@@ -247,7 +249,7 @@ export function OrderCard({
 
           {order.source === "MANUAL" && (
             <span
-              className="px-1.5 py-1 text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 rounded-full"
+              className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-slate-100 text-slate-500 rounded-full"
               title="Registered manually by an admin"
             >
               Manual
@@ -255,16 +257,16 @@ export function OrderCard({
           )}
 
           {expanded ? (
-            <ChevronUp size={16} className="text-gray-400" />
+            <ChevronUp size={16} className="text-[#c49a3c]" />
           ) : (
-            <ChevronDown size={16} className="text-gray-400" />
+            <ChevronDown size={16} className="text-slate-400" />
           )}
         </div>
       </div>
 
       {/* ─── Expanded Details ─── */}
       {expanded && (
-        <div className="border-t border-gray-200/60 px-4 pb-4 pt-3 space-y-4">
+        <div className="space-y-4 border-t border-[#c49a3c]/15 bg-[#faf8f3]/70 px-3 pt-4 pb-4 sm:px-4">
           {/* ─── Guest Notice ─── */}
           {isGuest && (
             <div className="flex items-center gap-2 p-2.5 bg-amber-100 border border-amber-200 rounded-lg ">
@@ -281,7 +283,7 @@ export function OrderCard({
           )}
           {/* ─── Contact Info ─── */}
           <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+            <p className="text-[10px] font-semibold text-[#a8852f] uppercase tracking-[0.15em] mb-2">
               Contact
             </p>
             <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-gray-600">
@@ -291,7 +293,7 @@ export function OrderCard({
                   <Mail size={13} className="text-gray-400" />
                   <a
                     href={`mailto:${displayEmail}`}
-                    className="hover:text-gray-900 hover:underline"
+                    className="hover:text-[#14245a] hover:underline"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {displayEmail}
@@ -304,7 +306,7 @@ export function OrderCard({
                   <Phone size={13} className="text-gray-400" />
                   <a
                     href={`tel:${order.registration?.phone || order.user.phone}`}
-                    className="hover:text-gray-900 hover:underline"
+                    className="hover:text-[#14245a] hover:underline"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {order.registration?.phone || order.user.phone}
@@ -337,7 +339,7 @@ export function OrderCard({
           {order.registration && !editing && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                <p className="text-[10px] font-semibold text-[#a8852f] uppercase tracking-[0.15em]">
                   Registration Details
                   {order.registration.bibNumber && (
                     <span className="ml-2 normal-case tracking-normal text-gray-500">
@@ -350,7 +352,7 @@ export function OrderCard({
                     e.stopPropagation();
                     setEditing(true);
                   }}
-                  className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer"
+                  className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-[#14245a] bg-white border border-slate-200 rounded-md hover:border-[#c49a3c] cursor-pointer"
                   title="Fix name, t-shirt size, contacts, BIB…"
                 >
                   <Pencil size={11} />
@@ -393,25 +395,36 @@ export function OrderCard({
                         },
                       ]
                     : []),
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-100"
-                  >
-                    <item.icon
-                      size={12}
-                      className="text-gray-400 flex-shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <p className="text-[9px] text-gray-400 uppercase tracking-wider">
-                        {item.label}
-                      </p>
-                      <p className="text-xs font-medium text-gray-700 truncate">
-                        {item.value}
-                      </p>
+                  // Extra checkout answers, e.g. company or number of guests
+                  ...answers.map(([key, value]) => ({
+                    icon: Hash,
+                    label: getAnswerLabel(key),
+                    value,
+                  })),
+                ]
+                  .filter((item) => item.value)
+                  .map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 p-2 bg-white rounded-lg ring-1 ring-slate-200/70"
+                    >
+                      <item.icon
+                        size={12}
+                        className="text-[#c49a3c] flex-shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-[9px] text-slate-400 uppercase tracking-wider">
+                          {item.label}
+                        </p>
+                        <p
+                          className="text-xs font-medium text-[#14245a] truncate"
+                          title={item.value}
+                        >
+                          {item.value}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
 
               {/* Emergency Contact */}
@@ -441,17 +454,17 @@ export function OrderCard({
           )}
           {/* ─── Package & Payment ─── */}
           <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+            <p className="text-[10px] font-semibold text-[#a8852f] uppercase tracking-[0.15em] mb-2">
               Package & Payment
             </p>
-            <div className="p-3 bg-white rounded-lg border border-gray-100 space-y-2">
+            <div className="p-3 bg-white rounded-lg ring-1 ring-slate-200/70 space-y-2">
               {/* Package Row */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="px-2 py-0.5 text-[10px] bg-indigo-50 text-indigo-600 rounded-full font-bold">
+                  <span className="px-2 py-0.5 text-[10px] bg-[#c49a3c]/10 text-[#a8852f] rounded-full font-semibold">
                     {order.package.distance}
                   </span>
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-[#14245a]">
                     {order.package.name}
                   </span>
                   {order.qty > 1 && (
@@ -492,10 +505,10 @@ export function OrderCard({
 
                   {/* Total */}
                   <div className="flex items-center justify-between pt-2 border-t border-dashed border-gray-200">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                       Amount Charged
                     </span>
-                    <span className="text-base font-bold text-gray-900">
+                    <span className="text-base font-semibold text-[#14245a] tabular-nums">
                       ৳{Number(order.payment.amount).toLocaleString()}{" "}
                       <span className="text-xs font-normal text-gray-400">
                         {order.payment.currency}
@@ -507,11 +520,14 @@ export function OrderCard({
             </div>
           </div>
           {/* ─── Emails / SMS sent for this order ─── */}
-          <OrderDeliveries orderId={order.id} canResend={order.status === "CONFIRMED"} />
+          <OrderDeliveries
+            orderId={order.id}
+            canResend={order.status === "CONFIRMED"}
+          />
 
           {/* ─── Status Actions ─── */}
-          <div className="flex items-center justify-between pt-2">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+          <div className="flex items-center justify-between border-t border-[#c49a3c]/15 pt-3">
+            <p className="text-[10px] font-semibold text-[#a8852f] uppercase tracking-[0.15em]">
               Update Status
             </p>
 
@@ -525,7 +541,7 @@ export function OrderCard({
                       e.stopPropagation();
                       setShowActions(!showActions);
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#14245a] rounded-lg hover:bg-[#1d3274] transition-colors cursor-pointer"
                   >
                     <MoreHorizontal size={13} />
                     Change Status

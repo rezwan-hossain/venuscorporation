@@ -39,7 +39,7 @@ export function OrderFilters({
           value={filters.search}
           onChange={(e) => update("search", e.target.value)}
           placeholder="Search by name, email, phone, transaction ID..."
-          className="w-full h-10 pl-9 pr-9 border border-gray-200 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all"
+          className="w-full h-11 pl-9 pr-9 border border-slate-200 rounded-xl bg-white text-sm outline-none transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15"
         />
         {filters.search && (
           <button
@@ -52,10 +52,10 @@ export function OrderFilters({
       </div>
 
       {/* Filter Row */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5">
         {/* Order Status Pills */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mr-1">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mr-1">
             Order:
           </span>
           {[
@@ -67,10 +67,10 @@ export function OrderFilters({
             <button
               key={option.value}
               onClick={() => update("orderStatus", option.value)}
-              className={`px-3 py-1.5 text-xs font-bold rounded-full transition-colors cursor-pointer ${
+              className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors cursor-pointer ${
                 filters.orderStatus === option.value
-                  ? "bg-gray-900 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-[#14245a] text-white"
+                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-[#c49a3c]"
               }`}
             >
               {option.label}
@@ -79,8 +79,8 @@ export function OrderFilters({
         </div>
 
         {/* Payment Status Pills */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mr-1">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mr-1">
             Payment:
           </span>
           {[
@@ -93,10 +93,10 @@ export function OrderFilters({
             <button
               key={`pay-${option.value}`}
               onClick={() => update("paymentStatus", option.value)}
-              className={`px-3 py-1.5 text-xs font-bold rounded-full transition-colors cursor-pointer ${
+              className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors cursor-pointer ${
                 filters.paymentStatus === option.value
-                  ? "bg-gray-900 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-[#14245a] text-white"
+                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-[#c49a3c]"
               }`}
             >
               {option.label}
@@ -108,7 +108,7 @@ export function OrderFilters({
         <select
           value={filters.sortBy}
           onChange={(e) => update("sortBy", e.target.value)}
-          className="h-8 px-3 border border-gray-200 rounded-lg bg-white text-xs font-medium text-gray-600 focus:outline-none cursor-pointer"
+          className="h-8 px-3 border border-slate-200 rounded-lg bg-white text-xs font-medium text-[#14245a] outline-none focus:border-[#c49a3c] cursor-pointer"
         >
           <option value="newest">Newest First</option>
           <option value="oldest">Oldest First</option>
@@ -124,7 +124,7 @@ export function OrderFilters({
               source: e.target.value as OrderFilterState["source"],
             })
           }
-          className="h-9 px-3 rounded-lg border border-gray-200 bg-white text-xs font-medium text-gray-700 cursor-pointer focus:outline-none focus:border-gray-900"
+          className="h-8 px-3 rounded-lg border border-slate-200 bg-white text-xs font-medium text-[#14245a] cursor-pointer outline-none focus:border-[#c49a3c]"
         >
           <option value="all">All sources</option>
           <option value="ONLINE">Online</option>
@@ -132,7 +132,7 @@ export function OrderFilters({
         </select>
 
         {/* Result count */}
-        <span className="ml-auto text-xs text-gray-400">
+        <span className="ml-auto text-xs text-slate-400 tabular-nums">
           {resultCount === totalCount
             ? `${totalCount} orders`
             : `${resultCount} of ${totalCount}`}

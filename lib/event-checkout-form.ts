@@ -52,7 +52,10 @@ export type CheckoutQuestion = {
 };
 
 /** An extra question — always has a key and a type. */
-export type ExtraQuestion = CheckoutQuestion & { key: string; type: NonNullable<CheckoutQuestion["type"]> };
+export type ExtraQuestion = CheckoutQuestion & {
+  key: string;
+  type: NonNullable<CheckoutQuestion["type"]>;
+};
 
 /** Answers to the extra questions, by key (what's saved in Registration.details). */
 export type ExtraAnswers = Record<string, string>;
@@ -92,9 +95,26 @@ export const EVENT_CATEGORIES: EventCategoryInfo[] = [
     description: "Summits, seminars, corporate conferences",
     questions: [
       ...CONTACT_QUESTIONS,
-      { key: "company", label: "Company", type: "text", required: true, placeholder: "Company or organisation" },
-      { key: "jobTitle", label: "Job title", type: "text", placeholder: "e.g. Head of Marketing" },
-      { key: "dietary", label: "Dietary needs", type: "select", options: ["None", "Vegetarian", "Halal", "Other"], onlyFor: "LIVE" },
+      {
+        key: "company",
+        label: "Company",
+        type: "text",
+        required: true,
+        placeholder: "Company or organisation",
+      },
+      {
+        key: "jobTitle",
+        label: "Job title",
+        type: "text",
+        placeholder: "e.g. Head of Marketing",
+      },
+      {
+        key: "dietary",
+        label: "Dietary needs",
+        type: "select",
+        options: ["None", "Vegetarian", "Halal", "Other"],
+        onlyFor: "LIVE",
+      },
     ],
   },
   {
@@ -103,8 +123,20 @@ export const EVENT_CATEGORIES: EventCategoryInfo[] = [
     description: "Trade shows, expos, fairs",
     questions: [
       ...CONTACT_QUESTIONS,
-      { key: "company", label: "Company", type: "text", required: true, placeholder: "Company or organisation" },
-      { key: "visitorType", label: "Visitor type", type: "select", options: ["Buyer", "Exhibitor", "Visitor"], required: true },
+      {
+        key: "company",
+        label: "Company",
+        type: "text",
+        required: true,
+        placeholder: "Company or organisation",
+      },
+      {
+        key: "visitorType",
+        label: "Visitor type",
+        type: "select",
+        options: ["Buyer", "Exhibitor", "Visitor"],
+        required: true,
+      },
     ],
   },
   {
@@ -113,9 +145,26 @@ export const EVENT_CATEGORIES: EventCategoryInfo[] = [
     description: "Weddings, galas, celebrations",
     questions: [
       ...CONTACT_QUESTIONS,
-      { key: "guests", label: "Number of guests", type: "number", required: true, placeholder: "1" },
-      { key: "meal", label: "Meal choice", type: "select", options: ["Chicken", "Beef", "Fish", "Vegetarian"], onlyFor: "LIVE" },
-      { key: "message", label: "Message", type: "textarea", placeholder: "Anything we should know?" },
+      {
+        key: "guests",
+        label: "Number of guests",
+        type: "number",
+        required: true,
+        placeholder: "1",
+      },
+      {
+        key: "meal",
+        label: "Meal choice",
+        type: "select",
+        options: ["Chicken", "Beef", "Fish", "Vegetarian"],
+        onlyFor: "LIVE",
+      },
+      {
+        key: "message",
+        label: "Message",
+        type: "textarea",
+        placeholder: "Anything we should know?",
+      },
     ],
   },
   {
@@ -124,8 +173,19 @@ export const EVENT_CATEGORIES: EventCategoryInfo[] = [
     description: "Hands-on workshops and trainings",
     questions: [
       ...CONTACT_QUESTIONS,
-      { key: "organisation", label: "Organisation", type: "text", placeholder: "Company, university …" },
-      { key: "experience", label: "Experience level", type: "select", options: ["Beginner", "Intermediate", "Advanced"], required: true },
+      {
+        key: "organisation",
+        label: "Organisation",
+        type: "text",
+        placeholder: "Company, university …",
+      },
+      {
+        key: "experience",
+        label: "Experience level",
+        type: "select",
+        options: ["Beginner", "Intermediate", "Advanced"],
+        required: true,
+      },
     ],
   },
 ];
@@ -177,22 +237,31 @@ export function usesRaceFields(category: string): boolean {
  * The extra questions for this event (the ones with a `key`), e.g. for a
  * conference: company, job title, dietary needs (in person only).
  */
-export function getExtraQuestions(category: string, eventType: string): ExtraQuestion[] {
-  return getCheckoutQuestions(category, eventType).filter((q): q is ExtraQuestion => !!q.key && !!q.type);
+export function getExtraQuestions(
+  category: string,
+  eventType: string,
+): ExtraQuestion[] {
+  return getCheckoutQuestions(category, eventType).filter(
+    (q): q is ExtraQuestion => !!q.key && !!q.type,
+  );
 }
 
 /**
  * Check one answer. Returns an error message, or "" if it's fine.
  * Used by the checkout form (as you type) AND the server (before saving).
  */
-export function checkExtraAnswer(question: ExtraQuestion, value: string | undefined): string {
+export function checkExtraAnswer(
+  question: ExtraQuestion,
+  value: string | undefined,
+): string {
   const answer = (value ?? "").trim();
 
   if (!answer) return question.required ? `${question.label} is required` : "";
 
   if (question.type === "number") {
     const n = Number(answer);
-    if (!Number.isInteger(n) || n < 1 || n > 20) return `${question.label} must be a whole number from 1 to 20`;
+    if (!Number.isInteger(n) || n < 1 || n > 20)
+      return `${question.label} must be a whole number from 1 to 20`;
   }
   if (question.type === "select" && !question.options?.includes(answer)) {
     return `Choose a ${question.label.toLowerCase()}`;
@@ -200,4 +269,14 @@ export function checkExtraAnswer(question: ExtraQuestion, value: string | undefi
   if (answer.length > 500) return `${question.label} is too long`;
 
   return "";
+}
+
+// The label to show for a saved answer key, e.g. "jobTitle" → "Job title".
+// Used by the admin order list, which only has the stored keys.
+export function getAnswerLabel(key: string): string {
+  for (const category of EVENT_CATEGORIES) {
+    const question = category.questions.find((q) => q.key === key);
+    if (question) return question.label;
+  }
+  return key;
 }

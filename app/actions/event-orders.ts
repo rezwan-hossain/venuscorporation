@@ -38,6 +38,7 @@ const ORDER_INCLUDE = {
       bibNumber: true,
       email: true,
       birthDate: true,
+      details: true,
     },
   },
   payment: {
@@ -237,6 +238,8 @@ export async function getEventOrdersPaged(
 }
 
 // ─── Export ─────────────────────────────────────────
+const EXPORT_LIMIT = 20000;
+
 // CSV needs every matching row, not just the visible page. Its own action so
 // the modal never holds them all just in case Export gets clicked.
 export async function getEventOrdersForExport(
@@ -244,7 +247,7 @@ export async function getEventOrdersForExport(
   query: Partial<OrderQuery> = {},
 ) {
   const { error } = await requireAdmin();
-  if (error) return { orders: [] as EventOrder[], error };
+  if (error) return { orders: [] as EventOrder[], truncated: false, error };
 
   const q: OrderQuery = { ...DEFAULT_QUERY, ...query };
 
@@ -253,15 +256,24 @@ export async function getEventOrdersForExport(
       where: buildWhere(eventId, q),
       orderBy: buildOrderBy(q.sortBy),
       include: ORDER_INCLUDE,
-      take: 20000, // ceiling so a runaway export can't exhaust memory
+      // Ceiling so a runaway export can't exhaust memory. One extra row
+      // tells us whether anything was left out.
+      take: EXPORT_LIMIT + 1,
     });
 
     return {
-      orders: JSON.parse(JSON.stringify(orders)) as EventOrder[],
+      orders: JSON.parse(
+        JSON.stringify(orders.slice(0, EXPORT_LIMIT)),
+      ) as EventOrder[],
+      truncated: orders.length > EXPORT_LIMIT,
       error: null,
     };
   } catch (err: any) {
     console.error("Export orders error:", err?.message);
-    return { orders: [] as EventOrder[], error: "Failed to build export" };
+    return {
+      orders: [] as EventOrder[],
+      truncated: false,
+      error: "Failed to build export",
+    };
   }
 }

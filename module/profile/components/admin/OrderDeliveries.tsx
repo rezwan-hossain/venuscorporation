@@ -2,13 +2,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getOrderDeliveries, resendConfirmation, type Delivery } from "@/app/actions/deliveries";
-import { ChevronDown, ChevronRight, Loader2, Mail, MessageSquare, RotateCw } from "lucide-react";
+import {
+  getOrderDeliveries,
+  resendConfirmation,
+  type Delivery,
+} from "@/app/actions/deliveries";
+import {
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  Mail,
+  MessageSquare,
+  RotateCw,
+} from "lucide-react";
 
 const STATUS: Record<Delivery["status"], { label: string; cls: string }> = {
   sent: { label: "Sent", cls: "bg-green-50 text-green-700 border-green-200" },
   failed: { label: "Failed", cls: "bg-red-50 text-red-700 border-red-200" },
-  skipped: { label: "Not sent", cls: "bg-gray-100 text-gray-600 border-gray-200" },
+  skipped: {
+    label: "Not sent",
+    cls: "bg-gray-100 text-gray-600 border-gray-200",
+  },
 };
 
 const fmt = (iso: string) =>
@@ -33,11 +47,15 @@ export function OrderDeliveries({
   const [open, setOpen] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<"email" | "sms" | null>(null);
   const [busy, setBusy] = useState(false);
-  const [outcome, setOutcome] = useState<{ ok: boolean; text: string } | null>(null);
+  const [outcome, setOutcome] = useState<{ ok: boolean; text: string } | null>(
+    null,
+  );
 
   useEffect(() => {
     let alive = true;
-    void getOrderDeliveries(orderId).then((r) => alive && setRows(r.deliveries));
+    void getOrderDeliveries(orderId).then(
+      (r) => alive && setRows(r.deliveries),
+    );
     return () => {
       alive = false;
     };
@@ -58,7 +76,10 @@ export function OrderDeliveries({
         if (r.status === "skipped") return `${what} not sent: ${r.reason}.`;
         return `${what} failed: ${r.reason}`;
       });
-      setOutcome({ ok: res.success, text: lines.join(" ") || "Nothing was sent." });
+      setOutcome({
+        ok: res.success,
+        text: lines.join(" ") || "Nothing was sent.",
+      });
     }
     setRows((await getOrderDeliveries(orderId)).deliveries);
   };
@@ -66,24 +87,31 @@ export function OrderDeliveries({
   return (
     <div onClick={(e) => e.stopPropagation()}>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Messages</p>
+        <p className="text-[10px] font-semibold text-[#a8852f] uppercase tracking-[0.15em]">
+          Messages
+        </p>
         {canResend && (
           <div className="flex flex-wrap items-center gap-1.5">
             {confirming ? (
               <>
                 <span className="text-[11px] text-gray-600">
-                  Send the {confirming === "email" ? "email" : "SMS"} again to the runner&apos;s current{" "}
+                  Send the {confirming === "email" ? "email" : "SMS"} again to
+                  the runner&apos;s current{" "}
                   {confirming === "email" ? "email" : "phone"}?
                 </span>
                 <button
                   onClick={() => resend(confirming)}
                   disabled={busy}
-                  className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white bg-gray-900 rounded-md hover:bg-gray-800 cursor-pointer disabled:opacity-50"
+                  className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white bg-[#14245a] rounded-md hover:bg-[#1d3274] cursor-pointer disabled:opacity-50"
                 >
                   {busy && <Loader2 size={11} className="animate-spin" />}
                   Yes, send
                 </button>
-                <button onClick={() => setConfirming(null)} disabled={busy} className="px-2 py-1 text-[10px] text-gray-500 hover:text-gray-700 cursor-pointer">
+                <button
+                  onClick={() => setConfirming(null)}
+                  disabled={busy}
+                  className="px-2 py-1 text-[10px] text-gray-500 hover:text-gray-700 cursor-pointer"
+                >
                   Cancel
                 </button>
               </>
@@ -97,7 +125,8 @@ export function OrderDeliveries({
                   }}
                   className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer"
                 >
-                  <RotateCw size={11} /> Resend {c === "email" ? "email" : "SMS"}
+                  <RotateCw size={11} /> Resend{" "}
+                  {c === "email" ? "email" : "SMS"}
                 </button>
               ))
             )}
@@ -105,7 +134,11 @@ export function OrderDeliveries({
         )}
       </div>
       {outcome && (
-        <p className={`mb-2 text-xs font-medium ${outcome.ok ? "text-green-700" : "text-red-600"}`}>{outcome.text}</p>
+        <p
+          className={`mb-2 text-xs font-medium ${outcome.ok ? "text-green-700" : "text-red-600"}`}
+        >
+          {outcome.text}
+        </p>
       )}
       {rows === null ? (
         <div className="h-9 bg-white rounded-lg border border-gray-100 animate-pulse" />
@@ -128,13 +161,18 @@ export function OrderDeliveries({
                   aria-expanded={expandable ? isOpen : undefined}
                 >
                   <Icon size={13} className="text-gray-400 flex-shrink-0" />
-                  <span className={`text-[10px] font-bold uppercase tracking-wider border rounded px-1.5 py-0.5 ${STATUS[d.status].cls}`}>
-                    {d.channel === "email" ? "Email" : "SMS"} · {STATUS[d.status].label}
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-wider border rounded px-1.5 py-0.5 ${STATUS[d.status].cls}`}
+                  >
+                    {d.channel === "email" ? "Email" : "SMS"} ·{" "}
+                    {STATUS[d.status].label}
                   </span>
                   <span className="text-gray-700 truncate min-w-0 flex-1">
                     {d.to ?? d.reason ?? "—"}
                   </span>
-                  <span className="text-gray-400 tabular-nums whitespace-nowrap">{fmt(d.createdAt)}</span>
+                  <span className="text-gray-400 tabular-nums whitespace-nowrap">
+                    {fmt(d.createdAt)}
+                  </span>
                   {expandable &&
                     (isOpen ? (
                       <ChevronDown size={12} className="text-gray-400" />
@@ -145,7 +183,13 @@ export function OrderDeliveries({
                 {isOpen && (
                   <div className="px-3 pb-3 pl-8 space-y-1.5 text-[11px]">
                     {d.reason && (
-                      <p className={d.status === "failed" ? "text-red-700" : "text-gray-600"}>
+                      <p
+                        className={
+                          d.status === "failed"
+                            ? "text-red-700"
+                            : "text-gray-600"
+                        }
+                      >
                         {d.status === "failed" ? "Error: " : ""}
                         {d.reason}
                       </p>
@@ -157,8 +201,12 @@ export function OrderDeliveries({
                     )}
                     {d.providerRef && (
                       <p className="text-gray-500 break-all">
-                        {d.channel === "email" ? "Resend ID: " : "Gateway reply: "}
-                        <span className="font-mono select-all">{d.providerRef}</span>
+                        {d.channel === "email"
+                          ? "Resend ID: "
+                          : "Gateway reply: "}
+                        <span className="font-mono select-all">
+                          {d.providerRef}
+                        </span>
                       </p>
                     )}
                   </div>
