@@ -14,7 +14,8 @@ const photo = (id: string, w = 1600) =>
 // ─── Hero: "Now showing" summit hero ──────────────────
 
 export const summitHero = {
-  // Background photo when no hero is set in admin.
+  // Default hero photo: used only when there is no event photo and no photo
+  // uploaded in admin.
   poster: photo("1540575467063-178a50c2df87", 2000), // summit audience
 
   label: "Now showing · Business Summit", // small gold line above the title

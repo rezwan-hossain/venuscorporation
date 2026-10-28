@@ -117,9 +117,9 @@ export function buildHeroContent({
   if (hero && !hero.showSlugButton) content.button = null;
   if (hero && !hero.showCountdown) content.countdownTo = null;
 
-  // 3. The photo (before a hero is saved, always the default photo)
+  // 3. The photo: admin's photo → the event's banner → default photo
   let image = summitHero.poster;
-  if (hero && heroEvent) image = heroEvent.bannerImage;
+  if (heroEvent) image = heroEvent.bannerImage;
   if (hero?.desktopImage) image = hero.desktopImage;
 
   // 4. The "Watch our events" video (before a hero is saved, the demo video)
