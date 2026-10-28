@@ -57,18 +57,26 @@ export async function getEventBySlug(slug: string) {
   }
 }
 
+/**
+ * The events page's "Upcoming" list: the soonest active events from today on.
+ * Cached for hours (not days) so events drop off soon after their date passes.
+ */
 export async function getUpcomingEvents(limit: number = 3) {
   "use cache";
   cacheLife("days");
   cacheTag("events", "upcoming-events");
+
+  // Event dates are stored as UTC midnight — compare against today's UTC midnight.
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
   try {
     const events = await prisma.event.findMany({
       where: {
         isActive: true,
         isArchived: false,
         status: "ACTIVE",
-        // ✅ Removed date filter — shows all active events
-        // date: { gte: new Date() },
+        date: { gte: today },
       },
       include: {
         organizer: true,
@@ -77,7 +85,7 @@ export async function getUpcomingEvents(limit: number = 3) {
           orderBy: { price: "asc" },
         },
       },
-      orderBy: { date: "desc" },
+      orderBy: { date: "asc" }, // soonest first
       take: limit,
     });
 
