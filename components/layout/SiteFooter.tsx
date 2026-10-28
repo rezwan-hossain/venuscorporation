@@ -2,7 +2,7 @@
 //
 // Site-wide footer, in the brand colours (deep navy + gold, elegant serif).
 //   1. Brand — logo card, tagline, social links
-//   2. Link columns — Explore (main pages), Services, Help, Contact
+//   2. Link columns — Explore (main pages), Services, Help, Account, Contact
 //   3. Bottom bar — copyright + motto
 // (Small screens: brand block first, then the columns two by two.)
 //
@@ -40,6 +40,11 @@ const SOCIAL_ICON = { Facebook, Instagram, X: Twitter, YouTube: Youtube } as con
 const socialIcons = contactDetails.social
   .filter((s) => s.label in SOCIAL_ICON)
   .map((s) => ({ ...s, icon: SOCIAL_ICON[s.label as keyof typeof SOCIAL_ICON] }));
+
+const accountLinks = [
+  { label: "Login", href: "/login" },
+  { label: "Register", href: "/register" },
+];
 
 const helpLinks = [
   { label: "Support", href: "/contact" },
@@ -119,7 +124,7 @@ const SiteFooter = () => {
           </div>
 
           {/* ── 2. Link columns ────────────────────────────────────── */}
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-[0.8fr_1.3fr_1fr_1.5fr] md:gap-x-8">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-[0.8fr_1.3fr_1fr_0.8fr_1.5fr] md:gap-x-8">
             <nav aria-label="Footer">
               <ColumnTitle>Explore</ColumnTitle>
               <ul className="space-y-2.5">
@@ -150,6 +155,19 @@ const SiteFooter = () => {
               <ColumnTitle>Help</ColumnTitle>
               <ul className="space-y-2.5">
                 {helpLinks.map((link) => (
+                  <li key={link.label}>
+                    <Link href={link.href} prefetch={false} className={linkClass}>
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <ColumnTitle>Account</ColumnTitle>
+              <ul className="space-y-2.5">
+                {accountLinks.map((link) => (
                   <li key={link.label}>
                     <Link href={link.href} prefetch={false} className={linkClass}>
                       {link.label}
