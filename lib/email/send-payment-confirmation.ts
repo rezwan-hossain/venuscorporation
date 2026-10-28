@@ -1,110 +1,62 @@
 // lib/email/send-payment-confirmation.ts
+//
+// Sends the "booking confirmed" email through Resend. The HTML comes from
+// templates/payment-confirmation.tsx; this file formats the dates and sends.
+
 import { Resend } from "resend";
-import { getPaymentConfirmationEmailHTML } from "./templates/payment-confirmation";
-import type { RenderedEmailContent } from "@/lib/email-template";
-// import { prisma } from "@/lib/prisma";
+import {
+  getPaymentConfirmationEmailHTML,
+  type PaymentConfirmationEmailProps,
+} from "./templates/payment-confirmation";
 
-type OrderStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
-type PaymentStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED";
-
-interface PaymentConfirmationEmailProps {
+type SendProps = Omit<
+  PaymentConfirmationEmailProps,
+  "eventDate" | "orderDate" | "appUrl"
+> & {
   to: string;
-  runnerName: string;
-  eventName: string;
   eventDate: string | Date;
-  eventAddress: string;
-  packageName: string;
-  distance: string;
-  amount: number;
-  orderId: string;
   orderDate: string | Date;
-  orderStatus: OrderStatus;
-  paymentStatus: PaymentStatus;
-  transactionId?: string;
-  paymentMethod?: string;
-  bibNumber?: string;
-  tshirtSize?: string;
-  bloodGroup?: string;
-  /** Admin-editable text (lib/email-template-server.ts). Omit = built-in text. */
-  content?: RenderedEmailContent;
-}
+};
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function sendPaymentConfirmationEmail(
-  params: PaymentConfirmationEmailProps,
-) {
+export async function sendPaymentConfirmationEmail({
+  to,
+  eventDate,
+  orderDate,
+  ...details
+}: SendProps) {
   try {
-    // const order = await prisma.order.findUnique({
-    //   where: { id: orderId },
-    //   include: {
-    //     user: true,
-    //     package: true,
-    //     event: true,
-    //     registration: true,
-    //     payment: true,
-    //   },
-    // });
-
-    // if (!order || !order.user.email) {
-    //   console.error("Order or user email not found");
-    //   return { success: false, error: "Order not found" };
-    // }
-
-    // Format dates
-    const eventDateFormatted = new Date(params.eventDate).toLocaleDateString(
-      "en-US",
-      {
+    const html = getPaymentConfirmationEmailHTML({
+      ...details,
+      // "Saturday, 22 November 2026". Event dates are stored as UTC midnight.
+      eventDate: new Date(eventDate).toLocaleDateString("en-GB", {
         weekday: "long",
-        year: "numeric",
+        day: "numeric",
         month: "long",
-        day: "numeric",
-      },
-    );
-
-    const orderDateFormatted = new Date(params.orderDate).toLocaleDateString(
-      "en-US",
-      {
         year: "numeric",
-        month: "short",
+        timeZone: "UTC",
+      }),
+      // "4 Oct 2026, 10:30" in Bangladesh time
+      orderDate: new Date(orderDate).toLocaleString("en-GB", {
         day: "numeric",
+        month: "short",
+        year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
-      },
-    );
-
-    // Generate HTML
-    const html = getPaymentConfirmationEmailHTML({
-      runnerName: params.runnerName || "Runner",
-      eventName: params.eventName,
-      eventDate: eventDateFormatted,
-      eventAddress: params.eventAddress,
-      packageName: params.packageName,
-      distance: params.distance,
-      amount: params.amount || 0,
-      orderId: params.orderId,
-      orderDate: orderDateFormatted,
-      orderStatus: params.orderStatus,
-      paymentStatus: params.paymentStatus,
-      transactionId: params.transactionId || undefined,
-      paymentMethod: params.paymentMethod || undefined,
-      bibNumber: params.bibNumber || undefined,
-      appUrl: process.env.NEXT_PUBLIC_APP_URL! || "http://localhost:3000",
-      tshirtSize: params.tshirtSize || undefined,
-      bloodGroup: params.bloodGroup || undefined,
-      content: params.content,
+        timeZone: "Asia/Dhaka",
+      }),
+      appUrl: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
     });
 
-    // Send email
     const { data, error } = await resend.emails.send({
       from:
         process.env.RESEND_ORDER_CONFIRMATION_FROM_EMAIL ||
-        "Marathon Events <info@venuscorporation.org>", // Change in production
-      to: [params.to],
+        "Venus Corporation <info@venuscorporation.org>",
+      to: [to],
       subject:
-        params.content?.subject ||
-        `✅ Registration Confirmed - ${params.eventName}`,
-      html: html,
+        details.content?.subject || `Booking confirmed: ${details.eventName}`,
+      html,
     });
 
     if (error) {
@@ -114,8 +66,11 @@ export async function sendPaymentConfirmationEmail(
 
     console.log("✅ Confirmation email sent:", data?.id);
     return { success: true, messageId: data?.id };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Failed to send confirmation email:", error);
-    return { success: false, error: error.message };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }

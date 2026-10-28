@@ -15,10 +15,10 @@ import {
   cleanEmailContent,
   parseEmailContent,
   renderEmailContent,
+  sampleEmailBooking,
   validateEmailContent,
   type EmailContent,
 } from "@/lib/email-template";
-import { sampleSmsVars } from "@/lib/sms-template";
 import { EMAIL_SETTING_KEY } from "@/lib/email-template-server";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,6 +51,8 @@ export async function getEmailSettings(): Promise<{
     id: string;
     name: string;
     date: string;
+    category: string;
+    eventType: string;
     content: EmailContent | null;
   }[];
   error: string | null;
@@ -69,7 +71,14 @@ export async function getEmailSettings(): Promise<{
       prisma.siteSetting.findUnique({ where: { key: EMAIL_SETTING_KEY } }),
       prisma.event.findMany({
         where: { isArchived: false },
-        select: { id: true, name: true, date: true, confirmationEmail: true },
+        select: {
+          id: true,
+          name: true,
+          date: true,
+          category: true,
+          eventType: true,
+          confirmationEmail: true,
+        },
         orderBy: { date: "desc" },
       }),
     ]);
@@ -81,6 +90,8 @@ export async function getEmailSettings(): Promise<{
         id: e.id,
         name: e.name,
         date: e.date.toISOString(),
+        category: e.category,
+        eventType: e.eventType,
         content: parseEmailContent(e.confirmationEmail),
       })),
       error: null,
@@ -193,7 +204,7 @@ export async function saveEventEmail(
   }
 }
 
-/** Send the email, with sample runner details, to one address. */
+/** Send the email, with a sample booking for the event, to one address. */
 export async function sendTestEmail(
   input: EmailContent,
   to: string,
@@ -224,33 +235,22 @@ export async function sendTestEmail(
         },
       })
     : null;
-  const vars = sampleSmsVars({
+  const { vars, details } = sampleEmailBooking({
     name: event?.name,
     category: event?.category,
     eventType: event?.eventType,
     date: event?.date,
+    address: event?.address,
     packageName: event?.packages[0]?.name,
     distance: event?.packages[0]?.distance,
   });
   const rendered = renderEmailContent(content, vars);
 
   const result = await sendPaymentConfirmationEmail({
+    ...details,
     to: address,
-    runnerName: vars.name!,
-    eventName: vars.event!,
     eventDate: event?.date ?? new Date(),
-    eventAddress: event?.address ?? "Hatirjheel, Dhaka",
-    packageName: vars.package!,
-    distance: vars.distance!,
-    amount: 1299,
-    orderId: "7040d1a6-test-0000-0000-000000000000",
     orderDate: new Date(),
-    orderStatus: "CONFIRMED",
-    paymentStatus: "PAID",
-    transactionId: "TEST-TRANSACTION",
-    paymentMethod: "bKash",
-    tshirtSize: "L",
-    bloodGroup: "O+",
     content: { ...rendered, subject: `[TEST] ${rendered.subject}` },
   });
   await audit({

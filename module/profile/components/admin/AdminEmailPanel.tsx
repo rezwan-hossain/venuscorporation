@@ -15,13 +15,14 @@ import {
   isValidEmailContent,
   renderEmailContent,
   sameEmailContent,
+  sampleEmailBooking,
   validateEmailContent,
   type EmailContent,
   type EmailField,
 } from "@/lib/email-template";
 import {
   SMS_PLACEHOLDERS,
-  sampleSmsVars,
+  type SampleEvent,
   type SmsPlaceholder,
 } from "@/lib/sms-template";
 import { getPaymentConfirmationEmailHTML } from "@/lib/email/templates/payment-confirmation";
@@ -52,7 +53,7 @@ const fmtDate = (iso: string) =>
 
 const HINTS: Partial<Record<EmailField, string>> = {
   message:
-    "Optional. Kit collection, race-day timing, contact number… Links become clickable. Leave empty to hide.",
+    "Optional. Collection details, start time, a contact number… Links become clickable. Leave empty to hide.",
   checklist: `One item per line, up to ${CHECKLIST_MAX_ITEMS}. Leave empty to hide the box.`,
 };
 
@@ -140,7 +141,7 @@ function EmailPreview({ html, subject }: { html: string; subject: string }) {
               aria-pressed={device === d}
               className={`flex items-center gap-1.5 px-2.5 h-8 rounded-md text-xs font-semibold cursor-pointer ${
                 device === d
-                  ? "bg-gray-900 text-white"
+                  ? "bg-[#14245a] text-white"
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
@@ -209,12 +210,13 @@ function ContentEditor({
   id,
   value,
   onChange,
-  eventName,
+  event,
 }: {
   id: string;
   value: EmailContent;
   onChange: (v: EmailContent) => void;
-  eventName?: string;
+  /** The event being edited; the preview shows a booking for it. */
+  event?: SampleEvent;
 }) {
   const refs = useRef<
     Partial<Record<EmailField, HTMLInputElement | HTMLTextAreaElement | null>>
@@ -222,35 +224,20 @@ function ContentEditor({
   const [focused, setFocused] = useState<EmailField>("message");
   const errors = validateEmailContent(value);
 
+  // A sample booking shaped like a real one for this event's type
+  const sample = useMemo(() => sampleEmailBooking(event), [event]);
+
   // Only rebuild the preview HTML when the visible text actually changes.
-  const renderedKey = JSON.stringify(
-    renderEmailContent(value, sampleSmsVars({ name: eventName })),
-  );
+  const renderedKey = JSON.stringify(renderEmailContent(value, sample.vars));
   const rendered = useMemo(
     () => JSON.parse(renderedKey) as ReturnType<typeof renderEmailContent>,
     [renderedKey],
   );
-  const html = useMemo(() => {
-    const vars = sampleSmsVars({ name: eventName });
-    return getPaymentConfirmationEmailHTML({
-      runnerName: vars.name!,
-      eventName: vars.event!,
-      eventDate: vars.eventDate!,
-      eventAddress: "Hatirjheel, Dhaka",
-      packageName: vars.package!,
-      distance: vars.distance!,
-      amount: 1299,
-      orderId: "7040d1a6-0000",
-      orderDate: "4 Oct 2026, 10:30",
-      orderStatus: "CONFIRMED",
-      paymentStatus: "PAID",
-      transactionId: "SP6512A0C3F1",
-      paymentMethod: "bKash",
-      tshirtSize: vars.tshirt!,
-      bloodGroup: "O+",
-      content: rendered,
-    });
-  }, [rendered, eventName]);
+  const html = useMemo(
+    () =>
+      getPaymentConfirmationEmailHTML({ ...sample.details, content: rendered }),
+    [sample, rendered],
+  );
 
   const set = (f: EmailField, v: string) => onChange({ ...value, [f]: v });
 
@@ -355,15 +342,15 @@ function ContentEditor({
           {field("checklist", true, 6)}
         </div>
         <p className="text-[11px] text-gray-500">
-          Order details, BIB, amount and buttons are filled in automatically. A
-          line is left out when all its placeholders are empty (e.g. no BIB
-          yet).
+          The event, booking details, checkout answers (other events), amount
+          and buttons are filled in automatically. A line is left out when all
+          its placeholders are empty (e.g. no T-shirt size).
         </p>
       </div>
 
       <div>
         <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">
-          Live preview · sample runner
+          Live preview · sample booking
         </p>
         <EmailPreview html={html} subject={rendered.subject} />
       </div>
@@ -536,7 +523,7 @@ export function AdminEmailPanel() {
           <Mail className="w-5 h-5 text-gray-400" /> Confirmation Email
         </h2>
         <p className="text-sm text-gray-500 mt-1">
-          The email a runner gets when their payment is confirmed.
+          The email someone gets when their payment is confirmed.
         </p>
       </div>
 
@@ -576,7 +563,7 @@ export function AdminEmailPanel() {
           <button
             onClick={() => saveDefault(defaultContent)}
             disabled={!defaultDirty || !defaultValid || !!saving}
-            className={`${btn} text-white bg-gray-900 hover:bg-gray-800`}
+            className={`${btn} text-white bg-[#14245a] hover:bg-[#1d3274]`}
           >
             {saving === "default" ? (
               <Loader2 size={12} className="animate-spin" />
@@ -621,8 +608,8 @@ export function AdminEmailPanel() {
               Email for one event
             </h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              Give an event its own text, e.g. kit-collection details, or a
-              checklist for a virtual run.
+              Give an event its own text, e.g. collection details for a run, or
+              joining instructions for an online workshop.
             </p>
           </header>
 
@@ -668,7 +655,7 @@ export function AdminEmailPanel() {
                   aria-pressed={eventCustom === o.custom}
                   className={`px-3 h-8 rounded-md text-xs font-semibold cursor-pointer ${
                     eventCustom === o.custom
-                      ? "bg-gray-900 text-white"
+                      ? "bg-[#14245a] text-white"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
@@ -683,11 +670,11 @@ export function AdminEmailPanel() {
               id="email-event"
               value={eventContent}
               onChange={setEventContent}
-              eventName={selected?.name}
+              event={selected}
             />
           ) : (
             <p className="rounded-lg bg-gray-50 border border-gray-100 p-3 text-xs text-gray-600">
-              Runners of this event get the default email above.
+              People booking this event get the default email above.
             </p>
           )}
 
@@ -695,7 +682,7 @@ export function AdminEmailPanel() {
             <button
               onClick={saveEvent}
               disabled={!eventDirty || !eventValid || !!saving}
-              className={`${btn} text-white bg-gray-900 hover:bg-gray-800`}
+              className={`${btn} text-white bg-[#14245a] hover:bg-[#1d3274]`}
             >
               {saving === "event" ? (
                 <Loader2 size={12} className="animate-spin" />
