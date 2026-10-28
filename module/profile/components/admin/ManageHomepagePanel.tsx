@@ -6,7 +6,7 @@ import { HeroForm } from "./HeroForm";
 import { AdminFaqEditor } from "./AdminFaqEditor";
 import {
   getAllHeroes,
-  setActiveHero,
+  setHeroActive,
   deleteHero,
 } from "@/app/actions/homepage";
 import {
@@ -40,9 +40,11 @@ export function ManageHomepagePanel({ initialHeroes }: Props) {
     setEditingHero(null);
   };
 
-  const handleSetActive = async (heroId: string) => {
+  // Turn a hero on (it shows on the homepage) or off (the homepage shows
+  // the next upcoming event instead)
+  const handleToggleActive = async (heroId: string, isActive: boolean) => {
     setLoadingId(heroId);
-    await setActiveHero(heroId);
+    await setHeroActive(heroId, isActive);
     const { heroes: updated } = await getAllHeroes();
     setHeroes(updated);
     setLoadingId(null);
@@ -69,6 +71,10 @@ export function ManageHomepagePanel({ initialHeroes }: Props) {
               </h2>
               <p className="text-sm text-gray-500 mt-1">
                 {heroes.length} hero section{heroes.length !== 1 ? "s" : ""}
+                {" · "}
+                {heroes.some((hero) => hero.isActive)
+                  ? "one is showing on the homepage"
+                  : "none active — the homepage shows the next upcoming event"}
               </p>
             </div>
             <button
@@ -185,23 +191,29 @@ export function ManageHomepagePanel({ initialHeroes }: Props) {
                               <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
                             ) : (
                               <>
-                                {!hero.isActive ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSetActive(hero.id)}
-                                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors cursor-pointer"
-                                    title="Set as Active"
-                                  >
-                                    <Circle size={15} />
-                                  </button>
-                                ) : (
-                                  <span
-                                    className="p-2 text-green-500"
-                                    title="Currently Active"
-                                  >
+                                {/* Click to turn on / off */}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleToggleActive(hero.id, !hero.isActive)
+                                  }
+                                  className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                                    hero.isActive
+                                      ? "text-green-500 hover:text-red-500 hover:bg-red-50"
+                                      : "text-gray-400 hover:text-green-600 hover:bg-green-50"
+                                  }`}
+                                  title={
+                                    hero.isActive
+                                      ? "Turn off (homepage shows the next upcoming event)"
+                                      : "Show this hero on the homepage"
+                                  }
+                                >
+                                  {hero.isActive ? (
                                     <CheckCircle size={15} />
-                                  </span>
-                                )}
+                                  ) : (
+                                    <Circle size={15} />
+                                  )}
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() => {

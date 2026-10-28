@@ -205,23 +205,30 @@ export async function updateHero(heroId: string, form: HeroFormData) {
   }
 }
 
-// ─── Set Active Hero ────────────────────────────────
-export async function setActiveHero(heroId: string) {
+// ─── Turn a hero on / off ───────────────────────────
+// On:  this hero shows on the homepage (any other hero is turned off).
+// Off: no hero is active, so the homepage shows the next upcoming event.
+export async function setHeroActive(heroId: string, isActive: boolean) {
   const { error } = await requireAdmin();
   if (error) return { success: false, error };
 
   try {
-    await prisma.heroSection.updateMany({ data: { isActive: false } });
+    // Only one hero can be on at a time
+    if (isActive) {
+      await prisma.heroSection.updateMany({ data: { isActive: false } });
+    }
     const hero = await prisma.heroSection.update({
       where: { id: heroId },
-      data: { isActive: true },
+      data: { isActive },
     });
 
     await audit({
-      action: "hero.activated",
+      action: isActive ? "hero.activated" : "hero.deactivated",
       entityType: "hero",
       entityId: heroId,
-      summary: `Made "${heroName(hero)}" the active homepage hero`,
+      summary: isActive
+        ? `Made "${heroName(hero)}" the active homepage hero`
+        : `Turned off homepage hero "${heroName(hero)}" (homepage shows the next event)`,
     });
 
     refreshHero();
