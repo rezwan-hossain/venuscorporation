@@ -58,7 +58,10 @@ async function CheckoutContent({
           distance: pkg.distance,
         }}
       />
+      {/* key: a different ticket or quantity starts a fresh checkout (no
+          total, coupon or answers left over from the previous one) */}
       <CheckoutPage
+        key={`${checkoutItem.packageId}-${checkoutItem.qty}`}
         item={checkoutItem}
         userEmail={user?.email ?? ""}
         userName={user?.user_metadata?.full_name ?? ""}

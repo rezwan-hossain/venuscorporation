@@ -96,7 +96,10 @@ const CheckoutPage = ({
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(
     null,
   );
-  const [finalPrice, setFinalPrice] = useState(item.price * item.qty);
+  // Total = ticket price × qty − coupon discount. Worked out on every render
+  // (not stored), so it always matches the ticket on screen.
+  const subtotal = item.price * item.qty;
+  const finalPrice = Math.max(0, subtotal - (appliedCoupon?.discountAmount ?? 0));
 
   const [formData, setFormData] = useState<BillingFormData>({
     fullName: userName?.trim() || "",
@@ -180,14 +183,14 @@ const CheckoutPage = ({
   };
 
   // ─── Coupon handlers ───
-  const handleApplyCoupon = (coupon: AppliedCoupon, newFinalPrice: number) => {
+  // The total follows from the coupon (see `finalPrice` above), so these only
+  // remember which coupon is applied.
+  const handleApplyCoupon = (coupon: AppliedCoupon) => {
     setAppliedCoupon(coupon);
-    setFinalPrice(newFinalPrice);
   };
 
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
-    setFinalPrice(item.price * item.qty);
   };
 
   const handlePlaceOrder = async () => {
