@@ -295,24 +295,32 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
     };
 
     return (
-      <div className="rounded-lg border border-gray-200 p-4 sm:p-6 md:p-8">
-        <h2 className="mb-4 sm:mb-6 font-serif text-xl sm:text-2xl font-bold text-foreground tracking-wider">
-          Billing Details
-        </h2>
+      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/70 sm:p-8">
+        <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#c49a3c] text-sm font-semibold text-[#a8852f]">
+            1
+          </span>
+          <h2
+            className="text-2xl font-semibold text-[#14245a]"
+            style={{ fontFamily: "var(--font-checkout-serif)" }}
+          >
+            Your details
+          </h2>
+        </div>
 
         {/* Name Row */}
         <div className="mb-4 sm:mb-5 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
-              Name <span className="text-red-500 font-semibold">*</span>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-[#14245a] sm:mb-2 sm:text-xs">
+              Name <span className="text-[#c49a3c] font-semibold">*</span>
             </label>
             <Input
               ref={inputRefs.fullName}
               className={`h-10 sm:h-11 border ${
                 touched.fullName && errors.fullName
                   ? "border-red-500 focus:ring-red-500"
-                  : "border-gray-200"
-              } bg-background rounded-md text-sm sm:text-base`}
+                  : "border-slate-200"
+              } bg-white rounded-xl text-sm sm:text-base transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 focus:outline-none`}
               placeholder="Enter Name"
               value={formData.fullName}
               onChange={(e) => handleFieldChange("fullName", e.target.value)}
@@ -322,16 +330,16 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
             <ErrorMessage field="fullName" />
           </div>
           <div>
-            <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
-              Email <span className="text-red-500 font-semibold">*</span>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-[#14245a] sm:mb-2 sm:text-xs">
+              Email <span className="text-[#c49a3c] font-semibold">*</span>
             </label>
             <Input
               ref={inputRefs.email}
               className={`h-10 sm:h-11 border ${
                 touched.email && errors.email
                   ? "border-red-500 focus:ring-red-500"
-                  : "border-gray-200"
-              } bg-background rounded-md text-sm sm:text-base`}
+                  : "border-slate-200"
+              } bg-white rounded-xl text-sm sm:text-base transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 focus:outline-none`}
               type="email"
               placeholder="Enter Email"
               value={formData.email}
@@ -344,17 +352,17 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
 
         <div className="mb-4 sm:mb-5 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-[#14245a] sm:mb-2 sm:text-xs">
               CONTACT NUMBER{" "}
-              <span className="text-red-500 font-semibold">*</span>
+              <span className="text-[#c49a3c] font-semibold">*</span>
             </label>
             <Input
               ref={inputRefs.phone}
               className={`h-10 sm:h-11 border ${
                 touched.phone && errors.phone
                   ? "border-red-500 focus:ring-red-500"
-                  : "border-gray-200"
-              } bg-background rounded-md text-sm sm:text-base`}
+                  : "border-slate-200"
+              } bg-white rounded-xl text-sm sm:text-base transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 focus:outline-none`}
               placeholder="e.g., 01712345678"
               value={formData.phone}
               onChange={(e) => handleFieldChange("phone", e.target.value)}
@@ -365,8 +373,8 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
           </div>
           {raceFields && (
             <div>
-              <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
-                GENDER <span className="text-red-500 font-semibold">*</span>
+              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-[#14245a] sm:mb-2 sm:text-xs">
+                GENDER <span className="text-[#c49a3c] font-semibold">*</span>
               </label>
               <Select
                 value={formData.gender}
@@ -374,11 +382,11 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
               >
                 <SelectTrigger
                   ref={inputRefs.gender}
-                  className={`h-10 sm:h-11 rounded-md border ${
+                  className={`h-10 sm:h-11 rounded-xl border ${
                     touched.gender && errors.gender
                       ? "border-red-500"
-                      : "border-gray-200"
-                  } bg-background text-sm sm:text-base`}
+                      : "border-slate-200"
+                  } bg-white text-sm sm:text-base transition hover:border-slate-300`}
                 >
                   <SelectValue placeholder="Select Gender" />
                 </SelectTrigger>
@@ -399,9 +407,9 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
           <>
             <div className="mb-4 sm:mb-5 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-[#14245a] sm:mb-2 sm:text-xs">
                   DATE OF BIRTH{" "}
-                  <span className="text-red-500 font-semibold">*</span>
+                  <span className="text-[#c49a3c] font-semibold">*</span>
                 </label>
                 <Input
                   ref={inputRefs.birthDate}
@@ -409,8 +417,8 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
                   className={`h-10 sm:h-11 border ${
                     touched.birthDate && errors.birthDate
                       ? "border-red-500 focus:ring-red-500"
-                      : "border-gray-200"
-                  } bg-background rounded-md text-sm sm:text-base`}
+                      : "border-slate-200"
+                  } bg-white rounded-xl text-sm sm:text-base transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 focus:outline-none`}
                   placeholder="Enter Date of Birth"
                   value={formData.birthDate}
                   onChange={(e) =>
@@ -422,9 +430,9 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
                 <ErrorMessage field="birthDate" />
               </div>
               <div>
-                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-[#14245a] sm:mb-2 sm:text-xs">
                   AGE CATEGORY{" "}
-                  <span className="text-red-500 font-semibold">*</span>
+                  <span className="text-[#c49a3c] font-semibold">*</span>
                 </label>
                 <Select
                   value={formData.ageCategory}
@@ -434,11 +442,11 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
                 >
                   <SelectTrigger
                     ref={inputRefs.ageCategory}
-                    className={`h-10 sm:h-11 rounded-md border ${
+                    className={`h-10 sm:h-11 rounded-xl border ${
                       touched.ageCategory && errors.ageCategory
                         ? "border-red-500"
-                        : "border-gray-200"
-                    } bg-background text-sm sm:text-base`}
+                        : "border-slate-200"
+                    } bg-white text-sm sm:text-base transition hover:border-slate-300`}
                   >
                     <SelectValue placeholder="Select Age Category" />
                   </SelectTrigger>
@@ -454,9 +462,9 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
 
             <div className="mb-4 sm:mb-5 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-[#14245a] sm:mb-2 sm:text-xs">
                   Blood Group{" "}
-                  <span className="text-red-500 font-semibold">*</span>
+                  <span className="text-[#c49a3c] font-semibold">*</span>
                 </label>
                 <Select
                   value={formData.bloodGroup}
@@ -464,11 +472,11 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
                 >
                   <SelectTrigger
                     ref={inputRefs.bloodGroup}
-                    className={`h-10 sm:h-11 rounded-md border ${
+                    className={`h-10 sm:h-11 rounded-xl border ${
                       touched.bloodGroup && errors.bloodGroup
                         ? "border-red-500"
-                        : "border-gray-200"
-                    } bg-background text-sm sm:text-base`}
+                        : "border-slate-200"
+                    } bg-white text-sm sm:text-base transition hover:border-slate-300`}
                   >
                     <SelectValue placeholder="Select Blood Group" />
                   </SelectTrigger>
@@ -488,9 +496,9 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
 
               {asksTshirt && (
                 <div>
-                  <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+                  <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-[#14245a] sm:mb-2 sm:text-xs">
                     T-Shirt Size{" "}
-                    <span className="text-red-500 font-semibold">*</span>
+                    <span className="text-[#c49a3c] font-semibold">*</span>
                   </label>
 
                   <Select
@@ -501,11 +509,11 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
                   >
                     <SelectTrigger
                       ref={inputRefs.tshirtSize}
-                      className={`h-10 sm:h-11 rounded-md border ${
+                      className={`h-10 sm:h-11 rounded-xl border ${
                         touched.tshirtSize && errors.tshirtSize
                           ? "border-red-500"
-                          : "border-gray-200"
-                      } bg-background text-sm sm:text-base`}
+                          : "border-slate-200"
+                      } bg-white text-sm sm:text-base transition hover:border-slate-300`}
                     >
                       <SelectValue placeholder="Select T-Shirt Size" />
                     </SelectTrigger>
@@ -527,12 +535,12 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
 
             <div className="mb-4 sm:mb-5 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-[#14245a] sm:mb-2 sm:text-xs">
                   Emergency Contact Name
                 </label>
                 <Input
                   ref={inputRefs.emergencyContactName}
-                  className="h-10 sm:h-11 border border-gray-200 bg-background rounded-md text-sm sm:text-base"
+                  className="h-10 sm:h-11 border border-slate-200 bg-white rounded-xl text-sm sm:text-base transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 focus:outline-none"
                   placeholder="Enter Emergency Contact Name"
                   value={formData.emergencyContactName}
                   onChange={(e) =>
@@ -541,7 +549,7 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
                 />
               </div>
               <div>
-                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-[#14245a] sm:mb-2 sm:text-xs">
                   Emergency Contact Number
                 </label>
                 <Input
@@ -550,8 +558,8 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
                     touched.emergencyContactNumber &&
                     errors.emergencyContactNumber
                       ? "border-red-500 focus:ring-red-500"
-                      : "border-gray-200"
-                  } bg-background rounded-md text-sm sm:text-base`}
+                      : "border-slate-200"
+                  } bg-white rounded-xl text-sm sm:text-base transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 focus:outline-none`}
                   type="text"
                   placeholder="e.g., 01712345678"
                   value={formData.emergencyContactNumber}
@@ -566,12 +574,12 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
 
             <div className="mb-4 sm:mb-5 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800 uppercase">
+                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-[#14245a] sm:mb-2 sm:text-xs">
                   Community Name
                 </label>
                 <Input
                   ref={inputRefs.communityName}
-                  className="h-10 sm:h-11 border border-gray-200 bg-background rounded-md text-sm sm:text-base"
+                  className="h-10 sm:h-11 border border-slate-200 bg-white rounded-xl text-sm sm:text-base transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 focus:outline-none"
                   placeholder="Enter Community Name"
                   value={formData.communityName}
                   onChange={(e) =>
@@ -580,9 +588,9 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
                 />
               </div>
               <div>
-                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-neutral-800">
+                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-[#14245a] sm:mb-2 sm:text-xs">
                   Runner Category{" "}
-                  <span className="text-red-500 font-semibold">*</span>
+                  <span className="text-[#c49a3c] font-semibold">*</span>
                 </label>
                 <Select
                   value={formData.runnerCategory}
@@ -592,11 +600,11 @@ export const BillingForm = forwardRef<BillingFormRef, BillingFormProps>(
                 >
                   <SelectTrigger
                     ref={inputRefs.runnerCategory}
-                    className={`h-10 sm:h-11 rounded-md border ${
+                    className={`h-10 sm:h-11 rounded-xl border ${
                       touched.runnerCategory && errors.runnerCategory
                         ? "border-red-500"
-                        : "border-gray-200"
-                    } bg-background text-sm sm:text-base`}
+                        : "border-slate-200"
+                    } bg-white text-sm sm:text-base transition hover:border-slate-300`}
                   >
                     <SelectValue placeholder="Select Runner Category" />
                   </SelectTrigger>

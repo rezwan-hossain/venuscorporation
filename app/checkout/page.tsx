@@ -44,6 +44,7 @@ async function CheckoutContent({
     distance: safePkg.distance,
     price: Number(safePkg.price),
     qty: quantity,
+    eventImage: safePkg.event.thumbImage || safePkg.event.bannerImage,
   };
 
   return (

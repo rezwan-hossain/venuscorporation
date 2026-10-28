@@ -7,6 +7,8 @@ export type CheckoutItem = {
   distance: string;
   price: number;
   qty: number;
+  /** Event photo for the order summary (optional). */
+  eventImage?: string;
 };
 
 export type BillingFormData = {

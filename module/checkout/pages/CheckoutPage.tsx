@@ -4,7 +4,9 @@
 import { useState, useRef, useMemo, useEffect } from "react";
 import { BillingForm, BillingFormRef } from "../components/BillingForm";
 import { OrderSummary } from "../components/OrderSummary";
-import { HeroText } from "@/components/ui/HeroText";
+import Link from "next/link";
+import { Cormorant_Garamond } from "next/font/google";
+import { ChevronLeft } from "lucide-react";
 import { BillingFormData, CheckoutItem, AppliedCoupon } from "@/types/checkout";
 import { useRouter } from "next/navigation";
 import { placeOrder } from "@/app/actions/checkout";
@@ -18,6 +20,15 @@ import {
   usesRaceFields,
   type ExtraAnswers,
 } from "@/lib/event-checkout-form";
+
+// The brand serif for checkout headings (var(--font-checkout-serif)).
+const serif = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["600"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-checkout-serif",
+});
 
 type CheckoutPageProps = {
   item: CheckoutItem;
@@ -46,8 +57,12 @@ const CheckoutPage = ({
   //   raceFields     — marathons: gender, blood group, T-shirt …
   //   extraQuestions — other categories: company, guests …
   const raceFields = usesRaceFields(category);
-  const asksTshirt = raceFields && asksQuestion(category, eventType, "T-shirt size");
-  const extraQuestions = useMemo(() => getExtraQuestions(category, eventType), [category, eventType]);
+  const asksTshirt =
+    raceFields && asksQuestion(category, eventType, "T-shirt size");
+  const extraQuestions = useMemo(
+    () => getExtraQuestions(category, eventType),
+    [category, eventType],
+  );
 
   // Answers to the extra questions, and their error messages
   const [extraAnswers, setExtraAnswers] = useState<ExtraAnswers>({});
@@ -57,13 +72,18 @@ const CheckoutPage = ({
     setExtraAnswers((prev) => ({ ...prev, [key]: value }));
     // Re-check this one answer as the user types
     const question = extraQuestions.find((q) => q.key === key);
-    if (question) setExtraErrors((prev) => ({ ...prev, [key]: checkExtraAnswer(question, value) }));
+    if (question)
+      setExtraErrors((prev) => ({
+        ...prev,
+        [key]: checkExtraAnswer(question, value),
+      }));
   };
 
   /** Check every extra question; shows the errors. Returns true if all are fine. */
   const validateExtraAnswers = () => {
     const errors: Record<string, string> = {};
-    for (const q of extraQuestions) errors[q.key] = checkExtraAnswer(q, extraAnswers[q.key]);
+    for (const q of extraQuestions)
+      errors[q.key] = checkExtraAnswer(q, extraAnswers[q.key]);
     setExtraErrors(errors);
     return Object.values(errors).every((e) => !e);
   };
@@ -99,7 +119,10 @@ const CheckoutPage = ({
   // Total = ticket price × qty − coupon discount. Worked out on every render
   // (not stored), so it always matches the ticket on screen.
   const subtotal = item.price * item.qty;
-  const finalPrice = Math.max(0, subtotal - (appliedCoupon?.discountAmount ?? 0));
+  const finalPrice = Math.max(
+    0,
+    subtotal - (appliedCoupon?.discountAmount ?? 0),
+  );
 
   const [formData, setFormData] = useState<BillingFormData>({
     fullName: userName?.trim() || "",
@@ -307,14 +330,38 @@ const CheckoutPage = ({
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mt-42 ">
-        <HeroText title="Checkout" />
+    <div className={`${serif.variable} min-h-screen bg-[#faf8f3]`}>
+      {/* ── Title row: back link, heading, step indicator ── */}
+      <div className="mx-auto max-w-6xl px-4 pt-28 pb-6 sm:pt-32">
+        <Link
+          href="/events"
+          className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-[#14245a]"
+        >
+          <ChevronLeft size={16} aria-hidden /> Back to events
+        </Link>
+        <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <h1
+            className="text-4xl leading-tight font-semibold text-[#14245a] sm:text-5xl"
+            style={{ fontFamily: "var(--font-checkout-serif)" }}
+          >
+            Checkout
+          </h1>
+          {/* Progress: details (now) → payment → done */}
+          <div className="flex items-center gap-3 text-xs font-medium text-slate-500">
+            <span className="text-[#14245a]">Details</span>
+            <span className="h-1 w-16 overflow-hidden rounded-full bg-slate-200">
+              <span className="block h-full w-1/3 rounded-full bg-[#c49a3c]" />
+            </span>
+            <span>Payment</span>
+            <span className="text-slate-300">·</span>
+            <span>Done</span>
+          </div>
+        </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8 md:py-12">
+      <div className="mx-auto max-w-6xl px-4 pb-16">
         {error && (
-          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl">
             <p className="text-red-600 text-xs sm:text-sm font-medium">
               {error}
             </p>
@@ -342,7 +389,7 @@ const CheckoutPage = ({
           </div>
 
           {/* Order Summary */}
-          <div className="w-full lg:w-[450px]">
+          <div className="w-full lg:sticky lg:top-28 lg:w-[380px] lg:self-start">
             <OrderSummary
               item={item}
               paymentMethod={paymentMethod}

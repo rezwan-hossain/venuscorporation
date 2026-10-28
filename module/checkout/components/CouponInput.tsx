@@ -80,7 +80,7 @@ export function CouponInput({
   // ── Applied state ──
   if (appliedCoupon) {
     return (
-      <div className="border border-green-200 bg-green-50 rounded-lg p-3 sm:p-4">
+      <div className="border border-emerald-200 bg-emerald-50 rounded-xl p-3 sm:p-4">
         <div className="flex items-start sm:items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <Tag className="h-4 w-4 text-green-600 shrink-0" />
@@ -110,10 +110,10 @@ export function CouponInput({
   // ── Input state ──
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-gray-700">
+      <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#14245a] sm:text-xs">
         Have a coupon code?
       </label>
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex gap-2">
         <input
           type="text"
           value={code}
@@ -122,14 +122,14 @@ export function CouponInput({
             setError("");
           }}
           placeholder="Enter coupon code"
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-transparent uppercase text-sm sm:text-base w-full"
+          className="h-11 min-w-0 flex-1 px-3 border border-slate-200 rounded-xl outline-none transition hover:border-slate-300 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15 uppercase text-sm placeholder:normal-case"
           disabled={loading}
           onKeyDown={(e) => e.key === "Enter" && handleApply()}
         />
         <button
           onClick={handleApply}
           disabled={loading || !code.trim()}
-          className="px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full sm:w-auto shrink-0"
+          className="h-11 px-5 bg-[#14245a] text-white font-semibold rounded-xl cursor-pointer hover:bg-[#0d1840] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shrink-0"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
         </button>
