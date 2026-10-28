@@ -47,38 +47,39 @@ model Organizer {
 }
 
 model Event {
-  id              String         @id @default(uuid())
-  name            String
-  slug            String         @unique
-  date            DateTime
-  time            DateTime
-  address         String
-  eventType       EventType      @default(LIVE)
+  id                      String         @id @default(uuid())
+  name                    String
+  slug                    String         @unique
+  date                    DateTime
+  time                    DateTime
+  address                 String
+  eventType               EventType      @default(LIVE)
   // What kind of event this is. Decides which questions checkout asks
   // (see lib/event-checkout-form.ts). Existing events default to MARATHON.
-  category        EventCategory  @default(MARATHON)
-  organizerId     Int
-  description     String
-  shortDesc       String?        @db.VarChar(255)
-  bannerImage     String
-  thumbImage      String?
-  minPackagePrice Float?
+  category                EventCategory  @default(MARATHON)
+  organizerId             Int
+  description             String
+  shortDesc               String?        @db.VarChar(255)
+  bannerImage             String
+  thumbImage              String?
+  minPackagePrice         Float?
   // Custom payment-confirmation SMS for this event; null = use the default
   // (site_settings "sms.confirmation"). See lib/sms-template.ts.
   confirmationSmsTemplate String?
   // Custom confirmation-email text for this event ({subject, heading,
   // subheading, message, checklist}); null = use the default. See lib/email-template.ts.
-  confirmationEmail Json?
-  status          Status         @default(ACTIVE)
-  isActive        Boolean        @default(true)
-  isArchived      Boolean        @default(false)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  coupons         Coupon[]
-  organizer       Organizer      @relation(fields: [organizerId], references: [id])
-  orders          Order[]
-  packages        Package[]
-  registrations   Registration[]
+  confirmationEmail       Json?
+  status                  Status         @default(ACTIVE)
+  isActive                Boolean        @default(true)
+  isArchived              Boolean        @default(false)
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+  coupons                 Coupon[]
+  organizer               Organizer      @relation(fields: [organizerId], references: [id])
+  orders                  Order[]
+  packages                Package[]
+  registrations           Registration[]
+  heroSections            HeroSection[]
 
   @@map("events")
 }
@@ -104,24 +105,24 @@ model Package {
 }
 
 model Order {
-  id           String        @id @default(uuid())
-  status       OrderStatus   @default(PENDING)
-  isActive     Boolean       @default(true)
-  isArchived   Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  qty          Int           @default(1)
-  subtotal     Float         @default(0)
-  discount     Float         @default(0)
-  total        Float         @default(0)
-  userId       String
-  packageId    Int
-  eventId      String
-  couponId     String?
+  id         String      @id @default(uuid())
+  status     OrderStatus @default(PENDING)
+  isActive   Boolean     @default(true)
+  isArchived Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  qty        Int         @default(1)
+  subtotal   Float       @default(0)
+  discount   Float       @default(0)
+  total      Float       @default(0)
+  userId     String
+  packageId  Int
+  eventId    String
+  couponId   String?
 
-  source       OrderSource   @default(ONLINE)  // ONLINE = normal checkout, MANUAL = admin entered
-  createdById  String?                          // which admin created it (User.id)
-  adminNote    String?                          // "cash at booth", "sponsor comp", etc.
+  source      OrderSource @default(ONLINE) // ONLINE = normal checkout, MANUAL = admin entered
+  createdById String? // which admin created it (User.id)
+  adminNote   String? // "cash at booth", "sponsor comp", etc.
 
   // Marketing channel that brought this buyer (last non-direct visit within 30
   // days, see lib/traffic-source.ts). Null = not tracked (older / manual orders).
@@ -133,7 +134,6 @@ model Order {
   // never auto-released (manual orders, admin-set statuses, manual review).
   holdExpiresAt DateTime?
 
-
   couponUsage  CouponUsage?
   coupon       Coupon?       @relation(fields: [couponId], references: [id])
   event        Event         @relation(fields: [eventId], references: [id])
@@ -144,16 +144,15 @@ model Order {
   payment      Payment?
   registration Registration?
 
-  @@index([eventId, createdAt])   // default sort: newest first, per event
-  @@index([eventId, status])      // status filter and the stats groupBy
+  @@index([eventId, createdAt]) // default sort: newest first, per event
+  @@index([eventId, status]) // status filter and the stats groupBy
   @@index([status, holdExpiresAt]) // expired-hold sweep
-
   @@map("orders")
 }
 
 model Registration {
-  id                     String   @id @default(uuid())
-  orderId                String   @unique
+  id                     String    @id @default(uuid())
+  orderId                String    @unique
   eventId                String
   bibNumber              String?
   fullName               String
@@ -171,11 +170,11 @@ model Registration {
   // Answers to the other categories' checkout questions, by field key,
   // e.g. { "company": "BRAC Bank", "jobTitle": "CFO" }. Null for marathons.
   details                Json?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
   email                  String?
-  event                  Event    @relation(fields: [eventId], references: [id])
-  order                  Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  event                  Event     @relation(fields: [eventId], references: [id])
+  order                  Order     @relation(fields: [orderId], references: [id], onDelete: Restrict)
 
   @@unique([eventId, bibNumber])
   @@map("registrations")
@@ -198,13 +197,33 @@ model Payment {
   @@map("payments")
 }
 
+// What the homepage hero shows (only one hero is active at a time):
+//   EVENT  → an event's name, date and description, with a "Get tickets"
+//            button. Uses `eventId`, or the next upcoming event when empty.
+//   CUSTOM → the title / subtitle / button typed in by the admin.
+enum HeroSource {
+  EVENT
+  CUSTOM
+}
+
 model HeroSection {
-  id             String    @id @default(uuid())
-  title          String    @default("Run Beyond")
-  desktopImage   String
-  mobileImage    String?
-  slug           String?
-  eventDate      DateTime?
+  id      String     @id @default(uuid())
+  source  HeroSource @default(EVENT)
+  eventId String?
+  event   Event?     @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  // Text (CUSTOM heroes)
+  title       String  @default("Run Beyond")
+  subtitle    String?
+  buttonLabel String?
+  slug        String? // the button's link, e.g. /contact or /events/…
+
+  // Media (both kinds). Empty photo → the event's banner / a default photo.
+  desktopImage String?
+  mobileImage  String?
+  youtubeUrl   String? // "Watch our events" opens this video
+
+  eventDate      DateTime? // countdown target for CUSTOM heroes
   showCountdown  Boolean   @default(true)
   countdownColor String    @default("#374151")
   showSlugButton Boolean   @default(true)
@@ -303,11 +322,11 @@ enum EventType {
 // this is *what* the event is. Labels and checkout questions per category
 // live in lib/event-checkout-form.ts.
 enum EventCategory {
-  MARATHON    // runs, marathons, races — today's checkout
-  CONFERENCE  // summits, seminars
-  EXHIBITION  // expos, trade shows
-  SOCIAL      // weddings, galas, private events
-  WORKSHOP    // trainings, workshops
+  MARATHON // runs, marathons, races — today's checkout
+  CONFERENCE // summits, seminars
+  EXHIBITION // expos, trade shows
+  SOCIAL // weddings, galas, private events
+  WORKSHOP // trainings, workshops
 }
 
 enum Status {
@@ -351,6 +370,7 @@ enum OrderSource {
   ONLINE
   MANUAL
 }
+
 // Append-only audit trail: who changed what, when. No foreign keys on purpose —
 // entries must survive deletion of the event/order/user they describe.
 // Written through lib/audit.ts; read in the admin "Audit Log" tab.

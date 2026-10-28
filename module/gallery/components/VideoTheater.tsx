@@ -15,7 +15,7 @@
 import { useState } from "react";
 import { ArrowRight, Clock, Play } from "lucide-react";
 
-import { youTubeId } from "@/module/home/components/ShowreelButton";
+import { youTubeId } from "@/lib/youtube";
 import type { GalleryVideo } from "../videos";
 
 const GOLD = "#c49a3c";

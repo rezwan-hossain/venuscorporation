@@ -113,148 +113,173 @@ export function ManageHomepagePanel({ initialHeroes }: Props) {
             </div>
           ) : (
             <div className="space-y-3">
-              {heroes.map((hero) => (
-                <div
-                  key={hero.id}
-                  className={`bg-white border rounded-xl overflow-hidden transition-all ${
-                    hero.isActive
-                      ? "border-green-300 ring-1 ring-green-100"
-                      : "border-gray-200"
-                  }`}
-                >
-                  <div className="flex flex-col sm:flex-row">
-                    {/* Preview */}
-                    <div className="relative w-full sm:w-48 h-28 sm:h-auto flex-shrink-0">
-                      <img
-                        src={hero.desktopImage}
-                        alt={hero.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              {heroes.map((hero) => {
+                // What the list shows for this hero
+                const name =
+                  hero.source === "CUSTOM"
+                    ? hero.title
+                    : (hero.event?.name ?? "Next upcoming event");
+                return (
+                  <div
+                    key={hero.id}
+                    className={`bg-white border rounded-xl overflow-hidden transition-all ${
+                      hero.isActive
+                        ? "border-green-300 ring-1 ring-green-100"
+                        : "border-gray-200"
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row">
+                      {/* Preview */}
+                      <div className="relative w-full sm:w-48 h-28 sm:h-auto flex-shrink-0">
+                        {hero.desktopImage ? (
+                          <img
+                            src={hero.desktopImage}
+                            alt={name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          // No photo of its own: uses the event's banner
+                          <div className="h-full w-full bg-[#14245a]" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
-                      {hero.isActive && (
-                        <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold uppercase bg-green-500 text-white rounded-full">
-                          Active
-                        </span>
-                      )}
+                        {hero.isActive && (
+                          <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold uppercase bg-green-500 text-white rounded-full">
+                            Active
+                          </span>
+                        )}
 
-                      {hero.mobileImage && (
-                        <span className="absolute top-2 right-2 p-1 bg-black/40 backdrop-blur-sm rounded">
-                          <Smartphone size={10} className="text-white" />
-                        </span>
-                      )}
+                        {hero.mobileImage && (
+                          <span className="absolute top-2 right-2 p-1 bg-black/40 backdrop-blur-sm rounded">
+                            <Smartphone size={10} className="text-white" />
+                          </span>
+                        )}
 
-                      <p className="absolute bottom-2 left-2 right-2 text-white font-black text-sm leading-tight uppercase truncate">
-                        {hero.title}
-                      </p>
-                    </div>
+                        <p className="absolute bottom-2 left-2 right-2 text-white font-semibold text-sm leading-tight truncate">
+                          {name}
+                        </p>
+                      </div>
 
-                    {/* Content */}
-                    <div className="flex-1 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-gray-900 truncate">
-                            {hero.title}
-                          </h4>
-                          {hero.slug && (
-                            <p className="text-xs text-gray-400 mt-0.5">
-                              Link: {hero.slug}
+                      {/* Content */}
+                      <div className="flex-1 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#a8852f]">
+                              {hero.source === "CUSTOM"
+                                ? "Custom text"
+                                : "Event"}
                             </p>
-                          )}
-                        </div>
+                            <p className="mt-0.5 font-semibold text-[#14245a] truncate">
+                              {name}
+                            </p>
+                            {hero.source === "CUSTOM" && hero.slug && (
+                              <p className="text-xs text-gray-400 mt-0.5">
+                                Button: {hero.buttonLabel || "—"} → {hero.slug}
+                              </p>
+                            )}
+                          </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          {loadingId === hero.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                          ) : (
-                            <>
-                              {!hero.isActive ? (
+                          {/* Actions */}
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {loadingId === hero.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                            ) : (
+                              <>
+                                {!hero.isActive ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSetActive(hero.id)}
+                                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors cursor-pointer"
+                                    title="Set as Active"
+                                  >
+                                    <Circle size={15} />
+                                  </button>
+                                ) : (
+                                  <span
+                                    className="p-2 text-green-500"
+                                    title="Currently Active"
+                                  >
+                                    <CheckCircle size={15} />
+                                  </span>
+                                )}
                                 <button
                                   type="button"
-                                  onClick={() => handleSetActive(hero.id)}
-                                  className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors cursor-pointer"
-                                  title="Set as Active"
+                                  onClick={() => {
+                                    setEditingHero(hero);
+                                    setView("edit");
+                                  }}
+                                  className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                                  title="Edit"
                                 >
-                                  <Circle size={15} />
+                                  <Pencil size={15} />
                                 </button>
-                              ) : (
-                                <span
-                                  className="p-2 text-green-500"
-                                  title="Currently Active"
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(hero.id)}
+                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                  title="Delete"
                                 >
-                                  <CheckCircle size={15} />
-                                </span>
+                                  <Trash2 size={15} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Pills */}
+                        <div className="flex flex-wrap gap-1.5 mt-3">
+                          {hero.showCountdown && (
+                            <span className="px-2 py-0.5 text-[10px] bg-blue-50 text-blue-600 rounded-full font-medium">
+                              ⏱ Countdown
+                            </span>
+                          )}
+                          {hero.showSlugButton && (
+                            <span className="px-2 py-0.5 text-[10px] bg-green-50 text-green-600 rounded-full font-medium">
+                              🔗 Button
+                            </span>
+                          )}
+                          {hero.youtubeUrl && (
+                            <span className="px-2 py-0.5 text-[10px] bg-red-50 text-red-600 rounded-full font-medium">
+                              ▶ YouTube
+                            </span>
+                          )}
+                          {hero.mobileImage && (
+                            <span className="px-2 py-0.5 text-[10px] bg-orange-50 text-orange-600 rounded-full font-medium">
+                              📱 Mobile
+                            </span>
+                          )}
+                          {hero.source === "CUSTOM" && hero.eventDate && (
+                            <span className="px-2 py-0.5 text-[10px] bg-yellow-50 text-yellow-600 rounded-full font-medium">
+                              📅{" "}
+                              {new Date(hero.eventDate).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                },
                               )}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditingHero(hero);
-                                  setView("edit");
-                                }}
-                                className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
-                                title="Edit"
-                              >
-                                <Pencil size={15} />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(hero.id)}
-                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                                title="Delete"
-                              >
-                                <Trash2 size={15} />
-                              </button>
-                            </>
+                            </span>
                           )}
                         </div>
-                      </div>
 
-                      {/* Pills */}
-                      <div className="flex flex-wrap gap-1.5 mt-3">
-                        {hero.showCountdown && (
-                          <span className="px-2 py-0.5 text-[10px] bg-blue-50 text-blue-600 rounded-full font-medium">
-                            ⏱ Countdown
-                          </span>
-                        )}
-                        {hero.showSlugButton && (
-                          <span className="px-2 py-0.5 text-[10px] bg-green-50 text-green-600 rounded-full font-medium">
-                            🔗 Button
-                          </span>
-                        )}
-                        {hero.mobileImage && (
-                          <span className="px-2 py-0.5 text-[10px] bg-orange-50 text-orange-600 rounded-full font-medium">
-                            📱 Mobile
-                          </span>
-                        )}
-                        {hero.eventDate && (
-                          <span className="px-2 py-0.5 text-[10px] bg-yellow-50 text-yellow-600 rounded-full font-medium">
-                            📅{" "}
-                            {new Date(hero.eventDate).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              },
-                            )}
-                          </span>
-                        )}
+                        <p className="text-[10px] text-gray-300 mt-2">
+                          Updated{" "}
+                          {new Date(hero.updatedAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
+                        </p>
                       </div>
-
-                      <p className="text-[10px] text-gray-300 mt-2">
-                        Updated{" "}
-                        {new Date(hero.updatedAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </>

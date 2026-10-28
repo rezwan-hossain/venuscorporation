@@ -14,31 +14,24 @@ const photo = (id: string, w = 1600) =>
 // ─── Hero: "Now showing" summit hero ──────────────────
 
 export const summitHero = {
-  // Background video (muted, looping). Put the file in public/videos/ and
-  // set its path here, e.g. "/videos/hero-summit.mp4". Use a 21:9, 5–10 s
-  // clip, under ~5 MB. Leave it null to show the poster photo only.
-  video: null as string | null,
-  // Shown while the video loads, and instead of it when `video` is null.
+  // Background photo when no hero is set in admin.
   poster: photo("1540575467063-178a50c2df87", 2000), // summit audience
 
-  kicker: "Now showing · Business Summit",
+  label: "Now showing · Business Summit", // small gold line above the title
   title: "Business summits that move industries forward",
   text: "Corporate stages, delegates and keynotes — planned and delivered end to end.",
   primaryCta: { label: "Plan your event", href: "/contact" },
-  watchCta: { label: "Watch our events", href: "#moments" }, // href = fallback if the video can't open
 
-  // Showreel that "Watch our events" plays in a full-screen player.
-  // Paste any YouTube link (youtube.com/watch?v=…, youtu.be/…, /shorts/…)
-  // or a video file path (e.g. "/videos/showreel.mp4" in public/videos/).
-  // DEMO: a placeholder YouTube video — replace with your own showreel.
-  // Set to null to make the button jump to "Signature moments" instead.
+  // YouTube video the "Watch our events" button plays (when no hero is set
+  // in admin). DEMO: a placeholder — replace with your own showreel.
+  // Set to null to hide the button.
   showreel: {
     url: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
     title: "Venus Corporation showreel",
   } as { url: string; title: string } | null,
 
   // The white bar under the hero shows the next upcoming event from the
-  // database (see NextEventInfo in components/SummitHero.tsx).
+  // database (see module/home/hero-content.ts).
 };
 
 // ─── (previous hero) The invitation card ──────────────

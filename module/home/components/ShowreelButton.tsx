@@ -14,6 +14,7 @@
 
 import { useRef, useState } from "react";
 import { Play, X } from "lucide-react";
+import { youTubeId } from "@/lib/youtube";
 
 const NAVY_DEEP = "#0d1840";
 const GOLD_LIGHT = "#dcb45c";
@@ -22,12 +23,6 @@ type Props = {
   label: string;
   video: { url: string; title: string };
 };
-
-/** Pull the 11-character video id out of any common YouTube link (null if it isn't one). */
-export function youTubeId(url: string): string | null {
-  const match = url.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/);
-  return match ? match[1] : null;
-}
 
 export default function ShowreelButton({ label, video }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -52,15 +47,27 @@ export default function ShowreelButton({ label, video }: Props) {
 
   return (
     <>
-      <button type="button" onClick={open} className="group inline-flex cursor-pointer items-center gap-4 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+      <button
+        type="button"
+        onClick={open}
+        className="group inline-flex cursor-pointer items-center gap-4 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+      >
         <span
           className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition group-hover:bg-white/10"
           style={{ borderColor: GOLD_LIGHT }}
           aria-hidden
         >
           {/* Soft pulse ring — hints that this plays a video */}
-          <span className="absolute inset-0 animate-ping rounded-full border opacity-40 motion-reduce:hidden" style={{ borderColor: GOLD_LIGHT, animationDuration: "2.4s" }} />
-          <Play size={14} fill="#fff" strokeWidth={0} className="translate-x-px" />
+          <span
+            className="absolute inset-0 animate-ping rounded-full border opacity-40 motion-reduce:hidden"
+            style={{ borderColor: GOLD_LIGHT, animationDuration: "2.4s" }}
+          />
+          <Play
+            size={14}
+            fill="#fff"
+            strokeWidth={0}
+            className="translate-x-px"
+          />
         </span>
         {label}
       </button>
@@ -82,7 +89,10 @@ export default function ShowreelButton({ label, video }: Props) {
             <X size={18} />
           </button>
 
-          <div className="aspect-video w-full overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10" style={{ background: NAVY_DEEP }}>
+          <div
+            className="aspect-video w-full overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10"
+            style={{ background: NAVY_DEEP }}
+          >
             {playing &&
               (ytId ? (
                 <iframe
@@ -94,7 +104,13 @@ export default function ShowreelButton({ label, video }: Props) {
                   className="h-full w-full"
                 />
               ) : (
-                <video src={video.url} controls autoPlay playsInline className="h-full w-full">
+                <video
+                  src={video.url}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="h-full w-full"
+                >
                   Your browser can&apos;t play this video.
                 </video>
               ))}
