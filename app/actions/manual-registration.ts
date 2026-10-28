@@ -1,6 +1,14 @@
 // app/actions/manual-registration.ts
 "use server";
 
+// Admin → Orders → "Add manual": register someone without the payment
+// gateway (cash at the booth, sponsor comps …).
+//
+// What's asked depends on the event's category (lib/event-checkout-form.ts),
+// same as checkout:
+//   marathons    → race fields (gender, date of birth, T-shirt …) + BIB
+//   other events → their extra questions, saved in registration.details
+
 import { prisma } from "@/lib/prisma";
 import { audit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/auth/require-admin";
@@ -12,6 +20,12 @@ import {
   EMAIL_REGEX,
   MANUAL_ORDER_STATUSES,
 } from "@/lib/registration-options";
+import {
+  asksQuestion,
+  checkExtraAnswer,
+  getExtraQuestions,
+  usesRaceFields,
+} from "@/lib/event-checkout-form";
 import type { ManualRegistrationInput, ManualPackage } from "@/types/profile";
 
 // ─── Helpers ────────────────────────────────────────
@@ -33,7 +47,10 @@ const splitName = (fullName: string) => {
 };
 
 // ─── Validation (server-side, never trust the form) ──
-function validate(input: ManualRegistrationInput): string | null {
+// Each returns the first problem as a message, or null when it's fine.
+
+/** Package, quantity, name, phone, email, status, discount — every event. */
+function validateBasics(input: ManualRegistrationInput): string | null {
   if (!clean(input.eventId)) return "Event is missing";
   if (!Number.isInteger(input.packageId) || input.packageId <= 0)
     return "Select a package";
@@ -52,6 +69,20 @@ function validate(input: ManualRegistrationInput): string | null {
   const email = clean(input.email);
   if (email && !EMAIL_REGEX.test(email)) return "Enter a valid email address";
 
+  if (!MANUAL_ORDER_STATUSES.includes(input.orderStatus))
+    return "Select a valid order status";
+
+  if (!Number.isFinite(input.discount) || input.discount < 0)
+    return "Discount must be 0 or more";
+
+  return null;
+}
+
+/** The race fields — marathons only. */
+function validateRaceFields(
+  input: ManualRegistrationInput,
+  asksTshirt: boolean,
+): string | null {
   const emergency = clean(input.emergencyContactNumber);
   if (emergency && !BD_PHONE_REGEX.test(stripPhone(emergency)))
     return "Emergency contact must be a Bangladeshi mobile number";
@@ -65,14 +96,8 @@ function validate(input: ManualRegistrationInput): string | null {
 
   if (!clean(input.ageCategory)) return "Select an age category";
   if (!clean(input.bloodGroup)) return "Select a blood group";
-  if (!clean(input.tshirtSize)) return "Select a t-shirt size";
+  if (asksTshirt && !clean(input.tshirtSize)) return "Select a t-shirt size";
   if (!clean(input.runnerCategory)) return "Select a runner category";
-
-  if (!MANUAL_ORDER_STATUSES.includes(input.orderStatus))
-    return "Select a valid order status";
-
-  if (!Number.isFinite(input.discount) || input.discount < 0)
-    return "Discount must be 0 or more";
 
   return null;
 }
@@ -104,8 +129,8 @@ export async function getEventPackages(eventId: string) {
       packages: JSON.parse(JSON.stringify(packages)) as ManualPackage[],
       error: null,
     };
-  } catch (err: any) {
-    console.error("Get event packages error:", err?.message);
+  } catch (err) {
+    console.error("Get event packages error:", err);
     return {
       packages: [] as ManualPackage[],
       error: "Failed to load packages",
@@ -124,7 +149,7 @@ export async function createManualRegistration(input: ManualRegistrationInput) {
     };
   }
 
-  const invalid = validate(input);
+  const invalid = validateBasics(input);
   if (invalid) return { success: false, error: invalid, orderId: null };
 
   const requestId = await getRequestId();
@@ -153,7 +178,7 @@ export async function createManualRegistration(input: ManualRegistrationInput) {
         usedSlots: true,
         eventId: true,
         isArchived: true,
-        event: { select: { slug: true } },
+        event: { select: { slug: true, category: true, eventType: true } },
       },
     });
 
@@ -164,6 +189,27 @@ export async function createManualRegistration(input: ManualRegistrationInput) {
         error: "That package doesn't belong to this event",
         orderId: null,
       };
+    }
+
+    // ─── The event's own fields ───
+    const { category, eventType } = pkg.event;
+    const isMarathon = usesRaceFields(category);
+    const asksTshirt = asksQuestion(category, eventType, "T-shirt size");
+
+    // Marathons: the race fields must be filled in
+    if (isMarathon) {
+      const raceProblem = validateRaceFields(input, asksTshirt);
+      if (raceProblem)
+        return { success: false, error: raceProblem, orderId: null };
+    }
+
+    // Other events: check each extra question, keep only known answers
+    const details: Record<string, string> = {};
+    for (const question of getExtraQuestions(category, eventType)) {
+      const answer = input.details?.[question.key]?.trim() ?? "";
+      const problem = checkExtraAnswer(question, answer);
+      if (problem) return { success: false, error: problem, orderId: null };
+      if (answer) details[question.key] = answer;
     }
 
     // ─── Pricing (admin enters a flat BDT discount) ───
@@ -181,7 +227,7 @@ export async function createManualRegistration(input: ManualRegistrationInput) {
 
     log.info({ subtotal, discount, total }, "order:pricing_calculated");
 
-    const bibNumber = clean(input.bibNumber);
+    const bibNumber = isMarathon ? clean(input.bibNumber) : null; // BIBs are for runs
     const email = clean(input.email)?.toLowerCase() ?? null;
     const phone = stripPhone(input.phone.trim());
     const { firstName, lastName } = splitName(input.fullName);
@@ -258,7 +304,8 @@ export async function createManualRegistration(input: ManualRegistrationInput) {
         },
       });
 
-      // 5. Registration
+      // 5. Registration: contact details for everyone, then race fields
+      //    (marathons) and the extra answers (any event that asks some)
       await tx.registration.create({
         data: {
           orderId: order.id,
@@ -267,17 +314,20 @@ export async function createManualRegistration(input: ManualRegistrationInput) {
           fullName: input.fullName.trim(),
           email,
           phone,
-          gender: input.gender,
-          birthDate: new Date(input.birthDate),
-          ageCategory: input.ageCategory,
-          bloodGroup: input.bloodGroup,
-          tshirtSize: input.tshirtSize,
-          runnerCategory: input.runnerCategory,
-          communityName: clean(input.communityName),
-          emergencyContactName: clean(input.emergencyContactName),
-          emergencyContactNumber: clean(input.emergencyContactNumber)
-            ? stripPhone(input.emergencyContactNumber.trim())
-            : null,
+          details: Object.keys(details).length > 0 ? details : undefined,
+          ...(isMarathon && {
+            gender: input.gender,
+            birthDate: new Date(input.birthDate),
+            ageCategory: input.ageCategory,
+            bloodGroup: input.bloodGroup,
+            tshirtSize: asksTshirt ? input.tshirtSize : null,
+            runnerCategory: input.runnerCategory,
+            communityName: clean(input.communityName),
+            emergencyContactName: clean(input.emergencyContactName),
+            emergencyContactNumber: clean(input.emergencyContactNumber)
+              ? stripPhone(input.emergencyContactNumber.trim())
+              : null,
+          }),
         },
       });
 
@@ -324,17 +374,19 @@ export async function createManualRegistration(input: ManualRegistrationInput) {
     log.info({ orderId, durationMs: Date.now() - start }, "action:success");
 
     return { success: true, error: null, orderId };
-  } catch (err: any) {
+  } catch (err) {
     log.error({ err, durationMs: Date.now() - start }, "action:error");
+    const message = err instanceof Error ? err.message : "";
+    const code = (err as { code?: string } | null)?.code;
 
-    if (err?.message === "NO_SLOTS")
+    if (message === "NO_SLOTS")
       return {
         success: false,
         error: "Not enough slots left in this package",
         orderId: null,
       };
 
-    if (err?.message === "BIB_TAKEN")
+    if (message === "BIB_TAKEN")
       return {
         success: false,
         error: "That BIB number is already used in this event",
@@ -342,14 +394,14 @@ export async function createManualRegistration(input: ManualRegistrationInput) {
       };
 
     // Lost a race on User.email between the findUnique and the create.
-    if (err?.code === "P2002")
+    if (code === "P2002")
       return {
         success: false,
         error: "That email is already registered — try again",
         orderId: null,
       };
 
-    console.error("Manual registration error:", err?.message);
+    console.error("Manual registration error:", message);
     return {
       success: false,
       error: "Couldn't save the registration. Try again.",

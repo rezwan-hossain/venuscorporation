@@ -122,6 +122,8 @@ export type ManualPackage = {
  * orderStatus excludes CANCELLED on purpose — see MANUAL_ORDER_STATUSES
  * in lib/registration-options.ts.
  */
+// Race fields (gender … emergency contact, BIB) are only used for marathons;
+// other events use `details` instead (see lib/event-checkout-form.ts).
 export type ManualRegistrationInput = {
   eventId: string;
   packageId: number;
@@ -139,6 +141,8 @@ export type ManualRegistrationInput = {
   emergencyContactName: string;
   emergencyContactNumber: string;
   bibNumber: string;
+  /** Answers to the event's extra checkout questions (non-marathon events). */
+  details: Record<string, string>;
   discount: number;
   orderStatus: "PENDING" | "CONFIRMED";
   adminNote: string;
