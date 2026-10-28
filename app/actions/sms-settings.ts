@@ -12,8 +12,8 @@ import { isValidBDPhone } from "@/lib/registration-options";
 import {
   DEFAULT_CONFIRMATION_SMS,
   renderSmsTemplate,
+  sampleSmsVars,
   validateSmsTemplate,
-  type SmsVars,
 } from "@/lib/sms-template";
 import { SMS_SETTING_KEY } from "@/lib/sms-template-server";
 
@@ -21,10 +21,22 @@ export async function getSmsSettings(): Promise<{
   builtin: string;
   defaultTemplate: string | null; // null = using the built-in text
   defaultUpdatedAt: string | null;
-  events: { id: string; name: string; date: string; template: string | null }[];
+  events: {
+    id: string;
+    name: string;
+    date: string;
+    category: string;
+    eventType: string;
+    template: string | null;
+  }[];
   error: string | null;
 }> {
-  const empty = { builtin: DEFAULT_CONFIRMATION_SMS, defaultTemplate: null, defaultUpdatedAt: null, events: [] };
+  const empty = {
+    builtin: DEFAULT_CONFIRMATION_SMS,
+    defaultTemplate: null,
+    defaultUpdatedAt: null,
+    events: [],
+  };
   const { error } = await requireAdmin();
   if (error) return { ...empty, error };
 
@@ -33,7 +45,14 @@ export async function getSmsSettings(): Promise<{
       prisma.siteSetting.findUnique({ where: { key: SMS_SETTING_KEY } }),
       prisma.event.findMany({
         where: { isArchived: false },
-        select: { id: true, name: true, date: true, confirmationSmsTemplate: true },
+        select: {
+          id: true,
+          name: true,
+          date: true,
+          category: true,
+          eventType: true,
+          confirmationSmsTemplate: true,
+        },
         orderBy: { date: "desc" },
       }),
     ]);
@@ -45,6 +64,8 @@ export async function getSmsSettings(): Promise<{
         id: e.id,
         name: e.name,
         date: e.date.toISOString(),
+        category: e.category,
+        eventType: e.eventType,
         template: e.confirmationSmsTemplate,
       })),
       error: null,
@@ -60,10 +81,13 @@ export async function saveDefaultSmsTemplate(
   template: string | null,
 ): Promise<{ success: boolean; error: string | null }> {
   const { error, dbUser } = await requireAdmin();
-  if (error || !dbUser) return { success: false, error: error ?? "Unauthorized" };
+  if (error || !dbUser)
+    return { success: false, error: error ?? "Unauthorized" };
 
   try {
-    const before = await prisma.siteSetting.findUnique({ where: { key: SMS_SETTING_KEY } });
+    const before = await prisma.siteSetting.findUnique({
+      where: { key: SMS_SETTING_KEY },
+    });
 
     if (template === null) {
       await prisma.siteSetting.deleteMany({ where: { key: SMS_SETTING_KEY } });
@@ -79,7 +103,8 @@ export async function saveDefaultSmsTemplate(
 
     const text = template.replace(/\r\n/g, "\n").trim();
     const problems = validateSmsTemplate(text);
-    if (problems.length > 0) return { success: false, error: problems.join(" ") };
+    if (problems.length > 0)
+      return { success: false, error: problems.join(" ") };
 
     await prisma.siteSetting.upsert({
       where: { key: SMS_SETTING_KEY },
@@ -119,10 +144,14 @@ export async function saveEventSmsTemplate(
     if (template !== null) {
       text = template.replace(/\r\n/g, "\n").trim();
       const problems = validateSmsTemplate(text);
-      if (problems.length > 0) return { success: false, error: problems.join(" ") };
+      if (problems.length > 0)
+        return { success: false, error: problems.join(" ") };
     }
 
-    await prisma.event.update({ where: { id: eventId }, data: { confirmationSmsTemplate: text } });
+    await prisma.event.update({
+      where: { id: eventId },
+      data: { confirmationSmsTemplate: text },
+    });
     await audit({
       action: text === null ? "sms.event_reset" : "sms.event_updated",
       entityType: "event",
@@ -141,28 +170,45 @@ export async function saveEventSmsTemplate(
   }
 }
 
-/** Send the rendered template to one number, with sample runner details. */
+/** Send the rendered template to one number, with sample details for the event. */
 export async function sendTestSms(
   template: string,
   phone: string,
   eventId: string | null,
 ): Promise<{ success: boolean; error: string | null; message?: string }> {
   const { error, dbUser } = await requireAdmin();
-  if (error || !dbUser) return { success: false, error: error ?? "Unauthorized" };
+  if (error || !dbUser)
+    return { success: false, error: error ?? "Unauthorized" };
 
   const problems = validateSmsTemplate(template);
   if (problems.length > 0) return { success: false, error: problems.join(" ") };
   if (!isValidBDPhone(phone)) {
-    return { success: false, error: "Enter a Bangladeshi mobile number, e.g. 01712345678." };
+    return {
+      success: false,
+      error: "Enter a Bangladeshi mobile number, e.g. 01712345678.",
+    };
   }
 
   const event = eventId
     ? await prisma.event.findUnique({
         where: { id: eventId },
-        select: { name: true, date: true, packages: { select: { name: true, distance: true }, take: 1 } },
+        select: {
+          name: true,
+          date: true,
+          category: true,
+          eventType: true,
+          packages: { select: { name: true, distance: true }, take: 1 },
+        },
       })
     : null;
-  const vars: SmsVars = sampleVars(event);
+  const vars = sampleSmsVars({
+    name: event?.name,
+    category: event?.category,
+    eventType: event?.eventType,
+    date: event?.date,
+    packageName: event?.packages[0]?.name,
+    distance: event?.packages[0]?.distance,
+  });
   const message = renderSmsTemplate(template, vars);
 
   const result = await sendSMS({ number: formatBDPhone(phone), message });
@@ -174,28 +220,10 @@ export async function sendTestSms(
     summary: `Sent a test confirmation SMS to ${phone}${result.success ? "" : " (failed)"}`,
   });
   if (!result.success) {
-    return { success: false, error: `The SMS gateway rejected it: ${result.error ?? "unknown error"}` };
+    return {
+      success: false,
+      error: `The SMS gateway rejected it: ${result.error ?? "unknown error"}`,
+    };
   }
   return { success: true, error: null, message };
-}
-
-function sampleVars(
-  event: { name: string; date: Date; packages: { name: string; distance: string }[] } | null,
-): SmsVars {
-  return {
-    name: "Rahim Uddin",
-    event: event?.name ?? "Dhaka City Marathon 2026",
-    package: event?.packages[0]?.name ?? "21K Half Marathon",
-    distance: event?.packages[0]?.distance ?? "21K",
-    tshirt: "L",
-    bib: "H0123",
-    eventDate: (event?.date ?? new Date()).toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      timeZone: "Asia/Dhaka",
-    }),
-    orderId: "7040D1A6",
-    amount: "৳1,299",
-  };
 }

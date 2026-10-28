@@ -12,11 +12,19 @@ import {
   SMS_PLACEHOLDERS,
   renderSmsTemplate,
   sampleSmsVars,
+  type SampleEvent,
   smsParts,
   validateSmsTemplate,
   type SmsPlaceholder,
 } from "@/lib/sms-template";
-import { CheckCircle2, Loader2, MessageSquare, RotateCcw, Save, Send } from "lucide-react";
+import {
+  CheckCircle2,
+  Loader2,
+  MessageSquare,
+  RotateCcw,
+  Save,
+  Send,
+} from "lucide-react";
 
 type Settings = Awaited<ReturnType<typeof getSmsSettings>>;
 
@@ -35,15 +43,16 @@ function TemplateEditor({
   id,
   value,
   onChange,
-  eventName,
+  event,
 }: {
   id: string;
   value: string;
   onChange: (v: string) => void;
-  eventName?: string;
+  /** The event being edited; the preview matches what its attendees get. */
+  event?: SampleEvent;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
-  const preview = renderSmsTemplate(value, sampleSmsVars(eventName));
+  const preview = renderSmsTemplate(value, sampleSmsVars(event));
   const { chars, parts, unicode } = smsParts(preview);
   const errors = validateSmsTemplate(value);
 
@@ -79,7 +88,9 @@ function TemplateEditor({
             </button>
           ))}
         </div>
-        <label htmlFor={id} className="sr-only">Message template</label>
+        <label htmlFor={id} className="sr-only">
+          Message template
+        </label>
         <textarea
           id={id}
           ref={ref}
@@ -89,12 +100,15 @@ function TemplateEditor({
           className="w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-sm font-mono text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 resize-y"
         />
         <p className="mt-1 text-[11px] text-gray-500">
-          A line is left out when all its placeholders are empty (e.g. no BIB yet).
+          A line is left out when all its placeholders are empty (e.g. no BIB
+          yet).
         </p>
         {errors.length > 0 && (
           <ul className="mt-2 space-y-0.5">
             {errors.map((e) => (
-              <li key={e} className="text-xs text-red-600 font-medium">{e}</li>
+              <li key={e} className="text-xs text-red-600 font-medium">
+                {e}
+              </li>
             ))}
           </ul>
         )}
@@ -102,14 +116,16 @@ function TemplateEditor({
 
       <div className="min-w-0">
         <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">
-          Preview · sample runner
+          Preview · sample booking
         </p>
         <div className="rounded-2xl bg-gray-100 p-4">
           <div className="max-w-[18rem] rounded-2xl rounded-bl-md bg-white border border-gray-200 px-3.5 py-2.5 text-sm text-gray-900 whitespace-pre-wrap break-words shadow-sm">
             {preview || <span className="text-gray-400">Nothing to send</span>}
           </div>
         </div>
-        <p className={`mt-2 text-xs tabular-nums ${parts > 2 ? "text-amber-700 font-semibold" : "text-gray-500"}`}>
+        <p
+          className={`mt-2 text-xs tabular-nums ${parts > 2 ? "text-amber-700 font-semibold" : "text-gray-500"}`}
+        >
           {chars} characters · {parts} SMS part{parts === 1 ? "" : "s"}
           {unicode && " · Unicode (Bangla/emoji: 70 characters per part)"}
           {parts > 2 && " — each part is charged separately"}
@@ -120,11 +136,19 @@ function TemplateEditor({
 }
 
 // ─── Test send ───
-function TestSend({ template, eventId }: { template: string; eventId: string | null }) {
+function TestSend({
+  template,
+  eventId,
+}: {
+  template: string;
+  eventId: string | null;
+}) {
   const [phone, setPhone] = useState("");
   const [sure, setSure] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(
+    null,
+  );
 
   const send = async () => {
     setBusy(true);
@@ -132,12 +156,19 @@ function TestSend({ template, eventId }: { template: string; eventId: string | n
     const res = await sendTestSms(template, phone, eventId);
     setBusy(false);
     setSure(false);
-    setResult(res.success ? { ok: true, text: `Sent to ${phone}.` } : { ok: false, text: res.error ?? "Failed" });
+    setResult(
+      res.success
+        ? { ok: true, text: `Sent to ${phone}.` }
+        : { ok: false, text: res.error ?? "Failed" },
+    );
   };
 
   return (
     <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-100">
-      <label htmlFor={`test-${eventId ?? "default"}`} className="text-xs text-gray-500">
+      <label
+        htmlFor={`test-${eventId ?? "default"}`}
+        className="text-xs text-gray-500"
+      >
         Send a test to
       </label>
       <input
@@ -158,10 +189,17 @@ function TestSend({ template, eventId }: { template: string; eventId: string | n
             disabled={busy}
             className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-bold uppercase tracking-wider text-white bg-gray-900 hover:bg-gray-800 cursor-pointer disabled:opacity-50"
           >
-            {busy ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+            {busy ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <Send size={12} />
+            )}
             Yes, send 1 real SMS
           </button>
-          <button onClick={() => setSure(false)} className="h-9 px-2 text-xs text-gray-500 hover:text-gray-700 cursor-pointer">
+          <button
+            onClick={() => setSure(false)}
+            className="h-9 px-2 text-xs text-gray-500 hover:text-gray-700 cursor-pointer"
+          >
             Cancel
           </button>
         </>
@@ -176,7 +214,11 @@ function TestSend({ template, eventId }: { template: string; eventId: string | n
         </button>
       )}
       {result && (
-        <span className={`text-xs font-medium ${result.ok ? "text-green-700" : "text-red-600"}`}>{result.text}</span>
+        <span
+          className={`text-xs font-medium ${result.ok ? "text-green-700" : "text-red-600"}`}
+        >
+          {result.text}
+        </span>
       )}
     </div>
   );
@@ -208,7 +250,8 @@ export function AdminSmsPanel() {
     void getSmsSettings().then((s) => applySettings(s));
   }, [applySettings]);
 
-  const reload = async (keepEventId?: string) => applySettings(await getSmsSettings(), keepEventId);
+  const reload = async (keepEventId?: string) =>
+    applySettings(await getSmsSettings(), keepEventId);
 
   const done = (msg: string) => {
     setFlash(msg);
@@ -231,8 +274,11 @@ export function AdminSmsPanel() {
 
   const selected = settings.events.find((e) => e.id === eventId);
   const eventSaved = selected?.template ?? null;
-  const eventDirty = eventCustom ? eventText.trim() !== (eventSaved ?? "").trim() : eventSaved !== null;
-  const eventValid = !eventCustom || validateSmsTemplate(eventText).length === 0;
+  const eventDirty = eventCustom
+    ? eventText.trim() !== (eventSaved ?? "").trim()
+    : eventSaved !== null;
+  const eventValid =
+    !eventCustom || validateSmsTemplate(eventText).length === 0;
 
   const saveDefault = async (value: string | null) => {
     setSaving(value === null ? "default-reset" : "default");
@@ -241,17 +287,28 @@ export function AdminSmsPanel() {
     setSaving(null);
     if (!res.success) return setError(res.error ?? "Failed to save");
     await reload(eventId);
-    done(value === null ? "Default message reset to the built-in text." : "Default message saved.");
+    done(
+      value === null
+        ? "Default message reset to the built-in text."
+        : "Default message saved.",
+    );
   };
 
   const saveEvent = async () => {
     setSaving("event");
     setError("");
-    const res = await saveEventSmsTemplate(eventId, eventCustom ? eventText : null);
+    const res = await saveEventSmsTemplate(
+      eventId,
+      eventCustom ? eventText : null,
+    );
     setSaving(null);
     if (!res.success) return setError(res.error ?? "Failed to save");
     await reload(eventId);
-    done(eventCustom ? `Custom message saved for ${selected?.name}.` : `${selected?.name} now uses the default message.`);
+    done(
+      eventCustom
+        ? `Custom message saved for ${selected?.name}.`
+        : `${selected?.name} now uses the default message.`,
+    );
   };
 
   const btn =
@@ -264,7 +321,7 @@ export function AdminSmsPanel() {
           <MessageSquare className="w-5 h-5 text-gray-400" /> SMS Messages
         </h2>
         <p className="text-sm text-gray-500 mt-1">
-          The SMS a runner gets when their payment is confirmed.
+          The SMS someone gets when their payment is confirmed.
         </p>
       </div>
 
@@ -284,7 +341,9 @@ export function AdminSmsPanel() {
       <section className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
         <header className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <h3 className="text-sm font-bold text-gray-900">Default confirmation SMS</h3>
+            <h3 className="text-sm font-bold text-gray-900">
+              Default confirmation SMS
+            </h3>
             <p className="text-xs text-gray-500 mt-0.5">
               Used for every event that doesn&apos;t have its own message.{" "}
               {settings.defaultTemplate
@@ -294,7 +353,11 @@ export function AdminSmsPanel() {
           </div>
         </header>
 
-        <TemplateEditor id="sms-default" value={defaultText} onChange={setDefaultText} />
+        <TemplateEditor
+          id="sms-default"
+          value={defaultText}
+          onChange={setDefaultText}
+        />
 
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -302,11 +365,18 @@ export function AdminSmsPanel() {
             disabled={!defaultDirty || !defaultValid || !!saving}
             className={`${btn} text-white bg-gray-900 hover:bg-gray-800`}
           >
-            {saving === "default" ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+            {saving === "default" ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <Save size={12} />
+            )}
             Save default
           </button>
           {defaultDirty && (
-            <button onClick={() => setDefaultText(currentDefault)} className={`${btn} text-gray-600 hover:bg-gray-50`}>
+            <button
+              onClick={() => setDefaultText(currentDefault)}
+              className={`${btn} text-gray-600 hover:bg-gray-50`}
+            >
               Undo changes
             </button>
           )}
@@ -317,7 +387,11 @@ export function AdminSmsPanel() {
               className={`${btn} text-gray-600 border border-gray-200 hover:bg-gray-50 ml-auto`}
               title="Go back to the original message"
             >
-              {saving === "default-reset" ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />}
+              {saving === "default-reset" ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <RotateCcw size={12} />
+              )}
               Use built-in text
             </button>
           )}
@@ -330,14 +404,18 @@ export function AdminSmsPanel() {
       {settings.events.length > 0 && (
         <section className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
           <header>
-            <h3 className="text-sm font-bold text-gray-900">Message for one event</h3>
+            <h3 className="text-sm font-bold text-gray-900">
+              Message for one event
+            </h3>
             <p className="text-xs text-gray-500 mt-0.5">
               Give an event its own text, e.g. its kit-collection details.
             </p>
           </header>
 
           <div className="flex flex-wrap items-center gap-3">
-            <label htmlFor="sms-event" className="sr-only">Event</label>
+            <label htmlFor="sms-event" className="sr-only">
+              Event
+            </label>
             <select
               id="sms-event"
               value={eventId}
@@ -357,7 +435,11 @@ export function AdminSmsPanel() {
               ))}
             </select>
 
-            <div className="flex rounded-lg border border-gray-200 p-0.5" role="group" aria-label="Which message">
+            <div
+              className="flex rounded-lg border border-gray-200 p-0.5"
+              role="group"
+              aria-label="Which message"
+            >
               {[
                 { custom: false, label: "Use default" },
                 { custom: true, label: "Custom message" },
@@ -370,7 +452,9 @@ export function AdminSmsPanel() {
                   }}
                   aria-pressed={eventCustom === o.custom}
                   className={`px-3 h-8 rounded-md text-xs font-semibold cursor-pointer ${
-                    eventCustom === o.custom ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-50"
+                    eventCustom === o.custom
+                      ? "bg-gray-900 text-white"
+                      : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   {o.label}
@@ -380,14 +464,19 @@ export function AdminSmsPanel() {
           </div>
 
           {eventCustom ? (
-            <TemplateEditor id="sms-event-text" value={eventText} onChange={setEventText} eventName={selected?.name} />
+            <TemplateEditor
+              id="sms-event-text"
+              value={eventText}
+              onChange={setEventText}
+              event={selected}
+            />
           ) : (
             <div className="rounded-lg bg-gray-50 border border-gray-100 p-3">
               <p className="text-xs text-gray-600 mb-2">
-                Runners of this event get the default message:
+                People booking this event get the default message:
               </p>
               <p className="text-sm text-gray-900 whitespace-pre-wrap">
-                {renderSmsTemplate(currentDefault, sampleSmsVars(selected?.name))}
+                {renderSmsTemplate(currentDefault, sampleSmsVars(selected))}
               </p>
             </div>
           )}
@@ -398,7 +487,11 @@ export function AdminSmsPanel() {
               disabled={!eventDirty || !eventValid || !!saving}
               className={`${btn} text-white bg-gray-900 hover:bg-gray-800`}
             >
-              {saving === "event" ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+              {saving === "event" ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Save size={12} />
+              )}
               {eventCustom ? "Save for this event" : "Switch to default"}
             </button>
           </div>

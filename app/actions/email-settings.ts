@@ -47,10 +47,20 @@ export async function getEmailSettings(): Promise<{
   builtin: EmailContent;
   defaultContent: EmailContent | null; // null = using the built-in text
   defaultUpdatedAt: string | null;
-  events: { id: string; name: string; date: string; content: EmailContent | null }[];
+  events: {
+    id: string;
+    name: string;
+    date: string;
+    content: EmailContent | null;
+  }[];
   error: string | null;
 }> {
-  const empty = { builtin: DEFAULT_CONFIRMATION_EMAIL, defaultContent: null, defaultUpdatedAt: null, events: [] };
+  const empty = {
+    builtin: DEFAULT_CONFIRMATION_EMAIL,
+    defaultContent: null,
+    defaultUpdatedAt: null,
+    events: [],
+  };
   const { error } = await requireAdmin();
   if (error) return { ...empty, error };
 
@@ -86,14 +96,19 @@ export async function saveDefaultEmail(
   input: EmailContent | null,
 ): Promise<{ success: boolean; error: string | null }> {
   const { error, dbUser } = await requireAdmin();
-  if (error || !dbUser) return { success: false, error: error ?? "Unauthorized" };
+  if (error || !dbUser)
+    return { success: false, error: error ?? "Unauthorized" };
 
   try {
-    const before = await prisma.siteSetting.findUnique({ where: { key: EMAIL_SETTING_KEY } });
+    const before = await prisma.siteSetting.findUnique({
+      where: { key: EMAIL_SETTING_KEY },
+    });
     const beforeContent = parseEmailContent(before?.value);
 
     if (input === null) {
-      await prisma.siteSetting.deleteMany({ where: { key: EMAIL_SETTING_KEY } });
+      await prisma.siteSetting.deleteMany({
+        where: { key: EMAIL_SETTING_KEY },
+      });
       await audit({
         action: "email.default_reset",
         entityType: "event",
@@ -120,7 +135,9 @@ export async function saveDefaultEmail(
       entityType: "event",
       entityId: EMAIL_SETTING_KEY,
       summary: "Changed the default confirmation email",
-      changes: { content: [beforeContent ?? DEFAULT_CONFIRMATION_EMAIL, content] },
+      changes: {
+        content: [beforeContent ?? DEFAULT_CONFIRMATION_EMAIL, content],
+      },
     });
     return { success: true, error: null };
   } catch (err) {
@@ -165,7 +182,9 @@ export async function saveEventEmail(
         content === null
           ? `"${event.name}" now uses the default confirmation email`
           : `Set a custom confirmation email for "${event.name}"`,
-      changes: { content: [parseEmailContent(event.confirmationEmail), content] },
+      changes: {
+        content: [parseEmailContent(event.confirmationEmail), content],
+      },
     });
     return { success: true, error: null };
   } catch (err) {
@@ -195,14 +214,24 @@ export async function sendTestEmail(
   const event = eventId
     ? await prisma.event.findUnique({
         where: { id: eventId },
-        select: { name: true, date: true, address: true, packages: { select: { name: true, distance: true }, take: 1 } },
+        select: {
+          name: true,
+          date: true,
+          address: true,
+          category: true,
+          eventType: true,
+          packages: { select: { name: true, distance: true }, take: 1 },
+        },
       })
     : null;
-  const vars = sampleSmsVars(event?.name);
-  if (event?.packages[0]) {
-    vars.package = event.packages[0].name;
-    vars.distance = event.packages[0].distance;
-  }
+  const vars = sampleSmsVars({
+    name: event?.name,
+    category: event?.category,
+    eventType: event?.eventType,
+    date: event?.date,
+    packageName: event?.packages[0]?.name,
+    distance: event?.packages[0]?.distance,
+  });
   const rendered = renderEmailContent(content, vars);
 
   const result = await sendPaymentConfirmationEmail({
@@ -231,6 +260,10 @@ export async function sendTestEmail(
     eventId,
     summary: `Sent a test confirmation email to ${address}${result.success ? "" : " (failed)"}`,
   });
-  if (!result.success) return { success: false, error: `Sending failed: ${result.error ?? "unknown error"}` };
+  if (!result.success)
+    return {
+      success: false,
+      error: `Sending failed: ${result.error ?? "unknown error"}`,
+    };
   return { success: true, error: null };
 }
