@@ -1,8 +1,9 @@
-// app/(site)/profile/components/admin/CouponForm.tsx
+// module/profile/components/admin/CouponForm.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import type { Coupon, CouponEvent } from "./AdminCouponsPanel";
+import { DiscountStub } from "./CouponDiscountStub";
 import {
   createCoupon,
   updateCoupon,
@@ -10,14 +11,7 @@ import {
   getPackagesForEvent,
 } from "@/app/actions/coupon";
 import Input from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Check, Loader2, Save, Package, X } from "lucide-react";
+import { Check, Loader2, Save } from "lucide-react";
 
 type CouponFormProps = {
   coupon: Coupon | null;
@@ -226,373 +220,390 @@ export function CouponForm({
     }
   };
 
-  return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">
-        {isEditing ? "Edit Coupon" : "Create New Coupon"}
-      </h2>
+  // Live preview of the coupon card
+  const previewValue = parseFloat(form.discountValue) || 0;
+  const previewEvent = events.find((e) => e.id === form.eventId)?.name;
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Code & Event */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Coupon Code <span className="text-red-500">*</span>
-            </label>
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* ─── Header + live preview ─── */}
+      <div>
+        <p className="text-[11px] font-semibold tracking-[0.2em] text-[#a8852f] uppercase">
+          Promotions
+        </p>
+        <p className="mt-1 text-2xl font-semibold text-[#14245a]">
+          {isEditing ? "Edit coupon" : "New coupon"}
+        </p>
+      </div>
+
+      <div className="flex overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/70">
+        <DiscountStub type={form.discountType} value={previewValue} />
+        <div className="w-0 border-l-2 border-dashed border-slate-200" />
+        <div className="min-w-0 p-4">
+          <p className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+            Preview
+          </p>
+          <p className="mt-1 font-mono text-lg font-bold tracking-wider text-[#14245a]">
+            {form.code || "YOURCODE"}
+          </p>
+          <p className="truncate text-sm text-slate-500">
+            {previewEvent ?? "Choose an event"}
+            {" · "}
+            {form.scopeType === "EVENT"
+              ? "all packages"
+              : `${form.packageIds.length} package${form.packageIds.length === 1 ? "" : "s"}`}
+          </p>
+        </div>
+      </div>
+
+      {/* ─── 1. Code and event ─── */}
+      <FormSection number={1} title="Code and event">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField label="Coupon code" required>
             <Input
               value={form.code}
               onChange={(e) =>
                 updateField("code", e.target.value.toUpperCase())
               }
               placeholder="e.g. SUMMER20"
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg font-mono uppercase"
+              className={`${inputClass} font-mono tracking-wider uppercase`}
             />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Event <span className="text-red-500">*</span>
-            </label>
-            <Select
+          </FormField>
+          <FormField
+            label="Event"
+            required
+            hint={isEditing ? "Can't be changed after creating" : undefined}
+          >
+            <select
               value={form.eventId}
-              onValueChange={handleEventChange}
+              onChange={(e) => handleEventChange(e.target.value)}
               disabled={isEditing}
+              className={`${inputClass} w-full cursor-pointer px-3 disabled:cursor-not-allowed disabled:bg-slate-50`}
             >
-              <SelectTrigger className="h-11 rounded-lg border border-gray-200 bg-gray-50">
-                <SelectValue placeholder="Select event" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200">
-                {events.map((ev) => (
-                  <SelectItem key={ev.id} value={ev.id}>
-                    {ev.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <option value="">Select event</option>
+              {events.map((ev) => (
+                <option key={ev.id} value={ev.id}>
+                  {ev.name}
+                </option>
+              ))}
+            </select>
+          </FormField>
         </div>
+      </FormSection>
 
-        {/* NEW: Coupon Scope Section */}
-        <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">
-            Coupon Scope <span className="text-red-500">*</span>
-          </label>
-
-          <div className="flex gap-4 mb-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="scopeType"
-                value="EVENT"
-                checked={form.scopeType === "EVENT"}
-                onChange={() => updateField("scopeType", "EVENT")}
-                className="w-4 h-4 text-gray-900 border-gray-300 focus:ring-gray-900"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                All Packages
-              </span>
-              <span className="text-xs text-gray-500">
-                (Applies to entire event)
-              </span>
-            </label>
-
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="scopeType"
-                value="PACKAGE"
-                checked={form.scopeType === "PACKAGE"}
-                onChange={() => updateField("scopeType", "PACKAGE")}
-                className="w-4 h-4 text-gray-900 border-gray-300 focus:ring-gray-900"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Specific Packages
-              </span>
-              <span className="text-xs text-gray-500">
-                (Select packages below)
-              </span>
-            </label>
-          </div>
-
-          {/* Package Selection (only shown when scope is PACKAGE) */}
-          {form.scopeType === "PACKAGE" && (
-            <div className="mt-4">
-              {!form.eventId ? (
-                <p className="text-sm text-gray-500 italic">
-                  Please select an event first
-                </p>
-              ) : loadingPackages ? (
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading packages...
-                </div>
-              ) : eventPackages.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">
-                  No packages found for this event
-                </p>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-medium text-gray-600">
-                      Select applicable packages:
-                    </span>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={selectAllPackages}
-                        className="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
-                      >
-                        Select All
-                      </button>
-                      <span className="text-gray-300">|</span>
-                      <button
-                        type="button"
-                        onClick={clearAllPackages}
-                        className="text-xs text-gray-500 hover:text-gray-700 font-medium cursor-pointer"
-                      >
-                        Clear All
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {eventPackages.map((pkg) => {
-                      const isSelected = form.packageIds.includes(pkg.id);
-                      return (
-                        <button
-                          key={pkg.id}
-                          type="button"
-                          onClick={() => togglePackage(pkg.id)}
-                          className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer text-left ${
-                            isSelected
-                              ? "border-gray-900 bg-gray-900 text-white"
-                              : "border-gray-200 bg-white hover:border-gray-400"
-                          }`}
-                        >
-                          <Package
-                            size={16}
-                            className={
-                              isSelected ? "text-white" : "text-gray-400"
-                            }
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p
-                              className={`text-sm font-medium truncate ${
-                                isSelected ? "text-white" : "text-gray-900"
-                              }`}
-                            >
-                              {pkg.name}
-                            </p>
-                            <p
-                              className={`text-xs ${
-                                isSelected ? "text-white/70" : "text-gray-500"
-                              }`}
-                            >
-                              {pkg.distance} · ৳{pkg.price}
-                            </p>
-                          </div>
-                          {isSelected && (
-                            <Check
-                              size={16}
-                              className="text-neon-lime flex-shrink-0"
-                            />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {form.packageIds.length > 0 && (
-                    <p className="mt-3 text-xs text-gray-600">
-                      <span className="font-semibold">
-                        {form.packageIds.length}
-                      </span>{" "}
-                      package(s) selected
-                    </p>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+      {/* ─── 2. Discount ─── */}
+      <FormSection number={2} title="Discount">
+        <div className="grid grid-cols-2 gap-2">
+          {(
+            [
+              {
+                value: "PERCENTAGE",
+                label: "Percentage",
+                hint: "e.g. 20% off",
+              },
+              { value: "FIXED", label: "Fixed amount", hint: "e.g. ৳500 off" },
+            ] as const
+          ).map((option) => (
+            <ChoiceCard
+              key={option.value}
+              selected={form.discountType === option.value}
+              onClick={() => updateField("discountType", option.value)}
+              title={option.label}
+              text={option.hint}
+            />
+          ))}
         </div>
-
-        {/* Discount Type & Value */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Discount Type <span className="text-red-500">*</span>
-            </label>
-            <Select
-              value={form.discountType}
-              onValueChange={(val) => updateField("discountType", val)}
-            >
-              <SelectTrigger className="h-11 rounded-lg border border-gray-200 bg-gray-50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200">
-                <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
-                <SelectItem value="FIXED">Fixed Amount (৳)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Discount Value <span className="text-red-500">*</span>
-            </label>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <FormField
+            label={
+              form.discountType === "PERCENTAGE" ? "Discount %" : "Discount ৳"
+            }
+            required
+          >
             <Input
               type="number"
               value={form.discountValue}
               onChange={(e) => updateField("discountValue", e.target.value)}
-              placeholder={
-                form.discountType === "PERCENTAGE" ? "e.g. 20" : "e.g. 500"
-              }
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
+              placeholder={form.discountType === "PERCENTAGE" ? "20" : "500"}
+              className={inputClass}
               min="0"
             />
-          </div>
-        </div>
-
-        {/* Usage Limits */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Max Uses{" "}
-              <span className="text-gray-400 font-normal normal-case">
-                (optional)
-              </span>
-            </label>
-            <Input
-              type="number"
-              value={form.maxUses}
-              onChange={(e) => updateField("maxUses", e.target.value)}
-              placeholder="Unlimited"
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
-              min="1"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Per User Limit
-            </label>
-            <Input
-              type="number"
-              value={form.maxUsesPerUser}
-              onChange={(e) => updateField("maxUsesPerUser", e.target.value)}
-              placeholder="1"
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
-              min="1"
-            />
-          </div>
-        </div>
-
-        {/* Order Constraints */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Min Order (৳){" "}
-              <span className="text-gray-400 font-normal normal-case">
-                (optional)
-              </span>
-            </label>
-            <Input
-              type="number"
-              value={form.minOrderAmount}
-              onChange={(e) => updateField("minOrderAmount", e.target.value)}
-              placeholder="No minimum"
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
-              min="0"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Max Discount (৳){" "}
-              <span className="text-gray-400 font-normal normal-case">
-                (optional)
-              </span>
-            </label>
+          </FormField>
+          <FormField label="Max discount ৳" hint="Cap for % coupons">
             <Input
               type="number"
               value={form.maxDiscount}
               onChange={(e) => updateField("maxDiscount", e.target.value)}
               placeholder="No cap"
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
+              className={inputClass}
               min="0"
             />
-            <p className="text-[10px] text-gray-400 mt-1">
-              Caps the discount for percentage-based coupons
-            </p>
-          </div>
+          </FormField>
+          <FormField label="Min order ৳">
+            <Input
+              type="number"
+              value={form.minOrderAmount}
+              onChange={(e) => updateField("minOrderAmount", e.target.value)}
+              placeholder="No minimum"
+              className={inputClass}
+              min="0"
+            />
+          </FormField>
+        </div>
+      </FormSection>
+
+      {/* ─── 3. Which packages ─── */}
+      <FormSection number={3} title="Which packages">
+        <div className="grid grid-cols-2 gap-2">
+          <ChoiceCard
+            selected={form.scopeType === "EVENT"}
+            onClick={() => updateField("scopeType", "EVENT")}
+            title="All packages"
+            text="Works for the whole event"
+          />
+          <ChoiceCard
+            selected={form.scopeType === "PACKAGE"}
+            onClick={() => updateField("scopeType", "PACKAGE")}
+            title="Some packages"
+            text="Pick them below"
+          />
         </div>
 
-        {/* Validity */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        {form.scopeType === "PACKAGE" && (
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Valid From <span className="text-red-500">*</span>
-            </label>
+            {!form.eventId ? (
+              <p className="text-sm text-slate-500">Choose an event first.</p>
+            ) : loadingPackages ? (
+              <p className="flex items-center gap-2 text-sm text-slate-500">
+                <Loader2 className="h-4 w-4 animate-spin" /> Loading packages…
+              </p>
+            ) : eventPackages.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                This event has no packages.
+              </p>
+            ) : (
+              <>
+                <div className="mb-2 flex items-center justify-between text-xs">
+                  <span className="text-slate-500">
+                    {form.packageIds.length} of {eventPackages.length} selected
+                  </span>
+                  <span className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={selectAllPackages}
+                      className="cursor-pointer font-semibold text-[#14245a] hover:underline"
+                    >
+                      Select all
+                    </button>
+                    <button
+                      type="button"
+                      onClick={clearAllPackages}
+                      className="cursor-pointer text-slate-500 hover:underline"
+                    >
+                      Clear
+                    </button>
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {eventPackages.map((pkg) => {
+                    const isSelected = form.packageIds.includes(pkg.id);
+                    return (
+                      <button
+                        key={pkg.id}
+                        type="button"
+                        onClick={() => togglePackage(pkg.id)}
+                        className={`flex cursor-pointer items-center gap-3 rounded-xl p-3 text-left ring-1 transition ${
+                          isSelected
+                            ? "bg-[#faf8f3] ring-2 ring-[#c49a3c]"
+                            : "bg-white ring-slate-200 hover:ring-slate-300"
+                        }`}
+                      >
+                        <span
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${
+                            isSelected
+                              ? "bg-[#14245a] text-[#dcb45c]"
+                              : "border border-slate-300"
+                          }`}
+                        >
+                          {isSelected && <Check size={13} strokeWidth={3} />}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold text-[#14245a]">
+                            {pkg.name}
+                          </span>
+                          <span className="block text-xs text-slate-500">
+                            {pkg.distance} · ৳{pkg.price.toLocaleString()}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </FormSection>
+
+      {/* ─── 4. Limits and dates ─── */}
+      <FormSection number={4} title="Limits and dates">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField label="Total uses" hint="Empty = unlimited">
+            <Input
+              type="number"
+              value={form.maxUses}
+              onChange={(e) => updateField("maxUses", e.target.value)}
+              placeholder="Unlimited"
+              className={inputClass}
+              min="1"
+            />
+          </FormField>
+          <FormField label="Uses per person">
+            <Input
+              type="number"
+              value={form.maxUsesPerUser}
+              onChange={(e) => updateField("maxUsesPerUser", e.target.value)}
+              placeholder="1"
+              className={inputClass}
+              min="1"
+            />
+          </FormField>
+          <FormField label="Starts" required>
             <Input
               type="datetime-local"
               value={form.validFrom}
               onChange={(e) => updateField("validFrom", e.target.value)}
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
+              className={inputClass}
             />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Valid Until <span className="text-red-500">*</span>
-            </label>
+          </FormField>
+          <FormField label="Ends" required>
             <Input
               type="datetime-local"
               value={form.validUntil}
               onChange={(e) => updateField("validUntil", e.target.value)}
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
+              className={inputClass}
             />
-          </div>
+          </FormField>
         </div>
+      </FormSection>
 
-        {/* Messages */}
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm">{error}</p>
-          </div>
-        )}
+      {/* ─── Save ─── */}
+      {error && (
+        <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-100">
+          {error}
+        </p>
+      )}
+      {success && (
+        <p className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 ring-1 ring-emerald-100">
+          <Check className="h-4 w-4" />
+          Coupon {isEditing ? "updated" : "created"}.
+        </p>
+      )}
+      <div className="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="cursor-pointer rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 hover:border-slate-300"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex cursor-pointer items-center gap-2 rounded-xl bg-[#14245a] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#1d3274] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          {isEditing ? "Save changes" : "Create coupon"}
+        </button>
+      </div>
+    </form>
+  );
+}
 
-        {success && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-            <Check className="w-4 h-4 text-green-600" />
-            <p className="text-green-600 text-sm font-medium">
-              Coupon {isEditing ? "updated" : "created"} successfully!
-            </p>
-          </div>
-        )}
+// ─── Small pieces ────────────────────────────────────
 
-        {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-5 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-2.5 text-sm font-bold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer uppercase tracking-wider"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                {isEditing ? "Updating..." : "Creating..."}
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                {isEditing ? "Update Coupon" : "Create Coupon"}
-              </>
-            )}
-          </button>
-        </div>
-      </form>
-    </div>
+const inputClass =
+  "h-11 rounded-xl border border-slate-200 bg-white focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15";
+
+/** A white card with a numbered title. */
+function FormSection({
+  number,
+  title,
+  children,
+}: {
+  number: number;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-4 rounded-2xl bg-white p-5 ring-1 ring-slate-200/70 sm:p-6">
+      <div className="flex items-center gap-3">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[#c49a3c] text-xs font-semibold text-[#a8852f]">
+          {number}
+        </span>
+        <p className="text-lg font-semibold text-[#14245a]">{title}</p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/** A label above an input, with an optional hint below. */
+function FormField({
+  label,
+  required,
+  hint,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-[11px] font-semibold tracking-[0.15em] text-[#14245a] uppercase">
+        {label}
+        {required && <span className="ml-0.5 text-[#c49a3c]">*</span>}
+      </span>
+      {children}
+      {hint && (
+        <span className="mt-1 block text-xs text-slate-400">{hint}</span>
+      )}
+    </label>
+  );
+}
+
+/** One of two side-by-side choices (discount type, which packages). */
+function ChoiceCard({
+  selected,
+  onClick,
+  title,
+  text,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  title: string;
+  text: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`cursor-pointer rounded-xl p-3 text-left ring-1 transition ${
+        selected
+          ? "bg-[#faf8f3] ring-2 ring-[#c49a3c]"
+          : "bg-white ring-slate-200 hover:ring-slate-300"
+      }`}
+    >
+      <span className="block text-sm font-semibold text-[#14245a]">
+        {title}
+      </span>
+      <span className="mt-0.5 block text-xs text-slate-500">{text}</span>
+    </button>
   );
 }
