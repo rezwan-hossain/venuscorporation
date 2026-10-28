@@ -1,104 +1,71 @@
 // module/dashboard/components/UpcomingEvents.tsx
+//
+// Dashboard sidebar: events open for registration, as compact cards
+// (photo with type tag, name, date, venue, "from" price), then "All events".
+
 import type { DashboardEvent } from "@/types/dashboard";
 import Link from "next/link";
-import { Calendar, MapPin } from "lucide-react";
+import { ArrowRight, Calendar, MapPin } from "lucide-react";
 
 type UpcomingEventsProps = {
   events: DashboardEvent[];
 };
 
+const SERIF = { fontFamily: "var(--font-dashboard-serif)" } as const;
+
 export function UpcomingEvents({ events }: UpcomingEventsProps) {
   if (events.length === 0) {
     return (
-      <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center">
-        <p className="text-gray-500">No active events right now</p>
+      <div className="rounded-2xl border border-dashed border-[#c49a3c]/40 bg-white p-8 text-center">
+        <p className="text-sm text-slate-500">No events open right now — check back soon.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {events.map((event) => (
-        <Link
-          key={event.id}
-          href={`/events/${event.slug}`}
-          className="block bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
-        >
-          {/* Image */}
-          <div className="relative h-32 w-full">
-            <img
-              src={event.bannerImage}
-              alt={event.name}
-              className="w-full h-full object-cover"
-            />
-            <span
-              className={`absolute top-2 right-2 px-2 py-0.5 text-xs font-semibold rounded-full ${
-                event.eventType === "VIRTUAL"
-                  ? "bg-purple-500 text-white"
-                  : "bg-green-500 text-white"
-              }`}
-            >
-              {event.eventType}
-            </span>
-          </div>
-
-          {/* Content */}
-          <div className="p-4">
-            <h3 className="font-semibold text-gray-900 text-sm line-clamp-1">
-              {event.name}
-            </h3>
-            <p className="text-xs text-indigo-500 mt-0.5">
-              {event.organizer.name}
-            </p>
-
-            <div className="mt-2 space-y-1">
-              <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                <Calendar className="w-3 h-3" />
-                <span>
-                  {new Date(event.date).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                <MapPin className="w-3 h-3" />
-                <span className="line-clamp-1">{event.address}</span>
-              </div>
+    <div className="space-y-3">
+      {events.map((event) => {
+        const fromPrice = event.packages.length ? Math.min(...event.packages.map((p) => p.price)) : null;
+        return (
+          <Link
+            key={event.id}
+            href={`/events/${event.slug}`}
+            className="group flex gap-4 rounded-2xl border border-[#c49a3c]/20 bg-white p-3 transition duration-300 hover:-translate-y-0.5 hover:border-[#c49a3c]/40 hover:shadow-lg hover:shadow-[#14245a]/10"
+          >
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[#14245a]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={event.bannerImage} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+              <span className="absolute inset-x-1.5 bottom-1.5 rounded-md bg-[#0d1840]/70 py-0.5 text-center text-[9px] font-semibold tracking-[0.15em] text-white uppercase backdrop-blur">
+                {event.eventType === "VIRTUAL" ? "Virtual" : "In person"}
+              </span>
             </div>
-
-            {/* Package Tags */}
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {event.packages.slice(0, 3).map((pkg) => (
-                <span
-                  key={pkg.id}
-                  className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded-full"
-                >
-                  {pkg.distance} — ৳{pkg.price}
-                </span>
-              ))}
+            <div className="min-w-0 flex-1 py-0.5">
+              <h3 className="line-clamp-2 text-lg leading-tight font-semibold text-[#14245a]" style={SERIF}>
+                {event.name}
+              </h3>
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500">
+                <Calendar className="h-3.5 w-3.5 shrink-0 text-[#c49a3c]" aria-hidden />
+                {new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
+              </p>
+              <p className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
+                <MapPin className="h-3.5 w-3.5 shrink-0 text-[#c49a3c]" aria-hidden />
+                <span className="truncate">{event.address}</span>
+              </p>
+              {fromPrice !== null && (
+                <p className="mt-1.5 text-xs text-slate-400">
+                  From <span className="text-sm font-semibold text-[#14245a]">৳{fromPrice.toLocaleString("en-IN")}</span>
+                </p>
+              )}
             </div>
+          </Link>
+        );
+      })}
 
-            {/* Starting Price */}
-            {event.packages.length > 0 && (
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-xs text-gray-400">Starting from</span>
-                <span className="text-sm font-bold text-indigo-600">
-                  ৳{event.packages[0].price}
-                </span>
-              </div>
-            )}
-          </div>
-        </Link>
-      ))}
-
-      {/* View All */}
       <Link
         href="/events"
-        className="block text-center py-3 text-sm text-indigo-500 hover:underline font-medium"
+        className="group flex items-center justify-center gap-2 rounded-2xl border border-[#c49a3c]/40 py-3 text-sm font-semibold text-[#14245a] transition hover:bg-[#14245a] hover:text-white"
       >
-        View All Events →
+        All events <ArrowRight size={15} className="text-[#c49a3c] transition-transform group-hover:translate-x-1" aria-hidden />
       </Link>
     </div>
   );

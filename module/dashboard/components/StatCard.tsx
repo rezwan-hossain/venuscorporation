@@ -1,5 +1,9 @@
+// module/dashboard/components/StatCard.tsx
+//
+// One dashboard number: gold icon circle, label, big serif value and a short
+// status line (green = good, amber = needs attention, grey = nothing yet).
+
 import { LucideIcon } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 
 interface StatCardProps {
   title: string;
@@ -9,37 +13,27 @@ interface StatCardProps {
   icon: LucideIcon;
 }
 
-export function StatCard({
-  title,
-  value,
-  change,
-  changeType,
-  icon: Icon,
-}: StatCardProps) {
+const TONE = {
+  positive: "text-emerald-600",
+  negative: "text-amber-600",
+  neutral: "text-slate-400",
+} as const;
+
+export function StatCard({ title, value, change, changeType, icon: Icon }: StatCardProps) {
   return (
-    <Card className="shadow-sm border-gray-400/60">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-2xl font-semibold tracking-tight">{value}</p>
-            <p
-              className={`text-xs font-medium ${
-                changeType === "positive"
-                  ? "text-success"
-                  : changeType === "negative"
-                    ? "text-destructive"
-                    : "text-muted-foreground"
-              }`}
-            >
-              {change}
-            </p>
-          </div>
-          <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-            <Icon className="h-5 w-5 text-primary" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="group relative overflow-hidden rounded-2xl border border-[#c49a3c]/20 bg-white p-5 transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#14245a]/10">
+      {/* Gold line that grows along the top on hover */}
+      <span aria-hidden className="absolute top-0 left-0 h-0.5 w-10 bg-[#c49a3c] transition-all duration-500 group-hover:w-full" />
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{title}</p>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#14245a] text-[#dcb45c]">
+          <Icon className="h-[18px] w-[18px]" aria-hidden />
+        </span>
+      </div>
+      <p className="mt-2 text-4xl leading-none font-semibold text-[#14245a] lining-nums" style={{ fontFamily: "var(--font-dashboard-serif)" }}>
+        {value}
+      </p>
+      <p className={`mt-3 text-xs font-medium ${TONE[changeType]}`}>{change}</p>
+    </div>
   );
 }
