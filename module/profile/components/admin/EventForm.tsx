@@ -25,6 +25,7 @@ import {
   EVENT_CATEGORIES,
   getCheckoutQuestions,
 } from "@/lib/event-checkout-form";
+import { ImageUploadCloudinary } from "./ImageUploadCloudinary";
 
 const RichTextEditor = dynamic(
   () =>
@@ -498,13 +499,21 @@ export function EventForm({
             <p className={labelClass}>
               Banner <span className="text-[#c49a3c]">*</span>
             </p>
-            <ImageVpsUpload
+            {/* <ImageVpsUpload
               value={form.bannerImage}
               onChange={(url) => updateField("bannerImage", url)}
               folder="banners"
               label="Upload banner"
               aspectRatio="aspect-[16/7]"
               maxSizeMB={5}
+            /> */}
+            <ImageUploadCloudinary
+              value={form.bannerImage}
+              onChange={(url) => updateField("bannerImage", url)}
+              folder="banners"
+              label="Upload banner"
+              aspectRatio="aspect-[16/7]"
+              maxSizeMB={2}
             />
             <p className="mt-1 text-xs text-slate-400">
               Wide photo for the event page and homepage.
@@ -512,13 +521,22 @@ export function EventForm({
           </div>
           <div>
             <p className={labelClass}>Thumbnail</p>
-            <ImageVpsUpload
+            {/* <ImageVpsUpload
               value={form.thumbImage}
               onChange={(url) => updateField("thumbImage", url)}
               folder="thumbnails"
               label="Upload thumbnail"
               aspectRatio="aspect-square"
               maxSizeMB={2}
+            /> */}
+
+            <ImageUploadCloudinary
+              value={form.thumbImage}
+              onChange={(url) => updateField("thumbImage", url)}
+              folder="thumbnails"
+              label="Upload thumbnail"
+              aspectRatio="aspect-square"
+              maxSizeMB={1}
             />
             <p className="mt-1 text-xs text-slate-400">Optional, square.</p>
           </div>

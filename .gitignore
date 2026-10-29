@@ -46,3 +46,5 @@ next-env.d.ts
 /lib/generated/prisma
 
 CLAUDE.md
+# photos uploaded with ImageUploadPublic (server data, not code)
+/public/uploads/
