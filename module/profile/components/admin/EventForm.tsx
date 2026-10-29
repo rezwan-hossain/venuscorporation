@@ -36,8 +36,8 @@ const RichTextEditor = dynamic(
     ssr: false,
     loading: () => (
       <div className="overflow-hidden rounded-xl border border-slate-200">
-        <div className="h-10 animate-pulse border-b border-slate-200 bg-slate-50" />
-        <div className="h-[200px] bg-white animate-pulse" />
+        <div className="h-11 animate-pulse border-b border-slate-200 bg-slate-50" />
+        <div className="h-[220px] animate-pulse bg-white" />
       </div>
     ),
   },
