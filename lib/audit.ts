@@ -24,6 +24,7 @@ export type AuditEntityType =
   | "gallery"
   | "team"
   | "faq"
+  | "contact"
   | "user";
 
 export type AuditChanges = Record<string, [unknown, unknown]>;

@@ -475,3 +475,33 @@ model ShareClickDaily {
   @@index([eventId, day])
   @@map("share_click_daily")
 }
+
+// Where an enquiry from the contact page is in the admin's inbox.
+enum ContactStatus {
+  NEW // not opened yet
+  READ // opened in admin
+  REPLIED // someone got back to them
+  ARCHIVED // done, hidden from the main list
+}
+
+// An enquiry sent from the contact page (/contact). Listed in
+// admin → Contact Messages.
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  eventType String
+  eventDate DateTime?     @db.Date
+  guests    String? // "Under 50", "50 – 150" …
+  message   String
+  status    ContactStatus @default(NEW)
+  adminNote String? // private note, only admins see it
+  ip        String? // sender's IP, for the 5-per-hour spam limit
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([status, createdAt])
+  @@index([ip, createdAt])
+  @@map("contact_messages")
+}

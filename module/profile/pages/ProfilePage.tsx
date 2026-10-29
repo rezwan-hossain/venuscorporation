@@ -28,6 +28,7 @@ import {
   MessageSquare,
   ShieldCheck,
   Mail,
+  MessageSquareText,
 } from "lucide-react";
 
 // The business card's elegant serif — the profile components use it through
@@ -44,43 +45,76 @@ const serif = Cormorant_Garamond({
 // only fetch a panel's code when they open its tab.
 const panelLoading = () => <ProfilePanelSkeleton />;
 const AdminEventsPanel = dynamic(
-  () => import("../components/admin/AdminEventsPanel").then((m) => m.AdminEventsPanel),
+  () =>
+    import("../components/admin/AdminEventsPanel").then(
+      (m) => m.AdminEventsPanel,
+    ),
   { loading: panelLoading },
 );
 const AdminCouponsPanel = dynamic(
-  () => import("../components/admin/AdminCouponsPanel").then((m) => m.AdminCouponsPanel),
+  () =>
+    import("../components/admin/AdminCouponsPanel").then(
+      (m) => m.AdminCouponsPanel,
+    ),
   { loading: panelLoading },
 );
 const ManageHomepagePanel = dynamic(
-  () => import("../components/admin/ManageHomepagePanel").then((m) => m.ManageHomepagePanel),
+  () =>
+    import("../components/admin/ManageHomepagePanel").then(
+      (m) => m.ManageHomepagePanel,
+    ),
   { loading: panelLoading },
 );
 const AdminGalleryPanel = dynamic(
-  () => import("../components/admin/AdminGalleryPanel").then((m) => m.AdminGalleryPanel),
+  () =>
+    import("../components/admin/AdminGalleryPanel").then(
+      (m) => m.AdminGalleryPanel,
+    ),
   { loading: panelLoading },
 );
 const AdminDashboardPanel = dynamic(
-  () => import("../components/admin/AdminDashboardPanel").then((m) => m.AdminDashboardPanel),
+  () =>
+    import("../components/admin/AdminDashboardPanel").then(
+      (m) => m.AdminDashboardPanel,
+    ),
   { loading: panelLoading },
 );
 const AdminAuditLogPanel = dynamic(
-  () => import("../components/admin/AdminAuditLogPanel").then((m) => m.AdminAuditLogPanel),
+  () =>
+    import("../components/admin/AdminAuditLogPanel").then(
+      (m) => m.AdminAuditLogPanel,
+    ),
   { loading: panelLoading },
 );
 const AdminSmsPanel = dynamic(
-  () => import("../components/admin/AdminSmsPanel").then((m) => m.AdminSmsPanel),
+  () =>
+    import("../components/admin/AdminSmsPanel").then((m) => m.AdminSmsPanel),
   { loading: panelLoading },
 );
 const AdminEmailPanel = dynamic(
-  () => import("../components/admin/AdminEmailPanel").then((m) => m.AdminEmailPanel),
+  () =>
+    import("../components/admin/AdminEmailPanel").then(
+      (m) => m.AdminEmailPanel,
+    ),
   { loading: panelLoading },
 );
 const AdminAdminsPanel = dynamic(
-  () => import("../components/admin/AdminAdminsPanel").then((m) => m.AdminAdminsPanel),
+  () =>
+    import("../components/admin/AdminAdminsPanel").then(
+      (m) => m.AdminAdminsPanel,
+    ),
+  { loading: panelLoading },
+);
+const AdminContactsPanel = dynamic(
+  () =>
+    import("../components/admin/AdminContactsPanel").then(
+      (m) => m.AdminContactsPanel,
+    ),
   { loading: panelLoading },
 );
 const AdminTeamPanel = dynamic(
-  () => import("../components/admin/AdminTeamPanel").then((m) => m.AdminTeamPanel),
+  () =>
+    import("../components/admin/AdminTeamPanel").then((m) => m.AdminTeamPanel),
   { loading: panelLoading },
 );
 
@@ -113,6 +147,7 @@ type Tab =
   | "audit"
   | "sms"
   | "email"
+  | "contacts"
   | "admins";
 
 type AdminTab = Exclude<Tab, "profile" | "password">;
@@ -161,6 +196,8 @@ function AdminTabContent({
       return <AdminSmsPanel />;
     case "email":
       return <AdminEmailPanel />;
+    case "contacts":
+      return <AdminContactsPanel />;
     case "audit":
       return (
         <AdminAuditLogPanel
@@ -210,6 +247,12 @@ const ProfilePage = ({ profile, isOAuthUser, adminData }: ProfilePageProps) => {
             label: "Manage Events",
             icon: CalendarPlus,
             description: "Create and manage events",
+          },
+          {
+            id: "contacts" as Tab,
+            label: "Contact Messages",
+            icon: MessageSquareText,
+            description: "Enquiries from the contact page",
           },
           {
             id: "coupons" as Tab,
@@ -275,20 +318,33 @@ const ProfilePage = ({ profile, isOAuthUser, adminData }: ProfilePageProps) => {
         onClick={() => setActiveTab(tab.id)}
         aria-current={active ? "page" : undefined}
         className={`group relative flex w-full shrink-0 cursor-pointer items-center gap-3 rounded-xl px-3.5 py-3 text-left text-sm font-medium transition lg:shrink ${
-          active ? "bg-[#14245a] text-white shadow-lg shadow-[#14245a]/20" : "text-slate-600 hover:bg-white hover:text-[#14245a] hover:shadow-sm"
+          active
+            ? "bg-[#14245a] text-white shadow-lg shadow-[#14245a]/20"
+            : "text-slate-600 hover:bg-white hover:text-[#14245a] hover:shadow-sm"
         }`}
       >
-        {active && <span aria-hidden className="absolute inset-y-2.5 left-0 w-[3px] rounded-r-full bg-[#dcb45c]" />}
+        {active && (
+          <span
+            aria-hidden
+            className="absolute inset-y-2.5 left-0 w-[3px] rounded-r-full bg-[#dcb45c]"
+          />
+        )}
         <span
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition ${
-            active ? "bg-white/10 text-[#dcb45c]" : "bg-[#c49a3c]/10 text-[#a8852f] group-hover:bg-[#c49a3c]/15"
+            active
+              ? "bg-white/10 text-[#dcb45c]"
+              : "bg-[#c49a3c]/10 text-[#a8852f] group-hover:bg-[#c49a3c]/15"
           }`}
         >
           <tab.icon className="h-4 w-4" aria-hidden />
         </span>
         <span className="min-w-0">
           <span className="block whitespace-nowrap">{tab.label}</span>
-          <span className={`hidden truncate text-xs font-normal lg:block ${active ? "text-white/60" : "text-slate-400"}`}>{tab.description}</span>
+          <span
+            className={`hidden truncate text-xs font-normal lg:block ${active ? "text-white/60" : "text-slate-400"}`}
+          >
+            {tab.description}
+          </span>
         </span>
       </button>
     );
@@ -297,22 +353,49 @@ const ProfilePage = ({ profile, isOAuthUser, adminData }: ProfilePageProps) => {
   return (
     <div className={`${serif.variable} min-h-screen bg-white`}>
       {/* ── Header band (light, so the fixed header's dark text stays readable) ── */}
-      <section className="relative overflow-hidden pt-32 pb-12 sm:pt-36 lg:pt-40" style={{ background: "#faf8f3" }}>
-        <svg viewBox="0 0 400 160" className="pointer-events-none absolute right-0 bottom-0 w-[26rem] max-w-[75%]" aria-hidden>
-          <path d="M0 160 C120 142 235 92 400 22 L400 160 Z" fill="#f4ecdb" opacity="0.7" />
-          <path d="M40 160 C175 132 280 82 400 34" fill="none" stroke="#c49a3c" strokeWidth="2.5" />
-          <path d="M120 160 C225 138 305 104 400 66" fill="none" stroke="#c49a3c" strokeWidth="1.25" opacity="0.8" />
+      <section
+        className="relative overflow-hidden pt-32 pb-12 sm:pt-36 lg:pt-40"
+        style={{ background: "#faf8f3" }}
+      >
+        <svg
+          viewBox="0 0 400 160"
+          className="pointer-events-none absolute right-0 bottom-0 w-[26rem] max-w-[75%]"
+          aria-hidden
+        >
+          <path
+            d="M0 160 C120 142 235 92 400 22 L400 160 Z"
+            fill="#f4ecdb"
+            opacity="0.7"
+          />
+          <path
+            d="M40 160 C175 132 280 82 400 34"
+            fill="none"
+            stroke="#c49a3c"
+            strokeWidth="2.5"
+          />
+          <path
+            d="M120 160 C225 138 305 104 400 66"
+            fill="none"
+            stroke="#c49a3c"
+            strokeWidth="1.25"
+            opacity="0.8"
+          />
         </svg>
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <p className="flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.3em] text-[#c49a3c]">
             {isAdmin ? "Account & admin" : "Account settings"}
             <span className="h-px w-12 bg-[#c49a3c]" aria-hidden />
           </p>
-          <h1 className="mt-4 text-5xl leading-[1.05] font-semibold text-[#14245a] sm:text-6xl" style={{ fontFamily: "var(--font-profile-serif)" }}>
+          <h1
+            className="mt-4 text-5xl leading-[1.05] font-semibold text-[#14245a] sm:text-6xl"
+            style={{ fontFamily: "var(--font-profile-serif)" }}
+          >
             Your <em className="font-medium text-[#c49a3c]">profile.</em>
           </h1>
           <p className="mt-3 max-w-xl text-slate-500">
-            {isAdmin ? "Manage your details, and run events, content and settings for the site." : "Keep your details up to date — they're used for your tickets and receipts."}
+            {isAdmin
+              ? "Manage your details, and run events, content and settings for the site."
+              : "Keep your details up to date — they're used for your tickets and receipts."}
           </p>
         </div>
       </section>
@@ -323,17 +406,26 @@ const ProfilePage = ({ profile, isOAuthUser, adminData }: ProfilePageProps) => {
           <aside className="w-full shrink-0 lg:w-72">
             <ProfileSidebar profile={profile} />
 
-            <nav aria-label="Profile sections" className="mt-6 rounded-2xl bg-[#faf8f3] p-2 ring-1 ring-[#c49a3c]/15">
-              <p className="px-3 pt-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">Account</p>
+            <nav
+              aria-label="Profile sections"
+              className="mt-6 rounded-2xl bg-[#faf8f3] p-2 ring-1 ring-[#c49a3c]/15"
+            >
+              <p className="px-3 pt-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+                Account
+              </p>
               {/* Phones: tabs scroll sideways; large screens: a vertical list */}
-              <div className="flex gap-1 overflow-x-auto [scrollbar-width:none] lg:flex-col lg:overflow-visible [&::-webkit-scrollbar]:hidden">{accountTabs.map(renderTab)}</div>
+              <div className="flex gap-1 overflow-x-auto [scrollbar-width:none] lg:flex-col lg:overflow-visible [&::-webkit-scrollbar]:hidden">
+                {accountTabs.map(renderTab)}
+              </div>
 
               {adminTabs.length > 0 && (
                 <>
                   <p className="mt-2 flex items-center gap-2 border-t border-[#c49a3c]/15 px-3 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#a8852f]">
                     <ShieldCheck className="h-3 w-3" aria-hidden /> Admin
                   </p>
-                  <div className="flex gap-1 overflow-x-auto [scrollbar-width:none] lg:flex-col lg:overflow-visible [&::-webkit-scrollbar]:hidden">{adminTabs.map(renderTab)}</div>
+                  <div className="flex gap-1 overflow-x-auto [scrollbar-width:none] lg:flex-col lg:overflow-visible [&::-webkit-scrollbar]:hidden">
+                    {adminTabs.map(renderTab)}
+                  </div>
                 </>
               )}
             </nav>
