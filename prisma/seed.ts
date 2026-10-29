@@ -24,6 +24,7 @@ import { prisma } from "../lib/prisma";
 import type { Prisma } from "../lib/generated/prisma/client";
 import { getPackageBibPrefix } from "../lib/bib-package-prefix";
 import { DEFAULT_FAQS } from "../lib/faq-defaults";
+import { EVENT_DESCRIPTIONS } from "./seed-descriptions";
 import {
   AGE_CATEGORIES,
   BLOOD_GROUPS,
@@ -195,8 +196,7 @@ type EventSeed = {
   organizer: number; // index into ORGANIZERS
   status: "ACTIVE" | "COMPLETED";
   photo: number; // index into PHOTOS
-  shortDesc: string;
-  description: string;
+  shortDesc: string; // one line for cards; the long text is in seed-descriptions.ts
   packages: PackageSeed[];
   orders: number; // how many orders to generate
 };
@@ -228,8 +228,6 @@ const EVENTS: EventSeed[] = [
     status: "ACTIVE",
     photo: 15,
     shortDesc: "A one-day summit for business leaders, entrepreneurs and investors from the Narsingdi region.",
-    description:
-      "The Narsingdi Business Summit brings together business leaders, entrepreneurs, manufacturers and investors for a day of keynotes, panel discussions and B2B networking. Hear from industry leaders on trade, textiles, finance and technology, meet potential partners in pre-booked meetings, and close the day at the networking dinner. Lunch, refreshments and a delegate kit are included with every pass.",
     // `distance` is shown as the package tag — here it's the pass type.
     packages: [
       { name: "General Pass", distance: "Day pass", price: 1500, availableSlots: 400 },
@@ -249,8 +247,6 @@ const EVENTS: EventSeed[] = [
     status: "ACTIVE",
     photo: 3,
     shortDesc: "A trail race along the edge of the world's largest mangrove forest.",
-    description:
-      "Run the trails at the edge of the Sundarbans. Mud, river crossings and village roads make this the toughest race on the calendar. Limited slots, with boat transfer from Mongla included.",
     packages: [
       { name: "Trail Explorer", distance: "10K", price: 1500, availableSlots: 150 },
       { name: "Trail Warrior", distance: "21K", price: 2200, availableSlots: 100 },
@@ -270,8 +266,6 @@ const EVENTS: EventSeed[] = [
     status: "ACTIVE",
     photo: 5,
     shortDesc: "Sea breeze, sunrise and a flat, fast course along Patenga Beach.",
-    description:
-      "Run along the Chattogram coastline as the sun rises over the Bay of Bengal. A flat, fast course on the Patenga marine drive, good for beginners and personal bests alike. Post-race beach breakfast included.",
     packages: [
       { name: "Beach Run", distance: "5K", price: 700, availableSlots: 400 },
       { name: "Coastal 10K", distance: "10K", price: 1100, availableSlots: 250 },
@@ -290,8 +284,6 @@ const EVENTS: EventSeed[] = [
     status: "ACTIVE",
     photo: 7,
     shortDesc: "Celebrate 16 December by running your distance, wherever you are.",
-    description:
-      "Celebrate Victory Day with a virtual run. Run anywhere on 16 December, track it with any GPS app and submit your result. Finisher medals and t-shirts are delivered to your address.",
     packages: [
       { name: "Victory 5K", distance: "5K", price: 500, availableSlots: 1000 },
       { name: "Liberation 10K", distance: "10K", price: 700, availableSlots: 500 },
@@ -310,8 +302,6 @@ const EVENTS: EventSeed[] = [
     status: "COMPLETED",
     photo: 9,
     shortDesc: "A run past Ahsan Manzil, Lalbagh Fort and the Star Mosque.",
-    description:
-      "Discover the history of Old Dhaka on foot. The course passes Ahsan Manzil, Lalbagh Fort and the Star Mosque, with an early start to beat the traffic and the heat.",
     packages: [
       { name: "Heritage Walk", distance: "5K", price: 700, availableSlots: 300 },
       { name: "Lalbagh 10K", distance: "10K", price: 1000, availableSlots: 200 },
@@ -332,8 +322,6 @@ const EVENTS: EventSeed[] = [
     status: "ACTIVE",
     photo: 16,
     shortDesc: "Three halls of manufacturers, retailers and buyers under one roof.",
-    description:
-      "The Bangladesh Trade Expo brings together manufacturers, retailers, exporters and buyers across textiles, food, packaging and technology. Walk the halls, meet suppliers face to face and join the buyer-seller meetings on both days.",
     packages: [
       { name: "Visitor Pass", distance: "1 day", price: 300, availableSlots: 2000 },
       { name: "Trade Buyer Pass", distance: "2 days + B2B meetings", price: 1500, availableSlots: 300 },
@@ -352,8 +340,6 @@ const EVENTS: EventSeed[] = [
     status: "ACTIVE",
     photo: 17,
     shortDesc: "An evening of dinner, music and awards for partners and friends.",
-    description:
-      "Celebrate the year with partners and friends at the Venus Corporate Gala Night — a three-course dinner, live music and the annual partner awards. Black-tie optional.",
     packages: [
       { name: "Single Seat", distance: "1 guest", price: 5000, availableSlots: 200 },
       { name: "Couple", distance: "2 guests", price: 9000, availableSlots: 80 },
@@ -372,8 +358,6 @@ const EVENTS: EventSeed[] = [
     status: "ACTIVE",
     photo: 18,
     shortDesc: "A live online workshop on planning and running memorable events.",
-    description:
-      "Learn how our team plans events end to end — budgets, vendors, timelines and the event day itself. A live, interactive online session with Q&A and a downloadable planning toolkit.",
     packages: [
       { name: "Standard", distance: "Live session", price: 800, availableSlots: 150 },
       { name: "Plus", distance: "Session + toolkit", price: 1200, availableSlots: 100 },
@@ -463,7 +447,7 @@ async function seedContent() {
         organizerId: organizers[e.organizer].id,
         status: e.status,
         shortDesc: e.shortDesc,
-        description: e.description,
+        description: EVENT_DESCRIPTIONS[e.slug] ?? `<p>${e.shortDesc}</p>`,
         bannerImage: img(PHOTOS[e.photo], 1600),
         thumbImage: img(PHOTOS[e.photo], 600),
         minPackagePrice: Math.min(...e.packages.map((p) => p.price)),
