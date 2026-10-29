@@ -307,9 +307,13 @@ model TeamMember {
   @@map("team_members")
 }
 
+// SUPER_ADMIN: an admin who can't be removed from the website (not by other
+// admins, not by deleting their own account). Set or unset only in the
+// database. Everywhere else they count as an admin (lib/auth/roles.ts).
 enum Role {
   USER
   ADMIN
+  SUPER_ADMIN
   ORGANIZER
 }
 

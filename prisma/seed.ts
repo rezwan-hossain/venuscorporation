@@ -519,7 +519,7 @@ async function seedUsers() {
       email: ADMIN_EMAIL,
       firstName: "Site",
       lastName: "Admin",
-      role: "ADMIN",
+      role: "SUPER_ADMIN", // can't be removed from the website
     },
   });
   await prisma.user.create({

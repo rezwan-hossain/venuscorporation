@@ -6,6 +6,7 @@
 // not in the UI:
 //   - only registered, active accounts can be made admin (guests can't log in)
 //   - an admin can't change their own role (no accidental self-lockout)
+//   - a SUPER_ADMIN can't be removed here at all (only in the database)
 //   - the last admin can't be removed
 //   - granting needs the user's email typed back as confirmation
 //   - every change is written to the audit log
@@ -13,6 +14,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { audit } from "@/lib/audit";
+import { ADMIN_ROLES, isAdminRole, isSuperAdmin } from "@/lib/auth/roles";
 
 export type AdminUser = {
   id: string;
@@ -21,10 +23,19 @@ export type AdminUser = {
   phone: string | null;
   createdAt: string;
   isYou: boolean;
+  /** Protected: can't be removed from the website. */
+  isSuperAdmin: boolean;
 };
 
-const displayName = (u: { firstName: string | null; lastName: string | null; userName: string | null; email: string }) =>
-  [u.firstName, u.lastName].filter(Boolean).join(" ") || u.userName || u.email.split("@")[0];
+const displayName = (u: {
+  firstName: string | null;
+  lastName: string | null;
+  userName: string | null;
+  email: string;
+}) =>
+  [u.firstName, u.lastName].filter(Boolean).join(" ") ||
+  u.userName ||
+  u.email.split("@")[0];
 
 const USER_SELECT = {
   id: true,
@@ -34,16 +45,21 @@ const USER_SELECT = {
   userName: true,
   phone: true,
   createdAt: true,
+  role: true,
 } as const;
 
-export async function getAdminUsers(): Promise<{ admins: AdminUser[]; error: string | null }> {
+export async function getAdminUsers(): Promise<{
+  admins: AdminUser[];
+  error: string | null;
+}> {
   const { error, dbUser } = await requireAdmin();
   if (error || !dbUser) return { admins: [], error: error ?? "Unauthorized" };
   try {
     const rows = await prisma.user.findMany({
-      where: { role: "ADMIN" },
+      where: { role: { in: [...ADMIN_ROLES] } },
       select: USER_SELECT,
-      orderBy: { createdAt: "asc" },
+      // Super admins first, then the others by when they joined
+      orderBy: [{ role: "desc" }, { createdAt: "asc" }],
     });
     return {
       admins: rows.map((u) => ({
@@ -53,6 +69,7 @@ export async function getAdminUsers(): Promise<{ admins: AdminUser[]; error: str
         phone: u.phone,
         createdAt: u.createdAt.toISOString(),
         isYou: u.id === dbUser.id,
+        isSuperAdmin: isSuperAdmin(u.role),
       })),
       error: null,
     };
@@ -65,7 +82,10 @@ export async function getAdminUsers(): Promise<{ admins: AdminUser[]; error: str
 /** Registered, active, non-admin accounts matching name / email / phone. */
 export async function searchUsersToPromote(
   term: string,
-): Promise<{ users: Omit<AdminUser, "isYou">[]; error: string | null }> {
+): Promise<{
+  users: Omit<AdminUser, "isYou" | "isSuperAdmin">[];
+  error: string | null;
+}> {
   const { error } = await requireAdmin();
   if (error) return { users: [], error };
   const q = term.trim();
@@ -73,7 +93,7 @@ export async function searchUsersToPromote(
   try {
     const rows = await prisma.user.findMany({
       where: {
-        role: { not: "ADMIN" },
+        role: { notIn: [...ADMIN_ROLES] },
         isGuest: false,
         isActive: true,
         isArchived: false,
@@ -82,7 +102,9 @@ export async function searchUsersToPromote(
           { firstName: { contains: q, mode: "insensitive" } },
           { lastName: { contains: q, mode: "insensitive" } },
           { userName: { contains: q, mode: "insensitive" } },
-          ...(q.replace(/\D/g, "").length >= 4 ? [{ phone: { contains: q.replace(/\D/g, "") } }] : []),
+          ...(q.replace(/\D/g, "").length >= 4
+            ? [{ phone: { contains: q.replace(/\D/g, "") } }]
+            : []),
         ],
       },
       select: USER_SELECT,
@@ -110,29 +132,49 @@ export async function grantAdmin(
   confirmEmail: string,
 ): Promise<{ success: boolean; error: string | null }> {
   const { error, dbUser } = await requireAdmin();
-  if (error || !dbUser) return { success: false, error: error ?? "Unauthorized" };
-  if (userId === dbUser.id) return { success: false, error: "You're already an admin." };
+  if (error || !dbUser)
+    return { success: false, error: error ?? "Unauthorized" };
+  if (userId === dbUser.id)
+    return { success: false, error: "You're already an admin." };
 
   try {
     const target = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true, role: true, isGuest: true, isActive: true, isArchived: true },
+      select: {
+        email: true,
+        role: true,
+        isGuest: true,
+        isActive: true,
+        isArchived: true,
+      },
     });
     if (!target) return { success: false, error: "User not found." };
-    if (target.isGuest) return { success: false, error: "Guest checkouts have no login, so they can't be admins." };
+    if (target.isGuest)
+      return {
+        success: false,
+        error: "Guest checkouts have no login, so they can't be admins.",
+      };
     if (!target.isActive || target.isArchived) {
       return { success: false, error: "This account is disabled." };
     }
-    if (target.role === "ADMIN") return { success: false, error: "This user is already an admin." };
+    if (isAdminRole(target.role))
+      return { success: false, error: "This user is already an admin." };
     if (confirmEmail.trim().toLowerCase() !== target.email.toLowerCase()) {
-      return { success: false, error: "Type the user's email exactly to confirm." };
+      return {
+        success: false,
+        error: "Type the user's email exactly to confirm.",
+      };
     }
 
     const changed = await prisma.user.updateMany({
       where: { id: userId, role: target.role, isGuest: false },
       data: { role: "ADMIN" },
     });
-    if (changed.count === 0) return { success: false, error: "This user just changed — refresh and try again." };
+    if (changed.count === 0)
+      return {
+        success: false,
+        error: "This user just changed — refresh and try again.",
+      };
 
     await audit({
       action: "admin.granted",
@@ -148,11 +190,17 @@ export async function grantAdmin(
   }
 }
 
-export async function revokeAdmin(userId: string): Promise<{ success: boolean; error: string | null }> {
+export async function revokeAdmin(
+  userId: string,
+): Promise<{ success: boolean; error: string | null }> {
   const { error, dbUser } = await requireAdmin();
-  if (error || !dbUser) return { success: false, error: error ?? "Unauthorized" };
+  if (error || !dbUser)
+    return { success: false, error: error ?? "Unauthorized" };
   if (userId === dbUser.id) {
-    return { success: false, error: "You can't remove your own admin access. Ask another admin." };
+    return {
+      success: false,
+      error: "You can't remove your own admin access. Ask another admin.",
+    };
   }
 
   try {
@@ -161,16 +209,30 @@ export async function revokeAdmin(userId: string): Promise<{ success: boolean; e
     type Outcome = { ok: false; error: string } | { ok: true; email: string };
     const result: Outcome = await prisma.$transaction(
       async (tx): Promise<Outcome> => {
-        const target = await tx.user.findUnique({ where: { id: userId }, select: { email: true, role: true } });
+        const target = await tx.user.findUnique({
+          where: { id: userId },
+          select: { email: true, role: true },
+        });
         if (!target) return { ok: false, error: "User not found." };
-        if (target.role !== "ADMIN") return { ok: false, error: "This user isn't an admin." };
-        const admins = await tx.user.count({ where: { role: "ADMIN" } });
-        if (admins <= 1) return { ok: false, error: "You can't remove the last admin." };
+        if (isSuperAdmin(target.role)) {
+          return { ok: false, error: "A super admin can't be removed." };
+        }
+        if (target.role !== "ADMIN")
+          return { ok: false, error: "This user isn't an admin." };
+        const admins = await tx.user.count({
+          where: { role: { in: [...ADMIN_ROLES] } },
+        });
+        if (admins <= 1)
+          return { ok: false, error: "You can't remove the last admin." };
         const changed = await tx.user.updateMany({
           where: { id: userId, role: "ADMIN" },
           data: { role: "USER" },
         });
-        if (changed.count === 0) return { ok: false, error: "This user just changed — refresh and try again." };
+        if (changed.count === 0)
+          return {
+            ok: false,
+            error: "This user just changed — refresh and try again.",
+          };
         return { ok: true, email: target.email };
       },
       { isolationLevel: "Serializable" },
@@ -188,7 +250,11 @@ export async function revokeAdmin(userId: string): Promise<{ success: boolean; e
   } catch (err) {
     // P2034 = serialization conflict: another admin change won the race.
     if ((err as { code?: string })?.code === "P2034") {
-      return { success: false, error: "Another admin change happened at the same time — refresh and try again." };
+      return {
+        success: false,
+        error:
+          "Another admin change happened at the same time — refresh and try again.",
+      };
     }
     console.error("revokeAdmin error:", err);
     return { success: false, error: "Failed to remove admin access" };

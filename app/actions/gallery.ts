@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { cacheLife, cacheTag, revalidatePath, updateTag } from "next/cache";
 import { audit, diff } from "@/lib/audit";
+import { isAdminRole } from "@/lib/auth/roles";
 import type {
   CreateGalleryImageInput,
   UpdateGalleryImageInput,
@@ -32,7 +33,7 @@ async function requireAdmin() {
     throw new Error("User not found");
   }
 
-  if (dbUser.role !== "ADMIN") {
+  if (!isAdminRole(dbUser.role)) {
     throw new Error("Forbidden: Admin only");
   }
 
@@ -40,8 +41,7 @@ async function requireAdmin() {
 }
 
 type ActionResult<T = unknown> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+  { success: true; data: T } | { success: false; error: string };
 
 // ─── Get All Gallery Images ─────────────────────────
 // Cached for days: the gallery rarely changes. Adding, editing or deleting a
@@ -114,7 +114,10 @@ export async function createGalleryImage(
     console.error("createGalleryImage error:", err);
     return {
       success: false,
-      error: err instanceof Error && err.message ? err.message : "Failed to create image",
+      error:
+        err instanceof Error && err.message
+          ? err.message
+          : "Failed to create image",
     };
   }
 }
@@ -170,7 +173,10 @@ export async function updateGalleryImage(
     console.error("updateGalleryImage error:", err);
     return {
       success: false,
-      error: err instanceof Error && err.message ? err.message : "Failed to update image",
+      error:
+        err instanceof Error && err.message
+          ? err.message
+          : "Failed to update image",
     };
   }
 }
@@ -215,7 +221,10 @@ export async function deleteGalleryImage(
     console.error("deleteGalleryImage error:", err);
     return {
       success: false,
-      error: err instanceof Error && err.message ? err.message : "Failed to delete image",
+      error:
+        err instanceof Error && err.message
+          ? err.message
+          : "Failed to delete image",
     };
   }
 }

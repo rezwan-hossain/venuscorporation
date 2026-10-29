@@ -12,6 +12,7 @@ import type {
   CouponEvent,
 } from "../components/admin/AdminCouponsPanel";
 import type { UserProfile, AdminEvent, AdminOrganizer } from "@/types/profile";
+import { isAdminRole } from "@/lib/auth/roles";
 import type { HeroSectionData } from "@/types/homepage";
 import type { GalleryImage } from "@/types/gallery";
 import type { TeamMember } from "@/types/team";
@@ -211,7 +212,7 @@ function AdminTabContent({
 
 const ProfilePage = ({ profile, isOAuthUser, adminData }: ProfilePageProps) => {
   const [activeTab, setActiveTab] = useState<Tab>("profile");
-  const isAdmin = profile.role === "ADMIN";
+  const isAdmin = isAdminRole(profile.role);
 
   const tabs = [
     {

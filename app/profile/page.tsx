@@ -1,5 +1,8 @@
 // app/profile/page.tsx
-import ProfilePage, { type AdminData } from "@/module/profile/pages/ProfilePage";
+import { isAdminRole } from "@/lib/auth/roles";
+import ProfilePage, {
+  type AdminData,
+} from "@/module/profile/pages/ProfilePage";
 import { getUserProfile } from "@/app/actions/profile";
 import { getAdminEvents, getOrganizers } from "@/app/actions/admin";
 import { getAllHeroes } from "@/app/actions/homepage";
@@ -72,7 +75,7 @@ export default async function Page() {
   }
 
   const isOAuthUser = user.app_metadata?.provider === "google";
-  const isAdmin = data.profile.role === "ADMIN";
+  const isAdmin = isAdminRole(data.profile.role);
 
   // Not awaited: the page renders as soon as the profile is ready, and the
   // admin tabs show a skeleton until this promise resolves (streamed in).

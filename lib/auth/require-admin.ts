@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { createClient } from "../supabase/server";
 import { prisma } from "@/lib/prisma";
+import { isAdminRole } from "@/lib/auth/roles";
 
 // Both helpers are wrapped in React `cache()`, which memoizes per request:
 // a page that calls several admin actions (e.g. /profile loads six) hits
@@ -26,7 +27,7 @@ export const requireAdmin = cache(async () => {
   });
 
   if (!dbUser) return { error: "User not found", user: null, dbUser: null };
-  if (dbUser.role !== "ADMIN")
+  if (!isAdminRole(dbUser.role))
     return { error: "Unauthorized — Admin only", user: null, dbUser: null };
 
   return { error: null, user, dbUser };

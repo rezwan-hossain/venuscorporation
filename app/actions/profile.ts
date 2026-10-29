@@ -1,6 +1,7 @@
 // app/actions/profile.ts
 "use server";
 
+import { isSuperAdmin } from "@/lib/auth/roles";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { getAuthUser } from "@/lib/auth/require-admin";
@@ -173,6 +174,15 @@ export async function deleteUserAccount() {
 
     if (!dbUser) {
       return { success: false, error: "User not found" };
+    }
+
+    // A super admin's account can't be deleted from the website
+    if (isSuperAdmin(dbUser.role)) {
+      return {
+        success: false,
+        error:
+          "Super admin accounts can't be deleted. Ask the site owner to change your role first.",
+      };
     }
 
     // Soft delete — mark as archived
