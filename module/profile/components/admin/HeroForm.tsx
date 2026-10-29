@@ -227,7 +227,7 @@ export function HeroForm({ hero, onSuccess, onCancel }: Props) {
       {/* ─── 2. Background ─── */}
       <section className={card}>
         <StepTitle number={2} title="Background" />
-        <div className="grid gap-5 sm:grid-cols-[1fr_9rem]">
+        <div className="grid gap-5 sm:grid-cols-[1fr_11rem]">
           <div>
             <p className={labelClass}>Photo</p>
             <ImageUpload
@@ -252,7 +252,7 @@ export function HeroForm({ hero, onSuccess, onCancel }: Props) {
               onChange={(url) => update("mobileImage", url)}
               bucket="event-images"
               folder="hero"
-              label="Mobile"
+              label="Upload phone photo"
               aspectRatio="aspect-[9/16]"
               maxSizeMB={3}
             />
