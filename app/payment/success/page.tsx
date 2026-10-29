@@ -1,487 +1,397 @@
 // app/payment/success/page.tsx
+//
+// "You're in!" — shown after a paid checkout. Looks like a ticket:
+//   navy top (event)  →  details  →  dashed tear line  →  total paid.
+//
+// Only shown for orders that are really paid + confirmed. Anything else is
+// sent to the right page (processing / failed) instead of a false "success".
+//
+// Works for every event category: marathons show T-shirt / blood group / BIB,
+// other events show their checkout answers (company, dietary needs …).
+
 import { Suspense } from "react";
-import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
-  CheckCircle2,
-  Hash,
+  ArrowRight,
   Calendar,
+  Check,
+  CreditCard,
+  Mail,
   MapPin,
   Package,
-  User,
-  CreditCard,
   Receipt,
-  ArrowRight,
-  Ticket,
-  Shield,
-  Shirt,
-  Heart,
+  User,
 } from "lucide-react";
+import { prisma } from "@/lib/prisma";
+import { answersForEmail } from "@/lib/email-template";
+import { getEventCategory, usesRaceFields } from "@/lib/event-checkout-form";
 import { PurchaseTracker } from "@/components/tracking/PurchaseTracker";
 import ShareButtons from "@/module/event/components/ShareButtons";
 
 type SearchParams = Promise<{ orderId?: string }>;
 
-// ✅ Skeleton shown instantly while data streams in
-function PaymentSuccessSkeleton() {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50/60 via-white to-gray-50 flex items-start justify-center px-4 py-12 sm:py-20">
-      <div className="mt-20 max-w-xl w-full">
-        {/* Header skeleton */}
-        <div className="text-center mb-8">
-          <div className="w-24 h-24 bg-emerald-100 rounded-full mx-auto mb-6 animate-pulse" />
-          <div className="h-9 bg-gray-200 rounded-lg w-56 mx-auto mb-2 animate-pulse" />
-          <div className="h-4 bg-gray-100 rounded w-72 mx-auto animate-pulse" />
-        </div>
+const taka = (n: number) => `৳${Math.round(n).toLocaleString("en-IN")}`;
 
-        {/* Card skeleton */}
-        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/60 border border-gray-100 overflow-hidden">
-          {/* BIB section */}
-          <div className="bg-emerald-500/20 px-6 py-7 animate-pulse">
-            <div className="flex items-center justify-between">
-              <div className="h-10 bg-emerald-200 rounded-xl w-36" />
-              <div className="h-14 bg-emerald-200 rounded-2xl w-32" />
-            </div>
-          </div>
+// ─── Page ───────────────────────────────────────────────
 
-          {/* Event bar */}
-          <div className="px-6 py-4 bg-gray-50/80 border-b border-gray-100">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-gray-200 rounded-xl animate-pulse" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-48 animate-pulse" />
-                <div className="h-3 bg-gray-100 rounded w-64 animate-pulse" />
-              </div>
-            </div>
-          </div>
-
-          {/* Details */}
-          <div className="px-6 py-5 space-y-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="flex items-start gap-2.5">
-                <div className="w-8 h-8 bg-gray-100 rounded-lg animate-pulse" />
-                <div className="space-y-1.5 flex-1">
-                  <div className="h-3 bg-gray-100 rounded w-16 animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-32 animate-pulse" />
-                </div>
-              </div>
-            ))}
-
-            {/* Total */}
-            <div className="flex items-center justify-between bg-gray-50 -mx-6 px-6 py-4 mt-4">
-              <div className="h-5 bg-gray-200 rounded w-24 animate-pulse" />
-              <div className="h-8 bg-emerald-100 rounded w-20 animate-pulse" />
-            </div>
-          </div>
-        </div>
-
-        {/* Buttons skeleton */}
-        <div className="mt-6 flex flex-col sm:flex-row gap-3">
-          <div className="flex-1 h-12 bg-gray-200 rounded-xl animate-pulse" />
-          <div className="flex-1 h-12 bg-gray-100 rounded-xl animate-pulse" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ✅ All dynamic data access isolated here
-async function PaymentSuccessContent({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
-  const params = await searchParams;
-  const orderId = params.orderId;
-
-  if (!orderId) redirect("/events");
-
-  // const supabase = await createClient();
-  // const {
-  //   data: { user },
-  // } = await supabase.auth.getUser();
-
-  // if (!user) redirect("/login");
-
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: {
-      event: true,
-      package: true,
-      registration: true,
-      payment: true,
-    },
-  });
-
-  if (!order) redirect("/events");
-
-  const eventDate = new Date(order.event.date).toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const orderDate = new Date(order.createdAt).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  //for tracking purpose
-  const purchaseData = {
-    orderId: order.id,
-    value: order.payment?.amount ?? Number(order.package.price),
-    product: {
-      id: String(order.package.id),
-      name: order.event.name,
-      price: order.payment?.amount ?? Number(order.package.price),
-      packageName: order.package.name,
-      distance: order.package.distance,
-    },
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50/60 via-white to-gray-50 flex items-start justify-center px-4 py-12 sm:py-20">
-      {/* // ✅ Fires Purchase tracker on page load */}
-      <PurchaseTracker data={purchaseData} />
-      <div className="mt-20 max-w-xl w-full">
-        {/* ── Animated Success Header ── */}
-        <div className="text-center mb-8">
-          <div className="relative w-24 h-24 mx-auto mb-6">
-            <div className="absolute inset-0 bg-emerald-200/40 rounded-full animate-ping" />
-            <div className="absolute inset-1 bg-emerald-100/60 rounded-full animate-pulse" />
-            <div className="relative w-24 h-24 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center shadow-lg shadow-emerald-200">
-              <CheckCircle2 className="w-12 h-12 text-white" strokeWidth={2} />
-            </div>
-          </div>
-
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
-            You&apos;re All Set!
-          </h1>
-          <p className="text-gray-500 mt-2 text-base">
-            Payment confirmed &amp; registration complete
-          </p>
-        </div>
-
-        {/* ── Main Card ── */}
-        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/60 border border-gray-100 overflow-hidden">
-          {/* BIB Number */}
-          {order.registration?.bibNumber && (
-            <div className="relative bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-7 text-white overflow-hidden">
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-2 left-4 text-[120px] font-black leading-none select-none">
-                  #
-                </div>
-              </div>
-
-              <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
-                <div className="flex items-center gap-2.5 sm:gap-3">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center">
-                    <Hash className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-emerald-100 text-[10px] sm:text-xs font-medium uppercase tracking-wider">
-                      Your BIB Number
-                    </p>
-                  </div>
-                </div>
-                <div className="w-full sm:w-auto bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl px-4 sm:px-6 py-2.5 sm:py-3 border border-white/30 text-center sm:text-left">
-                  <span className="text-3xl sm:text-4xl md:text-5xl font-black font-mono tracking-widest">
-                    {order.registration.bibNumber}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Event Info Bar */}
-          <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-gray-50/80 border-b border-gray-100">
-            <div className="flex items-start gap-2.5 sm:gap-3">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-indigo-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Ticket className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h2 className="font-bold text-gray-900 text-sm sm:text-base leading-tight line-clamp-2 sm:truncate">
-                  {order.event.name}
-                </h2>
-                <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-x-4 sm:gap-y-1 mt-2 sm:mt-2.5">
-                  <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-gray-500">
-                    <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-                    <span className="truncate">{eventDate}</span>
-                  </span>
-                  <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-gray-500">
-                    <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-                    <span className="line-clamp-1">{order.event.address}</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Details Grid */}
-          <div className="px-6 py-5 space-y-0 divide-y divide-gray-100">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4">
-              <DetailItem
-                icon={<User className="w-4 h-4" />}
-                label="Runner"
-                value={order.registration?.fullName || "—"}
-              />
-              <DetailItem
-                icon={<Package className="w-4 h-4" />}
-                label="Package"
-                value={`${order.package.name}`}
-                sub={order.package.distance}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
-              <DetailItem
-                icon={<Receipt className="w-4 h-4" />}
-                label="Order ID"
-                value={order.id.slice(0, 8).toUpperCase()}
-                mono
-              />
-              {order.payment?.transactionId && (
-                <DetailItem
-                  icon={<Shield className="w-4 h-4" />}
-                  label="Transaction ID"
-                  value={
-                    order.payment.transactionId.length > 16
-                      ? `${order.payment.transactionId.slice(0, 16)}...`
-                      : order.payment.transactionId
-                  }
-                  mono
-                />
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
-              {order.payment?.paymentMethod && (
-                <DetailItem
-                  icon={<CreditCard className="w-4 h-4" />}
-                  label="Payment Method"
-                  value={order.payment.paymentMethod}
-                  capitalize
-                />
-              )}
-              <DetailItem
-                icon={<Calendar className="w-4 h-4" />}
-                label="Date"
-                value={orderDate}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
-              {order.registration?.tshirtSize && (
-                <DetailItem
-                  icon={<Shirt className="w-4 h-4" />}
-                  label="T-Shirt Size"
-                  value={order.registration?.tshirtSize || "—"}
-                  capitalize
-                />
-              )}
-              <DetailItem
-                icon={<Heart className="w-4 h-4" />}
-                label="Blood Group"
-                value={order.registration?.bloodGroup || "—"}
-                capitalize
-              />
-            </div>
-
-            <div className="pt-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Status</span>
-                <div className="flex items-center gap-2">
-                  <StatusBadge
-                    label={order.status}
-                    variant={
-                      order.status === "CONFIRMED" ? "success" : "neutral"
-                    }
-                  />
-                  <StatusBadge
-                    label={order.payment?.status || "—"}
-                    variant={
-                      order.payment?.status === "PAID" ? "success" : "neutral"
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between bg-gray-50 -mx-6 px-6 py-4 -mb-5 rounded-b-2xl">
-                <span className="text-base font-semibold text-gray-900">
-                  Total Paid
-                </span>
-                <span className="text-2xl font-bold text-emerald-600">
-                  ৳
-                  {(
-                    order.payment?.amount ?? Number(order.package.price)
-                  ).toLocaleString()}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Confirmation Note ── */}
-        <div className="mt-5 flex items-start gap-3 bg-blue-50/80 border border-blue-100 rounded-xl px-5 py-4">
-          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-            <svg
-              className="w-4 h-4 text-blue-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
-              />
-            </svg>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-blue-900">
-              Confirmation sent to your email
-            </p>
-            <p className="text-xs text-blue-600 mt-0.5">
-              A copy of your registration details has been sent to your
-              registered email address.
-            </p>
-            <p className="text-xs text-red-600 mt-0.5">
-              Check spam folder some time emails goes to the spam folder
-            </p>
-          </div>
-        </div>
-
-        {/* ── Bring a friend: tracked as "runners after paying" ── */}
-        {order.status === "CONFIRMED" &&
-          order.event.status !== "COMPLETED" &&
-          order.event.status !== "CANCELLED" && (
-            <ShareButtons
-              slug={order.event.slug}
-              eventName={order.event.name}
-              place="paid"
-              siteUrl={process.env.NEXT_PUBLIC_SITE_URL}
-              variant="compact"
-              title="Bring your running buddies 🏃"
-              subtitle="Tell your friends you're in, and run together."
-              className="mt-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
-            />
-          )}
-
-        {/* ── Action Buttons ── */}
-        <div className="mt-6 flex flex-col sm:flex-row gap-3">
-          <Link
-            href="/login"
-            className="flex-1 group relative inline-flex items-center justify-center gap-2 py-3.5 bg-gray-900 text-white rounded-xl font-semibold text-sm hover:bg-gray-800 transition-all duration-200 shadow-lg shadow-gray-900/10"
-          >
-            Go to Dashboard
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-          </Link>
-          <Link
-            href="/events"
-            className="flex-1 inline-flex items-center justify-center gap-2 py-3.5 bg-white text-gray-700 rounded-xl font-semibold text-sm border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
-          >
-            Browse Events
-          </Link>
-        </div>
-
-        {/* ── Footer Note ── */}
-        <p className="text-center text-xs text-gray-400 mt-8">
-          Having issues?{" "}
-          <Link
-            href="/contact"
-            className="text-gray-500 underline underline-offset-2 hover:text-gray-700"
-          >
-            Contact support
-          </Link>
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// ✅ Page component — sync wrapper with Suspense boundary
 export default function PaymentSuccessPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
   return (
-    <Suspense fallback={<PaymentSuccessSkeleton />}>
-      <PaymentSuccessContent searchParams={searchParams} />
+    <Suspense fallback={<SuccessSkeleton />}>
+      <SuccessContent searchParams={searchParams} />
     </Suspense>
   );
 }
 
-/* ─── Sub-components ────────────────────────────── */
+async function SuccessContent({ searchParams }: { searchParams: SearchParams }) {
+  const { orderId } = await searchParams;
+  if (!orderId) redirect("/events");
 
-function DetailItem({
-  icon,
-  label,
-  value,
-  sub,
-  mono,
-  capitalize: cap,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  sub?: string;
-  mono?: boolean;
-  capitalize?: boolean;
-}) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { event: true, package: true, registration: true, payment: true },
+  });
+  if (!order) redirect("/events");
+
+  // Not actually paid + confirmed? Don't show a success page.
+  const paid = order.payment?.status === "PAID";
+  if (!paid && order.payment?.status === "FAILED")
+    redirect(`/payment/failed?orderId=${orderId}`);
+  if (!paid) redirect(`/payment/processing?orderId=${orderId}`);
+  if (order.status !== "CONFIRMED")
+    redirect(`/payment/failed?orderId=${orderId}&reason=paid_no_slot`);
+
+  const { event, registration, payment } = order;
+  const amount = payment?.amount ?? order.total;
+  const isRace = usesRaceFields(event.category);
+
+  // ── Rows for the details grid (empty ones are skipped) ──
+  const details: Detail[] = [
+    {
+      icon: User,
+      label: isRace ? "Runner" : "Attendee",
+      value: registration?.fullName,
+    },
+    {
+      icon: Package,
+      label: "Package",
+      value: order.package.name,
+      sub: order.package.distance,
+    },
+    {
+      icon: Receipt,
+      label: "Order ID",
+      value: order.id.slice(0, 8).toUpperCase(),
+      mono: true,
+    },
+    {
+      icon: CreditCard,
+      label: "Paid with",
+      value: payment?.paymentMethod,
+      sub: payment?.transactionId ? `Txn ${payment.transactionId}` : null,
+    },
+  ];
+
+  // Marathon fields, or the other categories' checkout answers.
+  const extras = isRace
+    ? [
+        { label: "T-shirt size", value: registration?.tshirtSize },
+        { label: "Blood group", value: registration?.bloodGroup },
+        { label: "Category", value: registration?.runnerCategory },
+      ]
+    : answersForEmail(event.category, event.eventType, registration?.details);
+  const shownExtras = extras.filter((x) => x.value);
+
+  const showShare =
+    event.status !== "COMPLETED" && event.status !== "CANCELLED";
+
+  // For the ad / analytics pixels.
+  const purchaseData = {
+    orderId: order.id,
+    value: amount,
+    product: {
+      id: String(order.package.id),
+      name: event.name,
+      price: amount,
+      packageName: order.package.name,
+      distance: order.package.distance,
+    },
+  };
+
   return (
-    <div className="flex items-start gap-2.5">
-      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 text-gray-500 mt-0.5">
-        {icon}
+    <Shell>
+      <PurchaseTracker data={purchaseData} />
+
+      {/* ── Big tick + heading ── */}
+      <div className="mb-8 text-center">
+        <div className="relative mx-auto mb-6 h-20 w-20">
+          <span className="absolute inset-0 animate-ping rounded-full bg-[#c49a3c]/25 [animation-iteration-count:2]" />
+          <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-[#14245a] shadow-lg ring-4 shadow-[#14245a]/20 ring-[#c49a3c]/30">
+            <Check className="h-9 w-9 text-[#dcb45c]" strokeWidth={3} />
+          </span>
+        </div>
+        <p className="text-[11px] font-semibold tracking-[0.25em] text-[#a8852f] uppercase">
+          Payment confirmed
+        </p>
+        <p className="mt-2 text-3xl font-semibold text-[#14245a] sm:text-4xl">
+          You&apos;re in, {firstName(registration?.fullName)}!
+        </p>
+        <p className="mt-2 text-sm text-slate-500">
+          Your spot at <span className="font-medium text-slate-700">{event.name}</span>{" "}
+          is booked.
+        </p>
       </div>
+
+      {/* ── Ticket ── */}
+      <div className="overflow-hidden rounded-3xl bg-white shadow-xl ring-1 shadow-[#14245a]/10 ring-slate-200/70">
+        {/* Navy top: event */}
+        <div className="relative overflow-hidden bg-[#14245a] px-6 py-6 text-white sm:px-8">
+          <span className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-[#c49a3c]/15" />
+          <span className="inline-block rounded-full bg-[#c49a3c]/20 px-2.5 py-1 text-[10px] font-semibold tracking-[0.18em] text-[#dcb45c] uppercase">
+            {getEventCategory(event.category).label}
+          </span>
+          <p className="relative mt-3 text-xl leading-snug font-semibold sm:text-2xl">
+            {event.name}
+          </p>
+          <div className="relative mt-3 flex flex-col gap-1.5 text-sm text-white/75 sm:flex-row sm:flex-wrap sm:gap-x-5">
+            <span className="flex items-center gap-1.5">
+              <Calendar className="h-4 w-4 shrink-0 text-[#dcb45c]" />
+              {formatDate(event.date)}
+            </span>
+            {event.address && (
+              <span className="flex min-w-0 items-center gap-1.5">
+                <MapPin className="h-4 w-4 shrink-0 text-[#dcb45c]" />
+                <span className="truncate">{event.address}</span>
+              </span>
+            )}
+          </div>
+
+          {/* BIB — only once one has been given out */}
+          {registration?.bibNumber && (
+            <div className="relative mt-5 flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/15">
+              <span className="text-[11px] font-semibold tracking-[0.18em] text-white/70 uppercase">
+                Your BIB
+              </span>
+              <span className="font-mono text-3xl font-bold tracking-widest text-[#dcb45c]">
+                {registration.bibNumber}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Details */}
+        <div className="grid grid-cols-1 gap-x-6 gap-y-5 px-6 py-6 sm:grid-cols-2 sm:px-8">
+          {details
+            .filter((d) => d.value)
+            .map((d) => (
+              <DetailItem key={d.label} {...d} />
+            ))}
+        </div>
+
+        {shownExtras.length > 0 && (
+          <div className="mx-6 mb-6 rounded-2xl bg-[#faf8f3] px-5 py-4 sm:mx-8">
+            <p className="text-[10px] font-semibold tracking-[0.18em] text-[#a8852f] uppercase">
+              Your details
+            </p>
+            <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+              {shownExtras.map((x) => (
+                <div key={x.label} className="flex justify-between gap-3 text-sm">
+                  <dt className="text-slate-500">{x.label}</dt>
+                  <dd className="truncate font-medium text-[#14245a]">{x.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        )}
+
+        {/* Tear line (the half-circles look like a ticket stub) */}
+        <div className="relative h-0">
+          <span className="absolute top-1/2 -left-3 h-6 w-6 -translate-y-1/2 rounded-full bg-[#faf8f3]" />
+          <span className="absolute top-1/2 -right-3 h-6 w-6 -translate-y-1/2 rounded-full bg-[#faf8f3]" />
+          <div className="mx-6 border-t-2 border-dashed border-slate-200" />
+        </div>
+
+        {/* Total */}
+        <div className="flex items-end justify-between gap-4 px-6 py-5 sm:px-8">
+          <div>
+            <p className="text-[10px] font-semibold tracking-[0.18em] text-slate-500 uppercase">
+              Total paid
+            </p>
+            <p className="mt-0.5 text-xs text-slate-400">
+              {order.qty > 1 ? `${order.qty} tickets · ` : ""}
+              {formatDateTime(order.createdAt)}
+              {order.discount > 0 && ` · ${taka(order.discount)} off`}
+            </p>
+          </div>
+          <p className="text-3xl font-bold text-[#14245a] tabular-nums">
+            {taka(amount)}
+          </p>
+        </div>
+      </div>
+
+      {/* ── Email note ── */}
+      <div className="mt-5 flex items-start gap-3 rounded-2xl bg-white px-5 py-4 ring-1 ring-slate-200/70">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#faf8f3] text-[#c49a3c]">
+          <Mail className="h-4 w-4" />
+        </span>
+        <div>
+          <p className="text-sm font-semibold text-[#14245a]">
+            Confirmation sent to {registration?.email || "your email"}
+          </p>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Can&apos;t see it in a few minutes? Check your spam or promotions
+            folder.
+          </p>
+        </div>
+      </div>
+
+      {/* ── Bring a friend (tracked as shares after paying) ── */}
+      {showShare && (
+        <ShareButtons
+          slug={event.slug}
+          eventName={event.name}
+          place="paid"
+          siteUrl={process.env.NEXT_PUBLIC_SITE_URL}
+          variant="compact"
+          title={isRace ? "Bring your running buddies 🏃" : "Bring a friend"}
+          subtitle="Tell your friends you're going — it's better together."
+          className="mt-5 rounded-2xl bg-white p-5 ring-1 ring-slate-200/70"
+        />
+      )}
+
+      {/* ── Buttons ── */}
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <Link
+          href="/dashboard"
+          className="group inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#14245a] py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#14245a]/15 transition hover:bg-[#1c3175]"
+        >
+          Go to my dashboard
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+        </Link>
+        <Link
+          href="/events"
+          className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white py-3.5 text-sm font-semibold text-[#14245a] transition hover:border-[#c49a3c]"
+        >
+          Browse more events
+        </Link>
+      </div>
+
+      <p className="mt-8 text-center text-xs text-slate-400">
+        Questions about your booking?{" "}
+        <Link
+          href="/contact"
+          className="font-medium text-[#a8852f] underline underline-offset-2 hover:text-[#14245a]"
+        >
+          Contact us
+        </Link>{" "}
+        with order ID{" "}
+        <span className="font-mono text-slate-500">
+          {order.id.slice(0, 8).toUpperCase()}
+        </span>
+      </p>
+    </Shell>
+  );
+}
+
+// ─── Small pieces ───────────────────────────────────────
+
+type Detail = {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value?: string | null;
+  sub?: string | null;
+  mono?: boolean;
+};
+
+function DetailItem({ icon: Icon, label, value, sub, mono }: Detail) {
+  return (
+    <div className="flex min-w-0 items-start gap-3">
+      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#faf8f3] text-[#c49a3c]">
+        <Icon className="h-4 w-4" />
+      </span>
       <div className="min-w-0">
-        <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">
+        <p className="text-[10px] font-semibold tracking-[0.18em] text-slate-400 uppercase">
           {label}
         </p>
         <p
-          className={`text-sm font-semibold text-gray-900 truncate mt-0.5 ${
-            mono ? "font-mono" : ""
-          } ${cap ? "capitalize" : ""}`}
+          className={`mt-0.5 truncate text-sm font-semibold text-[#14245a] capitalize ${mono ? "font-mono" : ""}`}
         >
           {value}
         </p>
-        {sub && (
-          <span className="inline-block mt-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-indigo-50 text-indigo-600 rounded">
-            {sub}
-          </span>
-        )}
+        {sub && <p className="truncate text-[11px] text-slate-400">{sub}</p>}
       </div>
     </div>
   );
 }
 
-function StatusBadge({
-  label,
-  variant,
-}: {
-  label: string;
-  variant: "success" | "neutral";
-}) {
-  const styles =
-    variant === "success"
-      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-      : "bg-gray-50 text-gray-600 border-gray-200";
-
+/** Page background + centred column, shared by the page and its skeleton. */
+function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <span
-      className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-full border ${styles}`}
-    >
-      {variant === "success" && (
-        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-      )}
-      {label}
-    </span>
+    <div className="min-h-screen bg-[#faf8f3] px-4 pt-32 pb-16 sm:pt-36">
+      <div className="mx-auto w-full max-w-xl">{children}</div>
+    </div>
   );
+}
+
+function SuccessSkeleton() {
+  return (
+    <Shell>
+      <div className="mb-8 flex flex-col items-center">
+        <div className="mb-6 h-20 w-20 animate-pulse rounded-full bg-[#14245a]/15" />
+        <div className="h-3 w-32 animate-pulse rounded bg-[#c49a3c]/20" />
+        <div className="mt-3 h-8 w-56 animate-pulse rounded-lg bg-slate-200" />
+        <div className="mt-3 h-4 w-64 animate-pulse rounded bg-slate-100" />
+      </div>
+      <div className="overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200/70">
+        <div className="h-36 animate-pulse bg-[#14245a]/80" />
+        <div className="grid grid-cols-1 gap-5 p-6 sm:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex gap-3">
+              <div className="h-9 w-9 animate-pulse rounded-xl bg-[#faf8f3]" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-2.5 w-16 animate-pulse rounded bg-slate-100" />
+                <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between border-t-2 border-dashed border-slate-100 p-6">
+          <div className="h-4 w-20 animate-pulse rounded bg-slate-100" />
+          <div className="h-8 w-28 animate-pulse rounded bg-slate-200" />
+        </div>
+      </div>
+    </Shell>
+  );
+}
+
+// ─── Helpers ────────────────────────────────────────────
+
+function firstName(fullName?: string | null) {
+  return fullName?.trim().split(/\s+/)[0] || "friend";
+}
+
+// Dates are shown in Dhaka time so the server's timezone doesn't matter.
+function formatDate(date: Date) {
+  return date.toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Dhaka",
+  });
+}
+
+function formatDateTime(date: Date) {
+  return date.toLocaleString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Dhaka",
+  });
 }
