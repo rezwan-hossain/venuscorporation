@@ -5,8 +5,8 @@
 // service list, client testimonials, an FAQ and a call to action.
 //
 // Content: module/home/business/data-v3.ts (numbers, steps, brand)
-// + data-v5.ts (FAQ) + data.ts ("Featured work" and
-// testimonials).
+// + data.ts ("Featured work" and testimonials). The FAQ comes from the
+// database (admin → Manage Homepage → FAQ).
 // Shown on the homepage via app/page.tsx.
 //
 // No client JavaScript: the expandable parts use the native <details> element.
@@ -24,23 +24,23 @@
 //      Featured work — module/home/components/FeaturedWork.tsx
 //   6. Testimonials
 //      Gallery — module/home/components/Gallery.tsx
-//   7. FAQ
+//   7. FAQ — module/home/components/HomeFaq.tsx (database)
 //   8. Call to action — module/home/components/ContactCta.tsx
 
 import { Suspense } from "react";
 import Link from "next/link";
 import { Cormorant_Garamond } from "next/font/google";
-import { ArrowRight, Phone, Plus, Quote, Star } from "lucide-react";
+import { ArrowRight, Phone, Quote, Star } from "lucide-react";
 
 import { testimonials as groupTestimonials } from "../business/data";
 import { cta, stats, steps } from "../business/data-v3";
-import { faqs } from "../business/data-v5";
 import ContactCta from "../components/ContactCta";
 import FeaturedWork from "../components/FeaturedWork";
 import Gallery from "../components/Gallery";
 import ServiceList from "../components/ServiceList";
 import SignatureMoments from "../components/SignatureMoments";
 import SummitHero from "../components/SummitHero";
+import HomeFaq from "../components/HomeFaq";
 import TrustedBy from "../components/TrustedBy";
 import UpcomingCorporateEvents from "../components/UpcomingCorporateEvents";
 import VenuePartners from "../components/VenuePartners";
@@ -84,7 +84,10 @@ export default function BusinessHomepage() {
       <FeaturedWork />
       <Testimonials />
       <Gallery />
-      <Faq />
+      {/* FAQ from the database — the rest of the page doesn't wait for it */}
+      <Suspense fallback={null}>
+        <HomeFaq />
+      </Suspense>
       <ContactCta />
     </div>
   );
@@ -355,48 +358,6 @@ function Testimonials() {
           ))}
         </ul>
       </div>
-    </section>
-  );
-}
-
-// ════════════════════════════════════════════════════════════════════════
-//  7. FAQ — native <details>
-// ════════════════════════════════════════════════════════════════════════
-
-function Faq() {
-  return (
-    // Comes right after the white gallery, so no extra top space.
-    <section className={`${container} pb-24 lg:pb-32`}>
-      <SectionHeading
-        kicker="Good to know"
-        title="Questions,"
-        italic="answered."
-      />
-
-      <ul className="mx-auto mt-12 max-w-3xl space-y-3">
-        {faqs.map((f) => (
-          <li key={f.q}>
-            <details
-              className="group rounded-2xl border px-6 open:bg-[#faf8f3]"
-              style={{ borderColor: `${GOLD}55` }}
-            >
-              <summary
-                className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 font-semibold [&::-webkit-details-marker]:hidden"
-                style={{ color: NAVY }}
-              >
-                {f.q}
-                <Plus
-                  size={18}
-                  className="shrink-0 transition-transform duration-300 group-open:rotate-45"
-                  style={{ color: GOLD }}
-                  aria-hidden
-                />
-              </summary>
-              <p className="pb-6 leading-relaxed">{f.a}</p>
-            </details>
-          </li>
-        ))}
-      </ul>
     </section>
   );
 }

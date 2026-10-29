@@ -38,12 +38,20 @@ export async function getPublicFaqs(): Promise<{ question: string; answer: strin
   cacheTag("faqs");
 
   try {
+    // The FAQ list is short, so load every question (shown and hidden).
     const rows = await prisma.faq.findMany({
-      where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-      select: { question: true, answer: true },
+      select: { question: true, answer: true, isActive: true },
     });
-    return rows; // empty = admin hid everything → the section hides
+
+    // No questions in the database at all → show the default FAQ
+    if (rows.length === 0) return DEFAULT_FAQS;
+
+    // Otherwise only the ones switched on. If an admin switched them all
+    // off, this is empty and the FAQ section is hidden.
+    return rows
+      .filter((row) => row.isActive)
+      .map(({ question, answer }) => ({ question, answer }));
   } catch (err) {
     console.error("getPublicFaqs failed, showing built-in FAQ:", err);
     return DEFAULT_FAQS;

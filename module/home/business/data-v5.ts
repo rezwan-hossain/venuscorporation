@@ -73,29 +73,6 @@ export const signature = [
 
 // ─── Frequently asked questions ───────────────────────
 
-export const faqs = [
-  {
-    q: "How early should we book?",
-    a: "For weddings and large corporate events, 3–6 months ahead is ideal. Smaller private events can often be arranged in 2–4 weeks — ask us about your date.",
-  },
-  {
-    q: "Can you work with our budget?",
-    a: "Yes. We start from your budget, show you clearly where it goes, and suggest options so nothing is spent without your approval.",
-  },
-  {
-    q: "Do you handle venues and vendors?",
-    a: "We do — venue booking, catering, décor, sound, lighting, photography and permits, all through partners we trust.",
-  },
-  {
-    q: "Do you organise events outside Dhaka?",
-    a: "Yes, across Bangladesh — from Chattogram beach events to Sundarbans trail runs. Travel and logistics are part of our plan.",
-  },
-  {
-    q: "What happens on the event day?",
-    a: "A dedicated coordinator and on-site team run the schedule, vendors and guests, so you can simply enjoy the occasion.",
-  },
-];
-
 // ─── Final call to action (RSVP card) ─────────────────
 
 export const rsvp = {

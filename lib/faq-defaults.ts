@@ -1,39 +1,35 @@
 // lib/faq-defaults.ts
 //
-// The original homepage FAQ. Seeded into the faqs table by its migration, and
-// shown as a fallback only if the database can't be reached.
+// The built-in FAQ (event management). Used:
+//   • by prisma/seed.ts to fill an empty faqs table
+//   • on the homepage and Services page only if the database can't be reached
+// Normally both pages read the questions from the database, edited in
+// admin → Manage Homepage → FAQ.
 
 export const DEFAULT_FAQS: { question: string; answer: string }[] = [
   {
-    question: "How do I register for the marathon?",
-    answer: "Click the register button on the homepage and fill out the registration form. Once completed, you'll receive a confirmation email with your race details.",
+    question: "How early should we book?",
+    answer:
+      "For weddings and large corporate events, 3–6 months ahead is ideal. Smaller private events can often be arranged in 2–4 weeks — ask us about your date.",
   },
   {
-    question: "Is there an early bird discount?",
-    answer: "Yes! Early bird pricing is available for a limited time. Register early to secure the best rate before slots fill up.",
+    question: "Can you work with our budget?",
+    answer:
+      "Yes. We start from your budget, show you clearly where it goes, and suggest options so nothing is spent without your approval.",
   },
   {
-    question: "Can beginners participate?",
-    answer: "Absolutely! We offer 1K and 7.5K categories perfect for beginners as well as a half marathon for experienced runners.",
+    question: "Do you handle venues and vendors?",
+    answer:
+      "We do — venue booking, catering, décor, sound, lighting, photography and permits, all through partners we trust.",
   },
   {
-    question: "What should I bring on race day?",
-    answer: "Bring your registration confirmation, proper running shoes, water bottle, and a positive attitude! Safety gear is recommended for long-distance runners.",
+    question: "Do you organise events outside Dhaka?",
+    answer:
+      "Yes, across Bangladesh — from Chattogram beach events to Sundarbans trail runs. Travel and logistics are part of our plan.",
   },
   {
-    question: "Is baggage storage available?",
-    answer: "Yes, secure baggage drop-off will be provided near the start line.",
-  },
-  {
-    question: "Is parking available at the venue?",
-    answer: "Limited parking is available. Participants are encouraged to use public transportation or ride-sharing.",
-  },
-  {
-    question: "Is there an age limit to participate?",
-    answer: "NO.",
-  },
-  {
-    question: "What happens if it rains?",
-    answer: "The race will proceed in most weather conditions unless deemed unsafe by organizers.",
+    question: "What happens on the event day?",
+    answer:
+      "A dedicated coordinator and on-site team run the schedule, vendors and guests, so you can simply enjoy the occasion.",
   },
 ];

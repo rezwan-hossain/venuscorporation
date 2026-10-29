@@ -180,7 +180,7 @@ export function AdminFaqEditor() {
         </div>
       ) : faqs.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-400 bg-white border border-dashed border-gray-200 rounded-xl">
-          No questions yet — the FAQ section is hidden on the homepage.
+          No questions yet — the homepage and Services page show the default FAQ until you add one.
         </p>
       ) : (
         <ol className="space-y-2">
