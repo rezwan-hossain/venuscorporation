@@ -10,15 +10,20 @@ import {
   deleteHero,
 } from "@/app/actions/homepage";
 import {
-  Plus,
+  AlertTriangle,
   ArrowLeft,
-  Pencil,
-  Trash2,
+  CalendarDays,
   CheckCircle,
   Circle,
   Loader2,
   Monitor,
+  MousePointerClick,
+  Pencil,
+  PlayCircle,
+  Plus,
   Smartphone,
+  Timer,
+  Trash2,
 } from "lucide-react";
 import { HeroSectionData } from "@/types/homepage";
 
@@ -59,34 +64,36 @@ export function ManageHomepagePanel({ initialHeroes }: Props) {
     setLoadingId(null);
   };
 
+  const activeHero = heroes.find((hero) => hero.isActive);
+  const startCreate = () => {
+    setEditingHero(null);
+    setView("create");
+  };
+
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      {/* ─── Header ─── */}
+      <div className="mb-5 flex items-end justify-between gap-4">
         {view === "list" ? (
           <>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
-                Manage Homepage
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">
-                {heroes.length} hero section{heroes.length !== 1 ? "s" : ""}
-                {" · "}
-                {heroes.some((hero) => hero.isActive)
-                  ? "one is showing on the homepage"
-                  : "none active — the homepage shows the next upcoming event"}
+              <p className="text-[11px] font-semibold tracking-[0.2em] text-[#a8852f] uppercase">
+                Homepage
+              </p>
+              <p className="mt-1 text-2xl font-semibold text-[#14245a]">
+                Hero section
+              </p>
+              <p className="mt-1 text-sm text-slate-500">
+                The big banner at the top of the homepage.
               </p>
             </div>
             <button
               type="button"
-              onClick={() => {
-                setEditingHero(null);
-                setView("create");
-              }}
-              className="flex items-center gap-2 bg-gray-900 text-white font-bold uppercase tracking-wider text-xs rounded-lg px-5 py-3 hover:bg-gray-800 transition-colors cursor-pointer"
+              onClick={startCreate}
+              className="flex shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-[#14245a] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1d3274]"
             >
               <Plus size={16} />
-              New Hero
+              New hero
             </button>
           </>
         ) : (
@@ -96,204 +103,63 @@ export function ManageHomepagePanel({ initialHeroes }: Props) {
               setView("list");
               setEditingHero(null);
             }}
-            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+            className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-[#14245a]"
           >
             <ArrowLeft size={16} />
-            Back
+            Back to homepage settings
           </button>
         )}
       </div>
 
-      {/* List */}
       {view === "list" && (
         <>
+          {/* ─── What visitors see right now ─── */}
+          <div className="mb-4 flex items-center gap-3 rounded-2xl bg-[#faf8f3] px-4 py-3 ring-1 ring-[#c49a3c]/20">
+            <span
+              className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                activeHero ? "bg-emerald-500" : "bg-[#c49a3c]"
+              }`}
+            />
+            <p className="text-sm text-slate-600">
+              <span className="font-semibold text-[#14245a]">
+                On the homepage now:
+              </span>{" "}
+              {activeHero
+                ? heroName(activeHero)
+                : "the next upcoming event (automatic — no hero is turned on)"}
+            </p>
+          </div>
+
+          {/* ─── Heroes ─── */}
           {heroes.length === 0 ? (
-            <div className="border border-dashed border-gray-300 rounded-xl p-12 text-center">
-              <Monitor className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg font-medium">
-                No hero sections yet
+            <div className="rounded-2xl border border-dashed border-[#c49a3c]/40 bg-[#faf8f3] p-12 text-center">
+              <Monitor className="mx-auto mb-4 h-10 w-10 text-[#c49a3c]" />
+              <p className="text-lg font-semibold text-[#14245a]">
+                No heroes yet
               </p>
-              <p className="text-gray-400 text-sm mt-1">
-                Create one to customize the homepage
+              <p className="mt-1 text-sm text-slate-500">
+                The homepage shows the next upcoming event until you make one.
               </p>
             </div>
           ) : (
             <div className="space-y-3">
-              {heroes.map((hero) => {
-                // What the list shows for this hero
-                const name =
-                  hero.source === "CUSTOM"
-                    ? hero.title
-                    : (hero.event?.name ?? "Next upcoming event");
-                return (
-                  <div
-                    key={hero.id}
-                    className={`bg-white border rounded-xl overflow-hidden transition-all ${
-                      hero.isActive
-                        ? "border-green-300 ring-1 ring-green-100"
-                        : "border-gray-200"
-                    }`}
-                  >
-                    <div className="flex flex-col sm:flex-row">
-                      {/* Preview */}
-                      <div className="relative w-full sm:w-48 h-28 sm:h-auto flex-shrink-0">
-                        {hero.desktopImage ? (
-                          <img
-                            src={hero.desktopImage}
-                            alt={name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          // No photo of its own: uses the event's banner
-                          <div className="h-full w-full bg-[#14245a]" />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-
-                        {hero.isActive && (
-                          <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold uppercase bg-green-500 text-white rounded-full">
-                            Active
-                          </span>
-                        )}
-
-                        {hero.mobileImage && (
-                          <span className="absolute top-2 right-2 p-1 bg-black/40 backdrop-blur-sm rounded">
-                            <Smartphone size={10} className="text-white" />
-                          </span>
-                        )}
-
-                        <p className="absolute bottom-2 left-2 right-2 text-white font-semibold text-sm leading-tight truncate">
-                          {name}
-                        </p>
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#a8852f]">
-                              {hero.source === "CUSTOM"
-                                ? "Custom text"
-                                : "Event"}
-                            </p>
-                            <p className="mt-0.5 font-semibold text-[#14245a] truncate">
-                              {name}
-                            </p>
-                            {hero.source === "CUSTOM" && hero.slug && (
-                              <p className="text-xs text-gray-400 mt-0.5">
-                                Button: {hero.buttonLabel || "—"} → {hero.slug}
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Actions */}
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            {loadingId === hero.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                            ) : (
-                              <>
-                                {/* Click to turn on / off */}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleToggleActive(hero.id, !hero.isActive)
-                                  }
-                                  className={`p-2 rounded-lg transition-colors cursor-pointer ${
-                                    hero.isActive
-                                      ? "text-green-500 hover:text-red-500 hover:bg-red-50"
-                                      : "text-gray-400 hover:text-green-600 hover:bg-green-50"
-                                  }`}
-                                  title={
-                                    hero.isActive
-                                      ? "Turn off (homepage shows the next upcoming event)"
-                                      : "Show this hero on the homepage"
-                                  }
-                                >
-                                  {hero.isActive ? (
-                                    <CheckCircle size={15} />
-                                  ) : (
-                                    <Circle size={15} />
-                                  )}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingHero(hero);
-                                    setView("edit");
-                                  }}
-                                  className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
-                                  title="Edit"
-                                >
-                                  <Pencil size={15} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDelete(hero.id)}
-                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                                  title="Delete"
-                                >
-                                  <Trash2 size={15} />
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Pills */}
-                        <div className="flex flex-wrap gap-1.5 mt-3">
-                          {hero.showCountdown && (
-                            <span className="px-2 py-0.5 text-[10px] bg-blue-50 text-blue-600 rounded-full font-medium">
-                              ⏱ Countdown
-                            </span>
-                          )}
-                          {hero.showSlugButton && (
-                            <span className="px-2 py-0.5 text-[10px] bg-green-50 text-green-600 rounded-full font-medium">
-                              🔗 Button
-                            </span>
-                          )}
-                          {hero.youtubeUrl && (
-                            <span className="px-2 py-0.5 text-[10px] bg-red-50 text-red-600 rounded-full font-medium">
-                              ▶ YouTube
-                            </span>
-                          )}
-                          {hero.mobileImage && (
-                            <span className="px-2 py-0.5 text-[10px] bg-orange-50 text-orange-600 rounded-full font-medium">
-                              📱 Mobile
-                            </span>
-                          )}
-                          {hero.source === "CUSTOM" && hero.eventDate && (
-                            <span className="px-2 py-0.5 text-[10px] bg-yellow-50 text-yellow-600 rounded-full font-medium">
-                              📅{" "}
-                              {new Date(hero.eventDate).toLocaleDateString(
-                                "en-US",
-                                {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                },
-                              )}
-                            </span>
-                          )}
-                        </div>
-
-                        <p className="text-[10px] text-gray-300 mt-2">
-                          Updated{" "}
-                          {new Date(hero.updatedAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            },
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {heroes.map((hero) => (
+                <HeroCard
+                  key={hero.id}
+                  hero={hero}
+                  busy={loadingId === hero.id}
+                  onToggle={() => handleToggleActive(hero.id, !hero.isActive)}
+                  onEdit={() => {
+                    setEditingHero(hero);
+                    setView("edit");
+                  }}
+                  onDelete={() => handleDelete(hero.id)}
+                />
+              ))}
             </div>
           )}
+
+          <div className="mt-8" />
         </>
       )}
 
@@ -311,6 +177,191 @@ export function ManageHomepagePanel({ initialHeroes }: Props) {
           }}
         />
       )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  One hero in the list
+// ════════════════════════════════════════════════════════════════════════
+
+/** What the list calls a hero: its title, or the event it shows. */
+function heroName(hero: HeroSectionData) {
+  if (hero.source === "CUSTOM") return hero.title;
+  return hero.event?.name ?? "Next upcoming event (automatic)";
+}
+
+/** A small chip: icon + text. */
+function Chip({
+  icon,
+  children,
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-[#c49a3c]/10 px-2 py-0.5 text-[11px] font-medium text-[#8a6d26]">
+      {icon}
+      {children}
+    </span>
+  );
+}
+
+function HeroCard({
+  hero,
+  busy,
+  onToggle,
+  onEdit,
+  onDelete,
+}: {
+  hero: HeroSectionData;
+  busy: boolean;
+  onToggle: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const name = heroName(hero);
+  const isCustom = hero.source === "CUSTOM";
+  // A custom hero needs both button text and a link to show its button
+  const buttonMissingText =
+    isCustom && hero.showSlugButton && hero.slug && !hero.buttonLabel;
+
+  return (
+    <div
+      className={`overflow-hidden rounded-2xl bg-white ring-1 transition ${
+        hero.isActive ? "ring-2 ring-emerald-400/70" : "ring-slate-200/70"
+      }`}
+    >
+      <div className="flex flex-col sm:flex-row">
+        {/* Picture (event heroes without a photo use the event's banner) */}
+        <div className="relative h-32 w-full shrink-0 bg-[#14245a] sm:h-auto sm:w-52">
+          {hero.desktopImage && (
+            <img
+              src={hero.desktopImage}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0d1840]/85 via-[#0d1840]/20 to-transparent" />
+          {!hero.desktopImage && (
+            <p className="absolute top-3 left-3 text-[10px] font-semibold tracking-wider text-[#dcb45c] uppercase">
+              Uses event banner
+            </p>
+          )}
+          <p className="absolute right-3 bottom-3 left-3 truncate text-sm font-semibold text-white">
+            {name}
+          </p>
+        </div>
+
+        {/* Details */}
+        <div className="flex min-w-0 flex-1 flex-col gap-3 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold tracking-[0.15em] text-[#a8852f] uppercase">
+                {isCustom ? "Custom text" : "Event"}
+              </p>
+              <p className="mt-0.5 truncate text-base font-semibold text-[#14245a]">
+                {name}
+              </p>
+              {isCustom && hero.buttonLabel && hero.slug && (
+                <p className="mt-0.5 truncate text-xs text-slate-500">
+                  Button “{hero.buttonLabel}” → {hero.slug}
+                </p>
+              )}
+            </div>
+
+            {/* Edit / delete */}
+            <div className="flex shrink-0 items-center gap-0.5">
+              <button
+                type="button"
+                onClick={onEdit}
+                className="cursor-pointer rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-[#14245a]"
+                title="Edit"
+              >
+                <Pencil size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={onDelete}
+                className="cursor-pointer rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                title="Delete"
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+          </div>
+
+          {/* What it shows */}
+          <div className="flex flex-wrap gap-1.5">
+            {hero.showSlugButton && (
+              <Chip icon={<MousePointerClick size={11} />}>Gold button</Chip>
+            )}
+            {hero.showCountdown && (
+              <Chip icon={<Timer size={11} />}>Countdown</Chip>
+            )}
+            {hero.youtubeUrl && (
+              <Chip icon={<PlayCircle size={11} />}>Video</Chip>
+            )}
+            {hero.mobileImage && (
+              <Chip icon={<Smartphone size={11} />}>Phone photo</Chip>
+            )}
+            {isCustom && hero.eventDate && (
+              <Chip icon={<CalendarDays size={11} />}>
+                {new Date(hero.eventDate).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </Chip>
+            )}
+          </div>
+
+          {buttonMissingText && (
+            <p className="flex items-center gap-1.5 text-xs text-amber-700">
+              <AlertTriangle size={13} />
+              Has a button link but no button text, so no button shows. Edit to
+              add it.
+            </p>
+          )}
+
+          {/* On / off + last change */}
+          <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+            <button
+              type="button"
+              onClick={onToggle}
+              disabled={busy}
+              className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition disabled:opacity-60 ${
+                hero.isActive
+                  ? "bg-emerald-50 text-emerald-700 hover:bg-red-50 hover:text-red-600"
+                  : "bg-white text-[#14245a] ring-1 ring-slate-200 hover:ring-[#c49a3c]"
+              }`}
+              title={
+                hero.isActive
+                  ? "Turn off — the homepage then shows the next upcoming event"
+                  : "Show this hero on the homepage"
+              }
+            >
+              {busy ? (
+                <Loader2 size={13} className="animate-spin" />
+              ) : hero.isActive ? (
+                <CheckCircle size={13} />
+              ) : (
+                <Circle size={13} />
+              )}
+              {hero.isActive ? "On the homepage" : "Show on homepage"}
+            </button>
+            <p className="text-[11px] text-slate-400">
+              Updated{" "}
+              {new Date(hero.updatedAt).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
