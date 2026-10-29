@@ -1,6 +1,13 @@
 // module/profile/components/admin/AdminTeamPanel.tsx
 "use client";
 
+// Admin → Manage Team: the people on the About page.
+//   • Filter tabs per group (Management, Leadership, Advisors, Organizers)
+//   • One card per person: photo, name, role, bio, social links,
+//     shown/hidden switch, edit, delete
+//   • Add / Edit opens TeamMemberForm
+// Order inside a group comes from each person's "sort order" number.
+
 import { useState } from "react";
 import {
   deleteTeamMember,
@@ -8,21 +15,25 @@ import {
   toggleTeamMemberActive,
 } from "@/app/actions/team";
 
-import type { TeamMember } from "@/types/team";
+import type { TeamCategory, TeamMember } from "@/types/team";
 import {
-  Plus,
   ArrowLeft,
-  Pencil,
-  Trash2,
-  Loader2,
-  Users,
-  UserCog,
-  Eye,
-  EyeOff,
-  GripVertical,
-  Shield,
   Briefcase,
   Crown,
+  Eye,
+  EyeOff,
+  Facebook,
+  Github,
+  Instagram,
+  Linkedin,
+  Loader2,
+  Pencil,
+  Plus,
+  Shield,
+  Trash2,
+  Twitter,
+  UserCog,
+  Users,
 } from "lucide-react";
 import Image from "next/image";
 import { TeamMemberForm } from "./TeamMemberForm";
@@ -33,45 +44,44 @@ type Props = {
 
 type View = "list" | "create" | "edit";
 
-// Category display config
-const CATEGORY_CONFIG = {
-  MANAGEMENT: {
-    label: "Management",
-    bgColor: "bg-emerald-100",
-    textColor: "text-emerald-700",
-    icon: Crown,
-  },
-  ADMIN: {
-    label: "Leadership",
-    bgColor: "bg-purple-100",
-    textColor: "text-purple-700",
-    icon: Shield,
-  },
-  ADVISOR: {
-    label: "Advisors",
-    bgColor: "bg-amber-100",
-    textColor: "text-amber-700",
-    icon: UserCog,
-  },
-  ORGANIZER: {
-    label: "Organizers",
-    bgColor: "bg-blue-100",
-    textColor: "text-blue-700",
-    icon: Briefcase,
-  },
-} as const;
+// The four groups, in the order they're listed
+const CATEGORIES = [
+  { value: "MANAGEMENT", label: "Management", icon: Crown },
+  { value: "ADMIN", label: "Leadership", icon: Shield },
+  { value: "ADVISOR", label: "Advisors", icon: UserCog },
+  { value: "ORGANIZER", label: "Organizers", icon: Briefcase },
+] as const;
+
+type Filter = "ALL" | TeamCategory;
+
+// Social links shown as small icons on each card
+const SOCIALS = [
+  { key: "linkedinUrl", label: "LinkedIn", icon: Linkedin },
+  { key: "twitterUrl", label: "X / Twitter", icon: Twitter },
+  { key: "githubUrl", label: "GitHub", icon: Github },
+  { key: "instagramUrl", label: "Instagram", icon: Instagram },
+  { key: "facebookUrl", label: "Facebook", icon: Facebook },
+] as const;
+
+/** "Sarah Rahman" → "SR" (shown when there's no photo) */
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
 export function AdminTeamPanel({ initialMembers }: Props) {
   const [view, setView] = useState<View>("list");
   const [members, setMembers] = useState(initialMembers);
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Filter>("ALL");
 
-  const managementMembers = members.filter((m) => m.category === "MANAGEMENT");
-  const adminMembers = members.filter((m) => m.category === "ADMIN");
-  const advisorMembers = members.filter((m) => m.category === "ADVISOR");
-  const organizerMembers = members.filter((m) => m.category === "ORGANIZER");
-  const activeCount = members.filter((m) => m.isActive).length;
+  const shownCount = members.filter((m) => m.isActive).length;
+  const countOf = (category: TeamCategory) =>
+    members.filter((m) => m.category === category).length;
 
   const refreshMembers = async () => {
     const { members: updated } = await getAllTeamMembers();
@@ -107,254 +117,147 @@ export function AdminTeamPanel({ initialMembers }: Props) {
     setLoadingId(null);
   };
 
-  const handleDelete = async (memberId: string) => {
-    if (!confirm("Delete this team member?")) return;
-    setLoadingId(memberId);
-    const result = await deleteTeamMember(memberId);
+  const handleDelete = async (member: TeamMember) => {
+    if (!confirm(`Delete ${member.name} from the team?`)) return;
+    setLoadingId(member.id);
+    const result = await deleteTeamMember(member.id);
     if (result.success) {
       await refreshMembers();
     }
     setLoadingId(null);
   };
 
-  // Plain render helpers (not components), so React doesn't recreate them each render.
-  const renderMemberCard = (member: TeamMember) => {
-    const categoryConfig = CATEGORY_CONFIG[member.category];
-
-    return (
-      <div
-        key={member.id}
-        className={`bg-white border rounded-xl p-4 transition-all ${
-          member.isActive ? "border-gray-200" : "border-gray-200 opacity-50"
-        }`}
-      >
-        <div className="flex items-start gap-4">
-          {/* Drag Handle */}
-          <div className="flex-shrink-0 pt-1 cursor-grab text-gray-300 hover:text-gray-400">
-            <GripVertical size={16} />
-          </div>
-
-          {/* Image */}
-          <div className="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-            {member.image ? (
-              <Image
-                src={member.image}
-                alt={member.name}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                <Users size={24} />
-              </div>
-            )}
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h4 className="font-bold text-gray-900 truncate">
-                  {member.name}
-                </h4>
-                {member.role && (
-                  <p className="text-sm text-gray-500">{member.role}</p>
-                )}
-              </div>
-
-              {/* Category Badge */}
-              <span
-                className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-full flex-shrink-0 ${categoryConfig.bgColor} ${categoryConfig.textColor}`}
-              >
-                {member.category}
-              </span>
-            </div>
-
-            {member.bio && (
-              <p className="text-xs text-gray-400 mt-1 line-clamp-2">
-                {member.bio}
-              </p>
-            )}
-
-            {/* Social Links Pills */}
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {member.linkedinUrl && (
-                <span className="px-2 py-0.5 text-[10px] bg-blue-50 text-blue-600 rounded-full">
-                  LinkedIn
-                </span>
-              )}
-              {member.twitterUrl && (
-                <span className="px-2 py-0.5 text-[10px] bg-sky-50 text-sky-600 rounded-full">
-                  Twitter
-                </span>
-              )}
-              {member.githubUrl && (
-                <span className="px-2 py-0.5 text-[10px] bg-gray-100 text-gray-600 rounded-full">
-                  GitHub
-                </span>
-              )}
-              {member.instagramUrl && (
-                <span className="px-2 py-0.5 text-[10px] bg-pink-50 text-pink-600 rounded-full">
-                  Instagram
-                </span>
-              )}
-              {member.facebookUrl && (
-                <span className="px-2 py-0.5 text-[10px] bg-indigo-50 text-indigo-600 rounded-full">
-                  Facebook
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-1 flex-shrink-0">
-            {loadingId === member.id ? (
-              <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => handleToggleActive(member)}
-                  className={`p-2 rounded-lg transition-colors cursor-pointer ${
-                    member.isActive
-                      ? "text-green-500 hover:text-red-600 hover:bg-red-50"
-                      : "text-gray-400 hover:text-green-600 hover:bg-green-50"
-                  }`}
-                  title={member.isActive ? "Hide" : "Show"}
-                >
-                  {member.isActive ? <Eye size={15} /> : <EyeOff size={15} />}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleEdit(member)}
-                  className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
-                  title="Edit"
-                >
-                  <Pencil size={15} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(member.id)}
-                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                  title="Delete"
-                >
-                  <Trash2 size={15} />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderCategorySection = (
-    title: string,
-    members: TeamMember[],
-    Icon: React.ElementType,
-  ) => {
-    if (members.length === 0) return null;
-
-    return (
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-3">
-          <Icon size={14} className="text-gray-400" />
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-            {title} ({members.length})
-          </h3>
-        </div>
-        <div className="space-y-3">
-          {members.map((member) => renderMemberCard(member))}
-        </div>
-      </div>
-    );
-  };
+  // Groups to show: every group for "All", otherwise just the chosen one
+  const groups = CATEGORIES.filter(
+    (c) => filter === "ALL" || c.value === filter,
+  );
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      {/* ─── Header ─── */}
+      <div className="mb-5 flex items-end justify-between gap-4">
         {view === "list" ? (
           <>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Manage Team</h2>
-              <p className="text-sm text-gray-500 mt-1">
-                {members.length} member{members.length !== 1 ? "s" : ""} total
+              <p className="text-[11px] font-semibold tracking-[0.2em] text-[#a8852f] uppercase">
+                About us
+              </p>
+              <p className="mt-1 text-2xl font-semibold text-[#14245a]">Team</p>
+              <p className="mt-1 text-sm text-slate-500">
+                {members.length} {members.length === 1 ? "person" : "people"} ·{" "}
+                {shownCount} shown on the About page
               </p>
             </div>
             <button
               onClick={handleCreate}
-              className="flex items-center gap-2 bg-gray-900 text-white font-bold uppercase tracking-wider text-xs rounded-lg px-5 py-3 hover:bg-gray-800 transition-colors cursor-pointer"
+              className="flex shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-[#14245a] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1d3274]"
             >
               <Plus size={16} />
-              Add Member
+              Add member
             </button>
           </>
         ) : (
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+            className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-[#14245a]"
           >
             <ArrowLeft size={16} />
-            Back to Team
+            Back to team
           </button>
         )}
       </div>
 
-      {/* Content */}
       {view === "list" && (
         <>
-          {/* Stats Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-            {[
-              { label: "Total", value: members.length, icon: Users },
-              { label: "Management", value: managementMembers.length, icon: Crown },
-              { label: "Leadership", value: adminMembers.length, icon: Shield },
-              {
-                label: "Advisors",
-                value: advisorMembers.length,
-                icon: UserCog,
-              },
-              {
-                label: "Organizers",
-                value: organizerMembers.length,
-                icon: Briefcase,
-              },
-              { label: "Active", value: activeCount, icon: Eye },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="bg-white border border-gray-200 rounded-xl p-4"
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <stat.icon size={14} className="text-gray-400" />
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                    {stat.label}
-                  </p>
-                </div>
-                <p className="text-2xl font-black text-gray-900">
-                  {stat.value}
-                </p>
-              </div>
-            ))}
-          </div>
-
           {members.length === 0 ? (
-            <div className="border border-dashed border-gray-300 rounded-xl p-12 text-center">
-              <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg font-medium">
+            <div className="rounded-2xl border border-dashed border-[#c49a3c]/40 bg-[#faf8f3] p-12 text-center">
+              <Users className="mx-auto mb-4 h-10 w-10 text-[#c49a3c]" />
+              <p className="text-lg font-semibold text-[#14245a]">
                 No team members yet
               </p>
-              <p className="text-gray-400 text-sm mt-1">
-                Add your first team member
+              <p className="mt-1 text-sm text-slate-500">
+                Add the people who should appear on the About page.
               </p>
             </div>
           ) : (
             <>
-              {renderCategorySection("Management", managementMembers, Crown)}
-              {renderCategorySection("Leadership", adminMembers, Shield)}
-              {renderCategorySection("Advisors", advisorMembers, UserCog)}
-              {renderCategorySection("Organizers", organizerMembers, Briefcase)}
+              {/* ─── Filter tabs ─── */}
+              <div className="mb-5 flex flex-wrap gap-1.5">
+                {[
+                  { value: "ALL" as Filter, label: "All", icon: Users },
+                  ...CATEGORIES,
+                ].map((tab) => {
+                  const active = filter === tab.value;
+                  const count =
+                    tab.value === "ALL" ? members.length : countOf(tab.value);
+                  return (
+                    <button
+                      key={tab.value}
+                      type="button"
+                      onClick={() => setFilter(tab.value)}
+                      className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                        active
+                          ? "bg-[#14245a] text-white"
+                          : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-[#c49a3c]"
+                      }`}
+                    >
+                      <tab.icon
+                        size={13}
+                        className={active ? "text-[#dcb45c]" : "text-[#c49a3c]"}
+                      />
+                      {tab.label}
+                      <span
+                        className={active ? "text-[#dcb45c]" : "text-slate-400"}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* ─── One section per group ─── */}
+              {groups.map((group) => {
+                const people = members.filter(
+                  (m) => m.category === group.value,
+                );
+                if (people.length === 0) {
+                  return filter === "ALL" ? null : (
+                    <p
+                      key={group.value}
+                      className="rounded-2xl bg-white p-8 text-center text-sm text-slate-500 ring-1 ring-slate-200/70"
+                    >
+                      Nobody in {group.label} yet.
+                    </p>
+                  );
+                }
+                return (
+                  <section key={group.value} className="mb-8">
+                    <div className="mb-3 flex items-center gap-2">
+                      <group.icon size={14} className="text-[#c49a3c]" />
+                      <p className="text-[11px] font-semibold tracking-[0.15em] text-[#a8852f] uppercase">
+                        {group.label}
+                      </p>
+                      <span className="text-xs text-slate-400">
+                        {people.length}
+                      </span>
+                      <span className="h-px flex-1 bg-[#c49a3c]/20" />
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                      {people.map((member) => (
+                        <MemberCard
+                          key={member.id}
+                          member={member}
+                          busy={loadingId === member.id}
+                          onToggle={() => handleToggleActive(member)}
+                          onEdit={() => handleEdit(member)}
+                          onDelete={() => handleDelete(member)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
             </>
           )}
         </>
@@ -367,6 +270,146 @@ export function AdminTeamPanel({ initialMembers }: Props) {
           onCancel={handleBack}
         />
       )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  One person
+// ════════════════════════════════════════════════════════════════════════
+
+function MemberCard({
+  member,
+  busy,
+  onToggle,
+  onEdit,
+  onDelete,
+}: {
+  member: TeamMember;
+  busy: boolean;
+  onToggle: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const socials = SOCIALS.filter((s) => member[s.key]);
+
+  return (
+    <div
+      className={`flex flex-col rounded-2xl bg-white p-4 ring-1 ring-slate-200/70 transition hover:shadow-md hover:shadow-[#14245a]/5 ${
+        member.isActive ? "" : "bg-slate-50/70"
+      }`}
+    >
+      <div className="flex gap-4">
+        {/* Photo (or initials) */}
+        <div
+          className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#14245a] ${
+            member.isActive ? "" : "opacity-50 grayscale"
+          }`}
+        >
+          {member.image ? (
+            <Image
+              src={member.image}
+              alt={member.name}
+              fill
+              sizes="80px"
+              className="object-cover"
+            />
+          ) : (
+            <span className="flex h-full w-full items-center justify-center text-lg font-semibold text-[#dcb45c]">
+              {initials(member.name)}
+            </span>
+          )}
+        </div>
+
+        {/* Name, role, bio */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <p className="truncate font-semibold text-[#14245a]">
+              {member.name}
+            </p>
+            <span
+              className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 tabular-nums"
+              title="Sort order — lower numbers are listed first"
+            >
+              #{member.sortOrder}
+            </span>
+          </div>
+          {member.role && (
+            <p className="truncate text-xs font-medium text-[#a8852f]">
+              {member.role}
+            </p>
+          )}
+          {member.bio && (
+            <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-slate-500">
+              {member.bio}
+            </p>
+          )}
+          {socials.length > 0 && (
+            <div className="mt-2 flex gap-1">
+              {socials.map((social) => (
+                <a
+                  key={social.key}
+                  href={member[social.key] ?? "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={social.label}
+                  aria-label={social.label}
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-[#c49a3c]/10 text-[#a8852f] transition hover:bg-[#14245a] hover:text-white"
+                >
+                  <social.icon size={12} />
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Shown / hidden + edit / delete */}
+      <div className="mt-4 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+        <button
+          type="button"
+          onClick={onToggle}
+          disabled={busy}
+          title={
+            member.isActive
+              ? "Hide from the About page"
+              : "Show on the About page"
+          }
+          className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition disabled:opacity-60 ${
+            member.isActive
+              ? "bg-emerald-50 text-emerald-700 hover:bg-red-50 hover:text-red-600"
+              : "bg-white text-slate-500 ring-1 ring-slate-200 hover:ring-[#c49a3c]"
+          }`}
+        >
+          {busy ? (
+            <Loader2 size={13} className="animate-spin" />
+          ) : member.isActive ? (
+            <Eye size={13} />
+          ) : (
+            <EyeOff size={13} />
+          )}
+          {member.isActive ? "Shown on site" : "Hidden"}
+        </button>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={onEdit}
+            className="cursor-pointer rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-[#14245a]"
+            title="Edit"
+          >
+            <Pencil size={15} />
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={busy}
+            className="cursor-pointer rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+            title="Delete"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

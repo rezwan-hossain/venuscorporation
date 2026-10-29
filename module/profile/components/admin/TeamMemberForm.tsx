@@ -15,13 +15,6 @@ import {
 import { ImageUpload } from "./ImageUpload";
 import Input from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Check,
   Loader2,
   Save,
@@ -31,6 +24,7 @@ import {
   Instagram,
   Facebook,
 } from "lucide-react";
+import { ImageUploadCloudinary } from "./ImageUploadCloudinary";
 
 type Props = {
   member: TeamMember | null;
@@ -84,6 +78,40 @@ const ROLE_SUGGESTIONS = [
   "Marketing Manager",
   "Project Manager",
 ];
+
+// The social link inputs, in order
+const SOCIAL_FIELDS = [
+  {
+    field: "linkedinUrl",
+    label: "LinkedIn",
+    icon: Linkedin,
+    placeholder: "linkedin.com/in/username",
+  },
+  {
+    field: "facebookUrl",
+    label: "Facebook",
+    icon: Facebook,
+    placeholder: "facebook.com/username",
+  },
+  {
+    field: "instagramUrl",
+    label: "Instagram",
+    icon: Instagram,
+    placeholder: "instagram.com/username",
+  },
+  {
+    field: "twitterUrl",
+    label: "X / Twitter",
+    icon: Twitter,
+    placeholder: "x.com/username",
+  },
+  {
+    field: "githubUrl",
+    label: "GitHub",
+    icon: Github,
+    placeholder: "github.com/username",
+  },
+] as const;
 
 export function TeamMemberForm({ member, onSuccess, onCancel }: Props) {
   const isEditing = !!member;
@@ -171,38 +199,38 @@ export function TeamMemberForm({ member, onSuccess, onCancel }: Props) {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">
-        {isEditing ? "Edit Team Member" : "Add Team Member"}
-      </h2>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* ─── Header ─── */}
+      <div>
+        <p className="text-[11px] font-semibold tracking-[0.2em] text-[#a8852f] uppercase">
+          Team
+        </p>
+        <p className="mt-1 text-2xl font-semibold text-[#14245a]">
+          {isEditing ? `Edit ${member.name}` : "Add team member"}
+        </p>
+        <p className="mt-1 text-sm text-slate-500">
+          Shown on the About page, in the group you choose.
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Name & Role */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Name <span className="text-red-500">*</span>
-            </label>
+      {/* ─── 1. Who they are ─── */}
+      <FormSection number={1} title="Who they are">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField label="Name" required>
             <Input
               value={form.name}
               onChange={(e) => updateField("name", e.target.value)}
               placeholder="e.g. Sarah Rahman"
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
+              className={inputClass}
             />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Role{" "}
-              <span className="text-gray-400 font-normal normal-case">
-                (optional)
-              </span>
-            </label>
+          </FormField>
+          <FormField label="Role" hint="Start typing for suggestions">
             <Input
               value={form.role}
               onChange={(e) => updateField("role", e.target.value)}
               placeholder="e.g. Managing Director (MD)"
               list="team-role-suggestions"
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
+              className={inputClass}
             />
             {/* Suggestions while typing (CEO, MD, Head of Marketing…) */}
             <datalist id="team-role-suggestions">
@@ -210,80 +238,42 @@ export function TeamMemberForm({ member, onSuccess, onCancel }: Props) {
                 <option key={r} value={r} />
               ))}
             </datalist>
-          </div>
+          </FormField>
         </div>
 
-        {/* Category & Sort Order */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Category
-            </label>
-            <Select
-              value={form.category}
-              onValueChange={(val) => updateField("category", val)}
-            >
-              <SelectTrigger className="h-11 rounded-lg border border-gray-200 bg-gray-50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200">
-                {CATEGORY_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <div className="flex flex-col">
-                      <span>{option.label}</span>
-                      <span className="text-xs text-gray-400">
-                        {option.description}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-              Sort Order
-            </label>
-            <Input
-              type="number"
-              value={form.sortOrder}
-              onChange={(e) => updateField("sortOrder", e.target.value)}
-              placeholder="0"
-              className="h-11 border border-gray-200 bg-gray-50 rounded-lg"
-              min="0"
-            />
-            <p className="text-[10px] text-gray-400 mt-1">
-              Lower numbers appear first
-            </p>
-          </div>
-        </div>
-
-        {/* Bio */}
         <div>
-          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-            Bio{" "}
-            <span className="text-gray-400 font-normal normal-case">
-              (optional)
-            </span>
-          </label>
-          <textarea
-            value={form.bio}
-            onChange={(e) => updateField("bio", e.target.value)}
-            rows={3}
-            placeholder="Brief description about the team member..."
-            className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
-          />
+          <p className={labelClass}>Group on the About page</p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {CATEGORY_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => updateField("category", option.value)}
+                aria-pressed={form.category === option.value}
+                className={`cursor-pointer rounded-xl p-3 text-left ring-1 transition ${
+                  form.category === option.value
+                    ? "bg-[#faf8f3] ring-2 ring-[#c49a3c]"
+                    : "bg-white ring-slate-200 hover:ring-slate-300"
+                }`}
+              >
+                <span className="block text-sm font-semibold text-[#14245a]">
+                  {option.label}
+                </span>
+                <span className="mt-0.5 block text-xs text-slate-500">
+                  {option.description}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
+      </FormSection>
 
-        {/* Image */}
-        <div>
-          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-            Profile Image{" "}
-            <span className="text-gray-400 font-normal normal-case">
-              (optional)
-            </span>
-          </label>
-          <ImageUpload
+      {/* ─── 2. Photo and bio ─── */}
+      <FormSection number={2} title="Photo and bio">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-[12rem_1fr]">
+          <div>
+            <p className={labelClass}>Photo</p>
+            {/* <ImageUpload
             value={form.image}
             onChange={(url) => updateField("image", url)}
             bucket="team-images"
@@ -291,125 +281,174 @@ export function TeamMemberForm({ member, onSuccess, onCancel }: Props) {
             label="Upload Profile Image"
             aspectRatio="aspect-square"
             maxSizeMB={2}
-          />
-        </div>
+          /> */}
 
-        {/* Social Links */}
-        <div className="border-t border-gray-200 pt-5 mt-5">
-          <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-4">
-            Social Links{" "}
-            <span className="text-gray-400 font-normal normal-case">
-              (all optional)
-            </span>
-          </h3>
+            <ImageUploadCloudinary
+              value={form.image}
+              onChange={(url) => updateField("image", url)}
+              bucket="team-images"
+              folder="profiles"
+              label="Upload photo"
+              aspectRatio="aspect-square"
+              maxSizeMB={1}
+            />
+            <p className="mt-1 text-xs text-slate-400">Square, a clear face.</p>
+          </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                <Linkedin size={14} className="text-blue-600" />
-              </div>
-              <Input
-                value={form.linkedinUrl}
-                onChange={(e) => updateField("linkedinUrl", e.target.value)}
-                placeholder="https://linkedin.com/in/username"
-                className="h-10 flex-1 border border-gray-200 bg-gray-50 rounded-lg"
-              />
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <p className={labelClass.replace("mb-1.5 ", "")}>Bio</p>
+              <span className="text-[11px] text-slate-400 tabular-nums">
+                {form.bio.length} characters
+              </span>
             </div>
-
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center">
-                <Twitter size={14} className="text-sky-500" />
-              </div>
-              <Input
-                value={form.twitterUrl}
-                onChange={(e) => updateField("twitterUrl", e.target.value)}
-                placeholder="https://twitter.com/username"
-                className="h-10 flex-1 border border-gray-200 bg-gray-50 rounded-lg"
-              />
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                <Github size={14} className="text-gray-700" />
-              </div>
-              <Input
-                value={form.githubUrl}
-                onChange={(e) => updateField("githubUrl", e.target.value)}
-                placeholder="https://github.com/username"
-                className="h-10 flex-1 border border-gray-200 bg-gray-50 rounded-lg"
-              />
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center">
-                <Instagram size={14} className="text-pink-600" />
-              </div>
-              <Input
-                value={form.instagramUrl}
-                onChange={(e) => updateField("instagramUrl", e.target.value)}
-                placeholder="https://instagram.com/username"
-                className="h-10 flex-1 border border-gray-200 bg-gray-50 rounded-lg"
-              />
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
-                <Facebook size={14} className="text-indigo-600" />
-              </div>
-              <Input
-                value={form.facebookUrl}
-                onChange={(e) => updateField("facebookUrl", e.target.value)}
-                placeholder="https://facebook.com/username"
-                className="h-10 flex-1 border border-gray-200 bg-gray-50 rounded-lg"
-              />
-            </div>
+            <textarea
+              value={form.bio}
+              onChange={(e) => updateField("bio", e.target.value)}
+              rows={7}
+              placeholder="Two or three sentences: their experience and what they look after."
+              className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm leading-relaxed outline-none transition focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15"
+            />
           </div>
         </div>
+      </FormSection>
 
-        {/* Messages */}
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm">{error}</p>
-          </div>
-        )}
+      {/* ─── 3. Social links ─── */}
+      <FormSection number={3} title="Social links">
+        <p className="-mt-2 text-xs text-slate-500">
+          All optional. Empty ones aren&apos;t shown.
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {SOCIAL_FIELDS.map((social) => (
+            <label
+              key={social.field}
+              className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white pl-2 transition focus-within:border-[#c49a3c] focus-within:ring-4 focus-within:ring-[#c49a3c]/15"
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#c49a3c]/10 text-[#a8852f]">
+                <social.icon size={14} />
+              </span>
+              <span className="sr-only">{social.label}</span>
+              <input
+                value={form[social.field]}
+                onChange={(e) => updateField(social.field, e.target.value)}
+                placeholder={social.placeholder}
+                className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm outline-none placeholder:text-slate-400"
+              />
+            </label>
+          ))}
+        </div>
+      </FormSection>
 
-        {success && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-            <Check className="w-4 h-4 text-green-600" />
-            <p className="text-green-600 text-sm font-medium">
-              Team member {isEditing ? "updated" : "added"} successfully!
-            </p>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-5 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+      {/* ─── 4. Order ─── */}
+      <FormSection number={4} title="Order">
+        <div className="max-w-xs">
+          <FormField
+            label="Sort order"
+            hint="Lower numbers are listed first in their group"
           >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-2.5 text-sm font-bold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer uppercase tracking-wider"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                {isEditing ? "Updating..." : "Adding..."}
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                {isEditing ? "Update Member" : "Add Member"}
-              </>
-            )}
-          </button>
+            <Input
+              type="number"
+              value={form.sortOrder}
+              onChange={(e) => updateField("sortOrder", e.target.value)}
+              placeholder="0"
+              className={inputClass}
+              min="0"
+            />
+          </FormField>
         </div>
-      </form>
-    </div>
+      </FormSection>
+
+      {/* ─── Save ─── */}
+      {error && (
+        <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-100">
+          {error}
+        </p>
+      )}
+      {success && (
+        <p className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 ring-1 ring-emerald-100">
+          <Check className="h-4 w-4" />
+          Team member {isEditing ? "updated" : "added"}.
+        </p>
+      )}
+      <div className="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="cursor-pointer rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 hover:border-slate-300"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex cursor-pointer items-center gap-2 rounded-xl bg-[#14245a] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#1d3274] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          {isEditing ? "Save changes" : "Add member"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  Small pieces
+// ════════════════════════════════════════════════════════════════════════
+
+const labelClass =
+  "mb-1.5 block text-[11px] font-semibold tracking-[0.15em] text-[#14245a] uppercase";
+const inputClass =
+  "h-11 rounded-xl border border-slate-200 bg-white focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15";
+
+/** A white card with a numbered title. */
+function FormSection({
+  number,
+  title,
+  children,
+}: {
+  number: number;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-4 rounded-2xl bg-white p-5 ring-1 ring-slate-200/70 sm:p-6">
+      <div className="flex items-center gap-3">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[#c49a3c] text-xs font-semibold text-[#a8852f]">
+          {number}
+        </span>
+        <p className="text-lg font-semibold text-[#14245a]">{title}</p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/** A label above an input, with an optional hint below. */
+function FormField({
+  label,
+  required,
+  hint,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block min-w-0">
+      <span className={labelClass}>
+        {label}
+        {required && <span className="ml-0.5 text-[#c49a3c]">*</span>}
+      </span>
+      {children}
+      {hint && (
+        <span className="mt-1 block text-xs text-slate-400">{hint}</span>
+      )}
+    </label>
   );
 }
