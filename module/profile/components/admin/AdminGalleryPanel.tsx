@@ -1,7 +1,11 @@
 // module/profile/components/admin/AdminGalleryPanel.tsx
 "use client";
 
-// Admin → Manage Gallery: the photos on the Gallery page (and the homepage).
+// Admin → Manage Gallery, in two parts (switch at the top):
+//   Photos      — the photos on the Gallery page (and the homepage), below
+//   Event films — the YouTube films (AdminGalleryVideos.tsx)
+//
+// Photos:
 //   • Add photo / Edit opens the form at the top (and scrolls to it)
 //   • Each photo: click it or the pencil to edit, the bin to delete
 //     (asks first). Buttons are always visible — phones can't hover.
@@ -14,12 +18,14 @@ import {
   Trash2,
   Loader2,
   X,
+  Clapperboard,
   ImageIcon,
   ImageOff,
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
 import { ImageUpload } from "./ImageUpload";
+import { AdminGalleryVideos } from "./AdminGalleryVideos";
 
 import type { GalleryImage } from "@/types/gallery";
 import {
@@ -39,7 +45,58 @@ type FormData = {
 
 const emptyForm: FormData = { src: "", alt: "" };
 
+// ════════════════════════════════════════════════════════════════════════
+//  Photos | Event films switch
+// ════════════════════════════════════════════════════════════════════════
+
 export function AdminGalleryPanel({ initialImages }: Props) {
+  const [tab, setTab] = useState<"photos" | "films">("photos");
+
+  return (
+    <div className="space-y-5">
+      <div className="flex w-fit rounded-xl bg-white p-1 ring-1 ring-slate-200/70">
+        {(
+          [
+            { value: "photos", label: "Photos", icon: ImageIcon },
+            { value: "films", label: "Event films", icon: Clapperboard },
+          ] as const
+        ).map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => setTab(option.value)}
+            aria-pressed={tab === option.value}
+            className={`flex cursor-pointer items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-semibold transition ${
+              tab === option.value
+                ? "bg-[#14245a] text-white"
+                : "text-slate-500 hover:text-[#14245a]"
+            }`}
+          >
+            <option.icon
+              size={15}
+              className={
+                tab === option.value ? "text-[#dcb45c]" : "text-[#c49a3c]"
+              }
+            />
+            {option.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "photos" ? (
+        <GalleryPhotos initialImages={initialImages} />
+      ) : (
+        <AdminGalleryVideos />
+      )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  Photos
+// ════════════════════════════════════════════════════════════════════════
+
+function GalleryPhotos({ initialImages }: Props) {
   const [images, setImages] = useState<GalleryImage[]>(initialImages);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

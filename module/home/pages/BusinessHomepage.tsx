@@ -23,7 +23,7 @@
 //   5. Signature moments — module/home/components/SignatureMoments.tsx
 //      Featured work — module/home/components/FeaturedWork.tsx
 //   6. Testimonials
-//      Gallery — module/home/components/Gallery.tsx
+//      Gallery — module/home/components/Gallery.tsx (6 newest gallery photos)
 //   7. FAQ — module/home/components/HomeFaq.tsx (database)
 //   8. Call to action — module/home/components/ContactCta.tsx
 
@@ -83,7 +83,10 @@ export default function BusinessHomepage() {
       <SignatureMoments />
       <FeaturedWork />
       <Testimonials />
-      <Gallery />
+      {/* Gallery photos from the database (cached) — the rest of the page doesn't wait for it */}
+      <Suspense fallback={null}>
+        <Gallery />
+      </Suspense>
       {/* FAQ from the database — the rest of the page doesn't wait for it */}
       <Suspense fallback={null}>
         <HomeFaq />

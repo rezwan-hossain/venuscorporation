@@ -505,3 +505,19 @@ model ContactMessage {
   @@index([ip, createdAt])
   @@map("contact_messages")
 }
+
+// "Event films" on the gallery page (admin → Manage Gallery → Event films).
+model GalleryVideo {
+  id        String   @id @default(cuid())
+  url       String // a YouTube link (watch?v=…, youtu.be/…, /shorts/…)
+  title     String
+  category  String? // small label, e.g. "Wedding", "Corporate"
+  duration  String? // shown as typed, e.g. "3:12"
+  sortOrder Int      @default(0) // lower numbers are shown first
+  isActive  Boolean  @default(true) // false = hidden from the gallery page
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@map("gallery_videos")
+}

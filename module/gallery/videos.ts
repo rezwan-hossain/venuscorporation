@@ -1,6 +1,8 @@
 // module/gallery/videos.ts
 //
-// Videos for the gallery page's "Watch our events" section.
+// DEMO videos for the gallery page's "Watch our events" section, shown only
+// until the first film is added in admin → Manage Gallery → Event films
+// (then the films come from the database: app/actions/gallery-videos.ts).
 //   url    — any YouTube link (watch?v=…, youtu.be/…, /shorts/…) or a video
 //            file path such as "/videos/wedding.mp4" (in public/videos/)
 //   cover  — optional cover photo; without one, YouTube's thumbnail is used
