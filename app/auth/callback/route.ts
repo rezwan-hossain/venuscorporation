@@ -1,60 +1,71 @@
-// ─────────────────────────────────────────────────────────────
 // app/auth/callback/route.ts
 //
-// REPLACES your existing file.
+// Supabase sends people here in two ways:
 //
-// The old prisma.user.upsert keyed on authId. A guest row created at
-// checkout has authId "guest_<uuid>", so the upsert never matched, fell
-// through to `create`, and died on the email @unique constraint with P2002 —
-// unhandled, inside a route handler, so the user got bounced to /auth/error
-// and could never finish signing up. syncUser looks up by authId AND email
-// and adopts the guest row in place.
-// ─────────────────────────────────────────────────────────────
+//   ?code=…                  Google sign-in, and the default email link.
+//                            Uses PKCE: the browser that STARTED sign-up keeps
+//                            a secret cookie ("code verifier"). If the link is
+//                            opened in another browser, the mail app's own
+//                            browser, or clicked twice, that cookie is missing
+//                            and the exchange fails.
+//
+//   ?token_hash=…&type=…     Email link with the recommended template (below).
+//                            Needs no cookie, so it works in ANY browser.
+//
+// To use the token_hash link, in Supabase → Authentication → Email Templates
+// → "Confirm signup", set the link to:
+//
+//   {{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email
+//
+// (.RedirectTo is our emailRedirectTo — …/auth/callback — so this works on
+// localhost and production without other changes.)
 
 import { NextResponse, type NextRequest } from "next/server";
+import type { EmailOtpType, User } from "@supabase/supabase-js";
 
-import { syncUser } from "@/lib/auth/syncUser"; // ← NEW
+import { syncUser } from "@/lib/auth/syncUser";
 import { createClient } from "@/lib/supabase/server";
-
-// ← REMOVED: `import { prisma } from "@/lib/prisma"` — no direct DB writes here now.
-// ← REMOVED: `createServerClient` and `cookies` — only the commented-out block used them.
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const tokenHash = searchParams.get("token_hash");
+  const type = searchParams.get("type") as EmailOtpType | null;
 
-  // ← EDITED: was console.log("⚡️ Received auth callback with code:", code).
-  // Never log the code itself — it is a live credential, exchangeable for a
-  // session until it's consumed.
-  console.log("⚡️ Received auth callback", { hasCode: !!code });
+  // Never log the code or token itself — they are live credentials.
+  console.log("⚡️ Received auth callback", {
+    hasCode: !!code,
+    hasTokenHash: !!tokenHash,
+  });
 
-  // ← EDITED: early return instead of falling through to the bottom. Same
-  // destination, but now you can tell "no code" from "exchange failed".
-  if (!code) {
+  const supabase = await createClient();
+  let user: User | null = null;
+
+  if (tokenHash && type) {
+    // Email link (token_hash template) — works in any browser.
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type,
+    });
+    if (error) console.error("👀 Email verify failed:", error.message);
+    user = data.user;
+  } else if (code) {
+    // Google sign-in, or the default email link.
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) console.error("👀 Exchange failed:", error.message);
+    user = data.user;
+  } else {
     return NextResponse.redirect(`${origin}/auth/error?reason=missing_code`);
   }
 
-  const supabase = await createClient();
-
-  // ← REMOVED: console.log("👾 Supabase client created...", supabase).
-  // Dumping the client object can print your anon key and cookie internals.
-  // ← REMOVED: console.log("💥 Here bang !!!").
-
-  // ← EDITED: was `const { error } = ...` followed by a separate
-  // supabase.auth.getUser() call. exchangeCodeForSession already returns the
-  // user, so that extra round-trip is gone.
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-  if (error || !data.user) {
-    console.error("👀 Exchange failed:", error?.message);
+  if (!user) {
     return NextResponse.redirect(`${origin}/auth/error?reason=exchange_failed`);
   }
 
-  // ← EDITED: this replaces the entire prisma.user.upsert block.
+  // Make sure the user has a row in our own database (adopts guest rows too).
   try {
-    await syncUser(data.user);
+    await syncUser(user);
   } catch (e) {
-    // ← NEW: previously any DB failure here was an unhandled throw.
     console.error("syncUser failed in callback:", e);
     return NextResponse.redirect(`${origin}/auth/error?reason=sync_failed`);
   }
