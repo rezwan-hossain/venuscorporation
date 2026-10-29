@@ -31,7 +31,7 @@ export function TrafficCard({ eventId, range }: { eventId: string; range: Analyt
   const heading = (
     <div className="flex flex-wrap items-end justify-between gap-2">
       <div>
-        <h3 className="text-sm font-bold text-gray-900">Website traffic</h3>
+        <p className="text-sm font-semibold text-[#14245a]">Website traffic</p>
         <p className="text-xs text-gray-500 mt-0.5">
           {eventId === "all" ? "Whole site" : "This event's page"} · built-in counter, bots excluded
           {data?.countingSince && ` · counting since ${fmtDay(data.countingSince)}`}
@@ -44,7 +44,7 @@ export function TrafficCard({ eventId, range }: { eventId: string; range: Analyt
     return (
       <div className="space-y-3">
         {heading}
-        <div className="h-48 bg-white border border-gray-200 rounded-xl animate-pulse" />
+        <div className="h-48 bg-white rounded-2xl ring-1 ring-slate-200/70 animate-pulse" />
       </div>
     );
   }
@@ -60,7 +60,7 @@ export function TrafficCard({ eventId, range }: { eventId: string; range: Analyt
     return (
       <div className="space-y-3">
         {heading}
-        <div className="bg-white border border-gray-200 rounded-xl py-10 text-center">
+        <div className="bg-white rounded-2xl ring-1 ring-slate-200/70 py-10 text-center">
           <p className="text-gray-900 font-bold">No visits counted yet</p>
           <p className="text-gray-400 text-sm mt-1">Numbers appear here as soon as people visit the site.</p>
         </div>

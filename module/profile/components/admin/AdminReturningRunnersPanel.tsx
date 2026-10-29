@@ -117,9 +117,9 @@ export function AdminReturningRunnersPanel({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           {embedded ? (
-            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <Repeat className="w-4 h-4 text-gray-400" /> Returning runners
-            </h3>
+            <p className="text-sm font-semibold text-[#14245a] flex items-center gap-2">
+              <Repeat className="w-4 h-4 text-[#c49a3c]" /> Returning runners
+            </p>
           ) : (
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <Repeat className="w-5 h-5 text-gray-400" /> Returning Runners
@@ -142,21 +142,21 @@ export function AdminReturningRunnersPanel({
 
       {/* Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-white border border-gray-200 rounded-xl px-4 py-3.5">
+        <div className="bg-white rounded-2xl ring-1 ring-slate-200/70 px-4 py-3.5">
           <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Returning runners</p>
           <p className="text-2xl font-black text-gray-900 mt-1 tabular-nums">{summary ? num(summary.returning) : "—"}</p>
           <p className="text-[11px] text-gray-500 mt-0.5 truncate">
             {scopeName ? `of ${scopeName}'s runners` : "ran 2 or more events"}
           </p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl px-4 py-3.5">
+        <div className="bg-white rounded-2xl ring-1 ring-slate-200/70 px-4 py-3.5">
           <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Share of runners</p>
           <p className="text-2xl font-black text-gray-900 mt-1 tabular-nums">{summary ? `${share}%` : "—"}</p>
           <p className="text-[11px] text-gray-500 mt-0.5">
             {summary ? `of ${num(summary.runners)} unique runners${scopeName ? " in this event" : ""}` : ""}
           </p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl px-4 py-3.5">
+        <div className="bg-white rounded-2xl ring-1 ring-slate-200/70 px-4 py-3.5">
           <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Events with runners</p>
           <p className="text-2xl font-black text-gray-900 mt-1 tabular-nums">{summary ? num(summary.eventsWithRunners) : "—"}</p>
           <p className="text-[11px] text-gray-500 mt-0.5">paid registrations only</p>
@@ -176,7 +176,7 @@ export function AdminReturningRunnersPanel({
               refetch(eventId, minEvents, e.target.value, true);
             }}
             placeholder="Search name, phone or email"
-            className="w-full h-9 pl-9 pr-8 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-gray-900"
+            className="w-full h-9 pl-9 pr-8 rounded-lg border border-gray-200 bg-white text-sm outline-none focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15"
           />
           {search && (
             <button
@@ -201,7 +201,7 @@ export function AdminReturningRunnersPanel({
             setEventId(e.target.value);
             refetch(e.target.value);
           }}
-          className="h-9 max-w-[16rem] px-3 rounded-lg border border-gray-200 bg-white text-sm cursor-pointer focus:outline-none focus:ring-1 focus:ring-gray-900"
+          className="h-9 max-w-[16rem] px-3 rounded-lg border border-gray-200 bg-white text-sm cursor-pointer outline-none focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15"
         >
           <option value="all">All events</option>
           {events.map((e) => (
@@ -218,7 +218,7 @@ export function AdminReturningRunnersPanel({
             setMinEvents(Number(e.target.value));
             refetch(eventId, Number(e.target.value));
           }}
-          className="h-9 px-3 rounded-lg border border-gray-200 bg-white text-sm cursor-pointer focus:outline-none focus:ring-1 focus:ring-gray-900"
+          className="h-9 px-3 rounded-lg border border-gray-200 bg-white text-sm cursor-pointer outline-none focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15"
         >
           {[2, 3, 4, 5].map((n) => (
             <option key={n} value={n}>{n}+ events</option>
@@ -236,11 +236,11 @@ export function AdminReturningRunnersPanel({
       {runners === null ? (
         <div className="space-y-2 animate-pulse">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-14 bg-white border border-gray-200 rounded-xl" />
+            <div key={i} className="h-14 bg-white rounded-2xl ring-1 ring-slate-200/70" />
           ))}
         </div>
       ) : runners.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl py-14 text-center">
+        <div className="bg-white rounded-2xl ring-1 ring-slate-200/70 py-14 text-center">
           <p className="text-gray-900 font-bold">No returning runners {search ? "match this search" : "yet"}</p>
           <p className="text-gray-400 text-sm mt-1">
             {scopeName
@@ -249,7 +249,7 @@ export function AdminReturningRunnersPanel({
           </p>
         </div>
       ) : (
-        <div className={`bg-white border border-gray-200 rounded-xl overflow-hidden transition-opacity ${loading ? "opacity-60" : ""}`}>
+        <div className={`bg-white rounded-2xl ring-1 ring-slate-200/70 overflow-hidden transition-opacity ${loading ? "opacity-60" : ""}`}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[720px]">
               <thead>

@@ -42,9 +42,9 @@ export function Card({
   className?: string;
 }) {
   return (
-    <section className={`bg-white border border-gray-200 rounded-xl p-5 ${className}`}>
+    <section className={`bg-white rounded-2xl ring-1 ring-slate-200/70 p-5 ${className}`}>
       <header className="mb-4">
-        <h3 className="text-sm font-bold text-gray-900">{title}</h3>
+        <p className="text-sm font-semibold text-[#14245a]">{title}</p>
         {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
       </header>
       {children}
@@ -53,24 +53,34 @@ export function Card({
 }
 
 // ─── Stat tile ─────────────────────────────────────────
+// A headline number. `icon` is optional (a lucide-react icon).
 export function StatTile({
   label,
   value,
   note,
+  icon: Icon,
 }: {
   label: string;
   value: string;
   note?: string;
+  icon?: React.ComponentType<{ className?: string }>;
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl px-4 py-3.5 min-w-0">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 truncate">
-        {label}
-      </p>
-      <p className="text-2xl font-black text-gray-900 mt-1 tabular-nums truncate">
+    <div className="min-w-0 rounded-2xl bg-white px-4 py-4 ring-1 ring-slate-200/70">
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate text-[10px] font-semibold tracking-[0.18em] text-slate-500 uppercase">
+          {label}
+        </p>
+        {Icon && (
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#faf8f3] text-[#c49a3c]">
+            <Icon className="h-3.5 w-3.5" />
+          </span>
+        )}
+      </div>
+      <p className="mt-1.5 truncate text-2xl font-bold text-[#14245a] tabular-nums">
         {value}
       </p>
-      {note && <p className="text-[11px] text-gray-500 mt-0.5 truncate">{note}</p>}
+      {note && <p className="mt-0.5 truncate text-[11px] text-slate-500">{note}</p>}
     </div>
   );
 }
@@ -156,7 +166,7 @@ export function ColumnChart({
           {/* Tooltip */}
           {hovered && hover !== null && (
             <div
-              className="absolute -top-2 z-10 pointer-events-none bg-gray-900 text-white rounded-lg px-2.5 py-1.5 text-xs shadow-lg whitespace-nowrap"
+              className="absolute -top-2 z-10 pointer-events-none bg-[#14245a] text-white rounded-lg px-2.5 py-1.5 text-xs shadow-lg whitespace-nowrap"
               style={{
                 left: `${((hover + 0.5) / points.length) * 100}%`,
                 transform: `translate(-${

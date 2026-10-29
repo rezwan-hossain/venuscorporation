@@ -82,7 +82,7 @@ export function PaceCard({ eventId }: { eventId: string }) {
   const header = (
     <header className="flex flex-wrap items-start justify-between gap-3 mb-4">
       <div>
-        <h3 className="text-sm font-bold text-gray-900">Registration pace</h3>
+        <p className="text-sm font-semibold text-[#14245a]">Registration pace</p>
         <p className="text-xs text-gray-500 mt-0.5">
           Paid attendees so far, this event vs another · day 0 = first order
         </p>
@@ -96,7 +96,7 @@ export function PaceCard({ eventId }: { eventId: string }) {
             id="pace-compare"
             value={compare?.id ?? ""}
             onChange={(e) => setCompareId(e.target.value || null)}
-            className="h-8 max-w-[14rem] px-2 rounded-lg border border-gray-200 bg-white text-xs text-gray-900 cursor-pointer focus:outline-none focus:ring-1 focus:ring-gray-900"
+            className="h-8 max-w-[14rem] px-2 rounded-lg border border-gray-200 bg-white text-xs text-gray-900 cursor-pointer outline-none focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15"
           >
             {!compare && <option value="">— choose an event —</option>}
             {options
@@ -124,7 +124,7 @@ export function PaceCard({ eventId }: { eventId: string }) {
                 aria-pressed={align === v}
                 className={`px-2.5 h-7 rounded-md text-[11px] font-semibold cursor-pointer ${
                   align === v
-                    ? "bg-gray-900 text-white"
+                    ? "bg-[#14245a] text-white shadow-sm"
                     : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
@@ -138,7 +138,7 @@ export function PaceCard({ eventId }: { eventId: string }) {
   );
 
   const frame = (body: React.ReactNode) => (
-    <section className="bg-white border border-gray-200 rounded-xl p-5">
+    <section className="bg-white rounded-2xl ring-1 ring-slate-200/70 p-5">
       {header}
       {body}
     </section>
@@ -380,7 +380,7 @@ export function PaceCard({ eventId }: { eventId: string }) {
 
         {hoverX !== null && (
           <div
-            className="absolute top-2 pointer-events-none bg-gray-900 text-white rounded-lg px-2.5 py-1.5 text-xs shadow-lg whitespace-nowrap"
+            className="absolute top-2 pointer-events-none bg-[#14245a] text-white rounded-lg px-2.5 py-1.5 text-xs shadow-lg whitespace-nowrap"
             style={{
               left: `${(sx(hoverX) / W) * 100}%`,
               transform: `translateX(${sx(hoverX) > W * 0.6 ? "-105%" : "5%"})`,

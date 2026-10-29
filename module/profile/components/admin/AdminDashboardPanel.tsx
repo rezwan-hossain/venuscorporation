@@ -16,7 +16,7 @@ import { AdminReturningRunnersPanel } from "./AdminReturningRunnersPanel";
 import { PaceCard } from "./analytics/PaceCard";
 import { TrafficCard } from "./analytics/TrafficCard";
 import type { AnalyticsData, AnalyticsRange } from "@/types/analytics";
-import { RefreshCw } from "lucide-react";
+import { BadgePercent, RefreshCw, Ticket, TrendingUp, Users } from "lucide-react";
 import {
   BarList,
   Card,
@@ -43,9 +43,14 @@ const RANGES: { value: AnalyticsRange; label: string }[] = [
 /** A small heading between groups of cards. */
 function SectionTitle({ title, note }: { title: string; note?: string }) {
   return (
-    <div className="flex items-baseline gap-2 pt-2">
-      <h3 className="text-sm font-bold text-gray-900">{title}</h3>
-      {note && <span className="text-xs text-gray-400">{note}</span>}
+    <div className="flex items-center gap-3 pt-3">
+      <p className="text-[11px] font-semibold tracking-[0.2em] whitespace-nowrap text-[#a8852f] uppercase">
+        {title}
+      </p>
+      {note && (
+        <span className="text-xs whitespace-nowrap text-slate-400">{note}</span>
+      )}
+      <span className="h-px flex-1 bg-slate-200" />
     </div>
   );
 }
@@ -57,12 +62,12 @@ function DashboardSkeleton() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="h-[88px] bg-white border border-gray-200 rounded-xl"
+            className="h-[88px] bg-white rounded-2xl ring-1 ring-slate-200/70"
           />
         ))}
       </div>
-      <div className="h-64 bg-white border border-gray-200 rounded-xl" />
-      <div className="h-64 bg-white border border-gray-200 rounded-xl" />
+      <div className="h-64 bg-white rounded-2xl ring-1 ring-slate-200/70" />
+      <div className="h-64 bg-white rounded-2xl ring-1 ring-slate-200/70" />
     </div>
   );
 }
@@ -104,9 +109,15 @@ export function AdminDashboardPanel({ events }: Props) {
       {/* Header + filters (one row) */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Dashboard</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Registrations, revenue and attendees · {rangeText}
+          <p className="text-[11px] font-semibold tracking-[0.2em] text-[#a8852f] uppercase">
+            Overview
+          </p>
+          <p className="mt-1 text-2xl font-semibold text-[#14245a]">
+            Dashboard
+          </p>
+          <p className="mt-1 text-sm text-slate-500">
+            Registrations, revenue and attendees ·{" "}
+            <span className="font-semibold text-[#a8852f]">{rangeText}</span>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -117,7 +128,7 @@ export function AdminDashboardPanel({ events }: Props) {
             id="dash-event"
             value={eventId}
             onChange={(e) => change(e.target.value, range)}
-            className="h-9 max-w-[14rem] px-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 cursor-pointer focus:outline-none focus:ring-1 focus:ring-gray-900"
+            className="h-9 max-w-[14rem] px-3 rounded-xl border border-slate-200 bg-white text-sm text-[#14245a] cursor-pointer outline-none focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15"
           >
             <option value="all">All events</option>
             {events.map((e) => (
@@ -127,7 +138,7 @@ export function AdminDashboardPanel({ events }: Props) {
             ))}
           </select>
           <div
-            className="flex rounded-lg border border-gray-200 bg-white p-0.5"
+            className="flex rounded-xl border border-slate-200 bg-white p-0.5"
             role="group"
             aria-label="Time range"
           >
@@ -136,10 +147,10 @@ export function AdminDashboardPanel({ events }: Props) {
                 key={r.value}
                 onClick={() => change(eventId, r.value)}
                 aria-pressed={range === r.value}
-                className={`px-2.5 h-8 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                className={`px-2.5 h-8 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                   range === r.value
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-[#14245a] text-white shadow-sm"
+                    : "text-slate-600 hover:bg-[#faf8f3] hover:text-[#14245a]"
                 }`}
               >
                 {r.label}
@@ -149,7 +160,7 @@ export function AdminDashboardPanel({ events }: Props) {
           <button
             onClick={() => change(eventId, range)}
             disabled={loading}
-            className="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 cursor-pointer disabled:opacity-50"
+            className="h-9 w-9 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-[#14245a] hover:border-[#c49a3c] cursor-pointer disabled:opacity-50"
             title="Refresh"
           >
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
@@ -158,9 +169,9 @@ export function AdminDashboardPanel({ events }: Props) {
       </div>
 
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600 text-sm">{error}</p>
-        </div>
+        <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-100">
+          {error}
+        </p>
       )}
 
       {!data || !k ? (
@@ -174,16 +185,19 @@ export function AdminDashboardPanel({ events }: Props) {
           {/* Headline numbers */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <StatTile
+              icon={TrendingUp}
               label="Revenue"
               value={taka(k.revenue)}
               note={`${num(k.paidOrders)} paid order${k.paidOrders === 1 ? "" : "s"} · avg ${taka(k.avgOrderValue)}`}
             />
             <StatTile
+              icon={Users}
               label="Paid attendees"
               value={num(k.paidAttendees)}
               note={`${num(k.pendingOrders)} unpaid · ${num(k.cancelledOrders)} cancelled`}
             />
             <StatTile
+              icon={Ticket}
               label="Checkout conversion"
               value={
                 k.conversionRate === null
@@ -193,6 +207,7 @@ export function AdminDashboardPanel({ events }: Props) {
               note="Online orders that got paid"
             />
             <StatTile
+              icon={BadgePercent}
               label="Discounts given"
               value={taka(k.discounts)}
               note={
@@ -202,6 +217,8 @@ export function AdminDashboardPanel({ events }: Props) {
               }
             />
           </div>
+
+          <SectionTitle title="Trends" note={rangeText} />
 
           {/* Trends — separate charts, never two scales on one axis */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -237,11 +254,15 @@ export function AdminDashboardPanel({ events }: Props) {
             </Card>
           </div>
 
+          <SectionTitle title="Pace & traffic" />
+
           {/* This event vs last event */}
           <PaceCard key={eventId} eventId={eventId} />
 
           {/* Built-in page-view counter + visit → paid funnel */}
           <TrafficCard eventId={eventId} range={range} />
+
+          <SectionTitle title="Tickets" />
 
           {/* Packages */}
           <Card
@@ -314,6 +335,8 @@ export function AdminDashboardPanel({ events }: Props) {
             </>
           )}
 
+          <SectionTitle title="Money" note="Paid orders" />
+
           {/* Money */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card title="Payment methods" subtitle="Paid orders">
@@ -331,7 +354,8 @@ export function AdminDashboardPanel({ events }: Props) {
           </Card>
 
           {/* Follows the event filter at the top; always all-time. */}
-          <section className="bg-white border border-gray-200 rounded-xl p-5">
+          <SectionTitle title="Loyalty" note="All time" />
+          <section className="bg-white rounded-2xl ring-1 ring-slate-200/70 p-5">
             <AdminReturningRunnersPanel
               events={events}
               eventId={eventId}
@@ -339,7 +363,7 @@ export function AdminDashboardPanel({ events }: Props) {
             />
           </section>
 
-          <p className="text-[11px] text-gray-400">
+          <p className="text-center text-[11px] text-slate-400">
             Updated{" "}
             {new Date(data.generatedAt).toLocaleTimeString("en-GB", {
               hour: "2-digit",
