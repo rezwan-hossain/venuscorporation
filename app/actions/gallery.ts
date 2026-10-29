@@ -3,7 +3,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { cacheLife, cacheTag, revalidatePath, updateTag } from "next/cache";
 import { audit, diff } from "@/lib/audit";
 import type {
   CreateGalleryImageInput,
@@ -44,7 +44,13 @@ type ActionResult<T = unknown> =
   | { success: false; error: string };
 
 // ─── Get All Gallery Images ─────────────────────────
+// Cached for days: the gallery rarely changes. Adding, editing or deleting a
+// photo (below) clears the "gallery" tag, so changes still show at once.
 export async function getGalleryImages(): Promise<GalleryImage[]> {
+  "use cache";
+  cacheLife("days");
+  cacheTag("gallery");
+
   const images = await prisma.galleryImage.findMany({
     orderBy: { createdAt: "desc" },
   });
@@ -101,11 +107,15 @@ export async function createGalleryImage(
 
     revalidatePath("/gallery");
     revalidatePath("/profile");
+    updateTag("gallery"); // refresh the cached photo list
 
     return { success: true, data: { id: image.id } };
-  } catch (err: any) {
+  } catch (err) {
     console.error("createGalleryImage error:", err);
-    return { success: false, error: err.message || "Failed to create image" };
+    return {
+      success: false,
+      error: err instanceof Error && err.message ? err.message : "Failed to create image",
+    };
   }
 }
 
@@ -153,11 +163,15 @@ export async function updateGalleryImage(
 
     revalidatePath("/gallery");
     revalidatePath("/profile");
+    updateTag("gallery"); // refresh the cached photo list
 
     return { success: true, data: { id: image.id } };
-  } catch (err: any) {
+  } catch (err) {
     console.error("updateGalleryImage error:", err);
-    return { success: false, error: err.message || "Failed to update image" };
+    return {
+      success: false,
+      error: err instanceof Error && err.message ? err.message : "Failed to update image",
+    };
   }
 }
 
@@ -194,10 +208,14 @@ export async function deleteGalleryImage(
 
     revalidatePath("/gallery");
     revalidatePath("/profile");
+    updateTag("gallery"); // refresh the cached photo list
 
     return { success: true, data: null };
-  } catch (err: any) {
+  } catch (err) {
     console.error("deleteGalleryImage error:", err);
-    return { success: false, error: err.message || "Failed to delete image" };
+    return {
+      success: false,
+      error: err instanceof Error && err.message ? err.message : "Failed to delete image",
+    };
   }
 }

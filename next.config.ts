@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   images: {
+    // Keep resized photos for 7 days (Next.js default: 4 hours). Uploaded
+    // photos get a new file name each time, so they never go stale. If you
+    // replace a file in public/ under the same name, it can take up to 7
+    // days to show — rename it instead.
+    minimumCacheTTL: 60 * 60 * 24 * 7,
     // Local Supabase (`npx supabase start`) serves uploads from 127.0.0.1,
     // which next/image blocks by default. Development only.
     dangerouslyAllowLocalIP: isDev,

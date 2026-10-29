@@ -1,8 +1,13 @@
 // module/profile/components/admin/AdminGalleryPanel.tsx
-
 "use client";
 
-import { useState, useTransition } from "react";
+// Admin → Manage Gallery: the photos on the Gallery page (and the homepage).
+//   • Add photo / Edit opens the form at the top (and scrolls to it)
+//   • Each photo: click it or the pencil to edit, the bin to delete
+//     (asks first). Buttons are always visible — phones can't hover.
+// Data: app/actions/gallery.ts
+
+import { useRef, useState, useTransition } from "react";
 import {
   Plus,
   Pencil,
@@ -10,6 +15,7 @@ import {
   Loader2,
   X,
   ImageIcon,
+  ImageOff,
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
@@ -40,6 +46,7 @@ export function AdminGalleryPanel({ initialImages }: Props) {
   const [formData, setFormData] = useState<FormData>(emptyForm);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const formRef = useRef<HTMLDivElement>(null);
   const [toast, setToast] = useState<{
     type: "success" | "error";
     message: string;
@@ -51,11 +58,18 @@ export function AdminGalleryPanel({ initialImages }: Props) {
     setTimeout(() => setToast(null), 3000);
   };
 
+  /** Bring the form into view (it sits above the photos). */
+  const scrollToForm = () =>
+    requestAnimationFrame(() =>
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
+
   // ─── Open Create Form ─────────────────────────────
   const handleOpenCreate = () => {
     setEditingId(null);
     setFormData(emptyForm);
     setShowForm(true);
+    scrollToForm();
   };
 
   // ─── Open Edit Form ───────────────────────────────
@@ -66,6 +80,7 @@ export function AdminGalleryPanel({ initialImages }: Props) {
       alt: image.alt ?? "",
     });
     setShowForm(true);
+    scrollToForm();
   };
 
   // ─── Close Form ───────────────────────────────────
@@ -78,7 +93,7 @@ export function AdminGalleryPanel({ initialImages }: Props) {
   // ─── Submit (Create or Update) ────────────────────
   const handleSubmit = () => {
     if (!formData.src) {
-      showToast("error", "Please upload or provide an image URL");
+      showToast("error", "Upload a photo or paste its link first");
       return;
     }
 
@@ -102,7 +117,7 @@ export function AdminGalleryPanel({ initialImages }: Props) {
                 : img,
             ),
           );
-          showToast("success", "Image updated successfully");
+          showToast("success", "Photo updated");
           handleCloseForm();
         } else {
           showToast("error", result.error);
@@ -122,7 +137,7 @@ export function AdminGalleryPanel({ initialImages }: Props) {
             updatedAt: new Date(),
           };
           setImages((prev) => [newImage, ...prev]);
-          showToast("success", "Image added to gallery");
+          showToast("success", "Photo added to the gallery");
           handleCloseForm();
         } else {
           showToast("error", result.error);
@@ -138,7 +153,7 @@ export function AdminGalleryPanel({ initialImages }: Props) {
 
       if (result.success) {
         setImages((prev) => prev.filter((img) => img.id !== id));
-        showToast("success", "Image removed from gallery");
+        showToast("success", "Photo deleted");
         setDeletingId(null);
       } else {
         showToast("error", result.error);
@@ -148,33 +163,36 @@ export function AdminGalleryPanel({ initialImages }: Props) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* ─── Header ─── */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 font-heading">
-            Gallery Management
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            {images.length} image{images.length !== 1 ? "s" : ""} in the gallery
+          <p className="text-[11px] font-semibold tracking-[0.2em] text-[#a8852f] uppercase">
+            Website
+          </p>
+          <p className="mt-1 text-2xl font-semibold text-[#14245a]">Gallery</p>
+          <p className="mt-1 text-sm text-slate-500">
+            {images.length} {images.length === 1 ? "photo" : "photos"} on the
+            Gallery page and the homepage.
           </p>
         </div>
         <button
           onClick={handleOpenCreate}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white text-sm font-bold rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
+          className="flex shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-[#14245a] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1d3274]"
         >
           <Plus size={16} />
-          Add Image
+          Add photo
         </button>
       </div>
 
-      {/* ─── Toast ─── */}
+      {/* ─── Message after saving / deleting ─── */}
       {toast && (
         <div
-          className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium ${
+          role="status"
+          className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium ring-1 ${
             toast.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
+              ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
+              : "bg-red-50 text-red-700 ring-red-100"
           }`}
         >
           {toast.type === "success" ? (
@@ -186,185 +204,272 @@ export function AdminGalleryPanel({ initialImages }: Props) {
         </div>
       )}
 
-      {/* ─── Create / Edit Form ─── */}
+      {/* ─── Add / edit form ─── */}
       {showForm && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-gray-900">
-              {editingId ? "Edit Image" : "Add New Image"}
-            </h3>
+        <div
+          ref={formRef}
+          className="scroll-mt-28 rounded-2xl bg-white p-5 ring-1 ring-[#c49a3c]/40 sm:p-6"
+        >
+          <div className="mb-5 flex items-center justify-between">
+            <p className="text-lg font-semibold text-[#14245a]">
+              {editingId ? "Edit photo" : "Add a photo"}
+            </p>
             <button
               onClick={handleCloseForm}
-              className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+              title="Close"
+              aria-label="Close"
+              className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-[#14245a]"
             >
               <X size={18} />
             </button>
           </div>
 
-          {/* Image Upload */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Image *
-            </label>
-            <ImageUpload
-              value={formData.src}
-              onChange={(url) => setFormData((prev) => ({ ...prev, src: url }))}
-              bucket="gallery-images"
-              folder="gallery"
-              label="Upload Gallery Image"
-              aspectRatio="aspect-[4/3]"
-              maxSizeMB={10}
-            />
-          </div>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-[1.2fr_1fr]">
+            {/* Photo */}
+            <div>
+              <p className={labelClass}>
+                Photo <span className="text-[#c49a3c]">*</span>
+              </p>
+              <ImageUpload
+                value={formData.src}
+                onChange={(url) =>
+                  setFormData((prev) => ({ ...prev, src: url }))
+                }
+                bucket="gallery-images"
+                folder="gallery"
+                label="Upload photo"
+                aspectRatio="aspect-[4/3]"
+                maxSizeMB={10}
+              />
+            </div>
 
-          {/* Alt Text */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Alt Text{" "}
-              <span className="text-gray-400 font-normal">(optional)</span>
-            </label>
-            <input
-              type="text"
-              value={formData.alt}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, alt: e.target.value }))
-              }
-              placeholder="Describe the image for accessibility..."
-              className="w-full h-11 px-4 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all placeholder:text-gray-400"
-              maxLength={200}
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              {formData.alt.length}/200 characters
-            </p>
-          </div>
+            {/* Description */}
+            <div className="flex flex-col">
+              <div className="mb-1.5 flex items-center justify-between">
+                <p className={labelClass.replace("mb-1.5 ", "")}>Description</p>
+                <span className="text-[11px] text-slate-400 tabular-nums">
+                  {formData.alt.length}/200
+                </span>
+              </div>
+              <textarea
+                value={formData.alt}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, alt: e.target.value }))
+                }
+                rows={4}
+                maxLength={200}
+                placeholder="e.g. Guests at the Narsingdi Business Summit 2026"
+                className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15"
+              />
+              <p className="mt-2 rounded-xl bg-[#faf8f3] p-3 text-xs leading-relaxed text-slate-500 ring-1 ring-[#c49a3c]/20">
+                A short description helps people using screen readers, and helps
+                Google show the photo in search.
+              </p>
 
-          {/* Actions */}
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              onClick={handleSubmit}
-              disabled={isPending || !formData.src}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-bold rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-            >
-              {isPending && <Loader2 size={14} className="animate-spin" />}
-              {editingId ? "Update Image" : "Add to Gallery"}
-            </button>
-            <button
-              onClick={handleCloseForm}
-              disabled={isPending}
-              className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
+              {/* Save */}
+              <div className="mt-auto flex items-center justify-end gap-2 pt-5">
+                <button
+                  onClick={handleCloseForm}
+                  disabled={isPending}
+                  className="cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:border-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={isPending || !formData.src}
+                  className="flex cursor-pointer items-center gap-2 rounded-xl bg-[#14245a] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1d3274] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isPending && <Loader2 size={14} className="animate-spin" />}
+                  {editingId ? "Save changes" : "Add to gallery"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ─── Empty State ─── */}
+      {/* ─── No photos yet ─── */}
       {images.length === 0 && !showForm && (
-        <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-xl">
-          <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <h3 className="text-sm font-bold text-gray-500 mb-1">
-            No gallery images yet
-          </h3>
-          <p className="text-xs text-gray-400 mb-4">
-            Start by adding your first image to the gallery.
+        <div className="rounded-2xl border border-dashed border-[#c49a3c]/40 bg-[#faf8f3] py-14 text-center">
+          <ImageIcon className="mx-auto mb-3 h-10 w-10 text-[#c49a3c]" />
+          <p className="text-lg font-semibold text-[#14245a]">No photos yet</p>
+          <p className="mt-1 mb-5 text-sm text-slate-500">
+            Add photos from your events to fill the gallery.
           </p>
           <button
             onClick={handleOpenCreate}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-bold rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#14245a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1d3274]"
           >
             <Plus size={14} />
-            Add First Image
+            Add the first photo
           </button>
         </div>
       )}
 
-      {/* ─── Image Grid ─── */}
+      {/* ─── Photos ─── */}
       {images.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
           {images.map((image) => (
-            <div
+            <PhotoCard
               key={image.id}
-              className="group relative bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
-            >
-              {/* Image Preview */}
-              <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
-                <img
-                  src={image.src}
-                  alt={image.alt ?? "Gallery image"}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-
-                {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
-                  <button
-                    onClick={() => handleOpenEdit(image)}
-                    className="p-2.5 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                    title="Edit"
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    onClick={() => setDeletingId(image.id)}
-                    className="p-2.5 bg-white text-red-600 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
-                    title="Delete"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Info */}
-              <div className="p-3">
-                <p className="text-sm text-gray-700 font-medium truncate">
-                  {image.alt || "No description"}
-                </p>
-                <p className="text-[10px] text-gray-400 mt-1">
-                  Added{" "}
-                  {new Date(image.createdAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </p>
-              </div>
-
-              {/* ─── Delete Confirmation ─── */}
-              {deletingId === image.id && (
-                <div className="absolute inset-0 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 z-10">
-                  <Trash2 className="w-8 h-8 text-red-500 mb-2" />
-                  <p className="text-sm font-bold text-gray-900 mb-1">
-                    Delete this image?
-                  </p>
-                  <p className="text-xs text-gray-500 text-center mb-4">
-                    This action cannot be undone.
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleDelete(image.id)}
-                      disabled={isPending}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors cursor-pointer"
-                    >
-                      {isPending && (
-                        <Loader2 size={12} className="animate-spin" />
-                      )}
-                      Delete
-                    </button>
-                    <button
-                      onClick={() => setDeletingId(null)}
-                      disabled={isPending}
-                      className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg transition-colors cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+              image={image}
+              editing={editingId === image.id}
+              confirmingDelete={deletingId === image.id}
+              busy={isPending}
+              onEdit={() => handleOpenEdit(image)}
+              onAskDelete={() => setDeletingId(image.id)}
+              onCancelDelete={() => setDeletingId(null)}
+              onDelete={() => handleDelete(image.id)}
+            />
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  One photo
+// ════════════════════════════════════════════════════════════════════════
+
+const labelClass =
+  "mb-1.5 block text-[11px] font-semibold tracking-[0.15em] text-[#14245a] uppercase";
+
+function PhotoCard({
+  image,
+  editing,
+  confirmingDelete,
+  busy,
+  onEdit,
+  onAskDelete,
+  onCancelDelete,
+  onDelete,
+}: {
+  image: GalleryImage;
+  editing: boolean;
+  confirmingDelete: boolean;
+  busy: boolean;
+  onEdit: () => void;
+  onAskDelete: () => void;
+  onCancelDelete: () => void;
+  onDelete: () => void;
+}) {
+  // The photo's link doesn't load (moved or deleted somewhere else)
+  const [broken, setBroken] = useState(false);
+
+  return (
+    <div
+      className={`group relative overflow-hidden rounded-2xl bg-white ring-1 transition hover:shadow-lg hover:shadow-[#14245a]/5 ${
+        editing ? "ring-2 ring-[#c49a3c]" : "ring-slate-200/70"
+      }`}
+    >
+      {/* Photo — click to edit */}
+      <button
+        type="button"
+        onClick={onEdit}
+        className="relative block aspect-[4/3] w-full cursor-pointer overflow-hidden bg-slate-100"
+        title="Edit photo"
+      >
+        {broken ? (
+          <span className="flex h-full w-full flex-col items-center justify-center gap-1 text-slate-400">
+            <ImageOff size={22} />
+            <span className="text-xs">Photo couldn&apos;t load</span>
+          </span>
+        ) : (
+          <img
+            src={image.src}
+            alt={image.alt ?? "Gallery photo"}
+            onError={() => setBroken(true)}
+            // The photo can fail before React is listening for onError
+            // (it starts loading with the page), so check once it's on screen.
+            ref={(img) => {
+              if (img?.complete && img.naturalWidth === 0) setBroken(true);
+            }}
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          />
+        )}
+        {editing && (
+          <span className="absolute top-2 left-2 rounded-full bg-[#c49a3c] px-2 py-0.5 text-[10px] font-semibold tracking-wider text-white uppercase">
+            Editing
+          </span>
+        )}
+      </button>
+
+      {/* Description, date, and the buttons (always visible — phones can't hover) */}
+      <div className="flex items-start gap-2 p-3">
+        <div className="min-w-0 flex-1">
+          {image.alt ? (
+            <p className="line-clamp-2 text-sm font-medium text-[#14245a]">
+              {image.alt}
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="cursor-pointer text-sm font-medium text-amber-700 hover:underline"
+            >
+              + Add a description
+            </button>
+          )}
+          <p className="mt-0.5 text-[11px] text-slate-400">
+            Added{" "}
+            {new Date(image.createdAt).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center">
+          <button
+            onClick={onEdit}
+            title="Edit"
+            aria-label="Edit photo"
+            className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-[#14245a]"
+          >
+            <Pencil size={15} />
+          </button>
+          <button
+            onClick={onAskDelete}
+            title="Delete"
+            aria-label="Delete photo"
+            className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      </div>
+
+      {/* Delete: ask first */}
+      {confirmingDelete && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/95 p-4 text-center backdrop-blur-sm">
+          <span className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-red-50">
+            <Trash2 className="h-5 w-5 text-red-500" />
+          </span>
+          <p className="text-sm font-semibold text-[#14245a]">
+            Delete this photo?
+          </p>
+          <p className="mt-0.5 mb-4 text-xs text-slate-500">
+            It can&apos;t be undone.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={onCancelDelete}
+              disabled={busy}
+              className="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-slate-300"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onDelete}
+              disabled={busy}
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {busy && <Loader2 size={12} className="animate-spin" />}
+              Delete
+            </button>
+          </div>
         </div>
       )}
     </div>
