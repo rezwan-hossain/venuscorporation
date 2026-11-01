@@ -77,7 +77,7 @@ export async function sendContactMessage(
       }
     }
 
-    await prisma.contactMessage.create({
+    const saved = await prisma.contactMessage.create({
       data: {
         name: form.name,
         phone: form.phone,
@@ -88,6 +88,15 @@ export async function sendContactMessage(
         message: form.message,
         ip,
       },
+    });
+    // The sender isn't signed in, so name them as the actor.
+    // (No message text or IP in the log — that stays in the inbox.)
+    await audit({
+      action: "contact.received",
+      entityType: "contact",
+      entityId: saved.id,
+      summary: `New enquiry from ${saved.name} (${saved.eventType})`,
+      actor: { id: null, label: `Visitor · ${saved.name}` },
     });
     return { success: true, error: null };
   } catch (err) {
@@ -149,7 +158,23 @@ export async function setContactStatus(
     return { success: false, error: "Unknown status" };
 
   try {
-    await prisma.contactMessage.update({ where: { id }, data: { status } });
+    const before = await prisma.contactMessage.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+    const message = await prisma.contactMessage.update({
+      where: { id },
+      data: { status },
+    });
+    if (before && before.status !== status) {
+      await audit({
+        action: "contact.status_changed",
+        entityType: "contact",
+        entityId: id,
+        summary: `Marked the enquiry from ${message.name} as ${status.toLowerCase()}`,
+        changes: { status: [before.status, status] },
+      });
+    }
     return { success: true, error: null };
   } catch {
     return { success: false, error: "Failed to update the message" };
@@ -167,9 +192,17 @@ export async function saveContactNote(
     return { success: false, error: "Keep the note under 2000 characters" };
 
   try {
-    await prisma.contactMessage.update({
+    const message = await prisma.contactMessage.update({
       where: { id },
       data: { adminNote: note.trim() || null },
+    });
+    await audit({
+      action: "contact.note_saved",
+      entityType: "contact",
+      entityId: id,
+      summary: message.adminNote
+        ? `Saved a note on the enquiry from ${message.name}`
+        : `Cleared the note on the enquiry from ${message.name}`,
     });
     return { success: true, error: null };
   } catch {

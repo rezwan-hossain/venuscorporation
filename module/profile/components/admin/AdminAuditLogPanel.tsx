@@ -29,7 +29,9 @@ const CATEGORIES: { value: AuditCategory; label: string }[] = [
   { value: "payments", label: "Payments" },
   { value: "events", label: "Events & packages" },
   { value: "coupons", label: "Coupons" },
-  { value: "content", label: "Homepage & team" },
+  { value: "homepage", label: "Homepage hero & FAQ" },
+  { value: "content", label: "Gallery & team" },
+  { value: "contacts", label: "Contact messages" },
   { value: "messages", label: "Emails & SMS" },
 ];
 
@@ -57,7 +59,7 @@ function chip(action: string) {
       cls: "bg-red-50 text-red-700 border-red-200",
     };
   if (
-    /created|manual_created|duplicated|activated$/.test(verb) &&
+    /created|manual_created|duplicated|received|activated$/.test(verb) &&
     verb !== "deactivated"
   )
     return {

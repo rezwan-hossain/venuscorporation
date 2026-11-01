@@ -36,7 +36,9 @@ const CATEGORY_WHERE: Record<AuditCategory, Prisma.AuditLogWhereInput> = {
   payments: { entityType: "payment" },
   events: { entityType: { in: ["event", "package", "organizer"] } },
   coupons: { entityType: "coupon" },
-  content: { entityType: { in: ["hero", "gallery", "team", "faq"] } },
+  homepage: { entityType: { in: ["hero", "faq"] } },
+  content: { entityType: { in: ["gallery", "team"] } },
+  contacts: { entityType: "contact" },
   messages: { action: { startsWith: "notification." } },
 };
 
