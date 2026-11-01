@@ -2,7 +2,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { cacheLife, cacheTag, revalidatePath, updateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { audit, diff } from "@/lib/audit";
 
@@ -57,7 +57,14 @@ export async function getAllTeamMembers() {
 }
 
 // ─── GET ACTIVE TEAM MEMBERS (for public page) ─────
+// Public: the team shown on the About page. Cached for days so the page
+// doesn't wait on the database; every team change below refreshes it
+// (updateTag("team")), so edits still show at once.
 export async function getActiveTeamMembers() {
+  "use cache";
+  cacheLife("days");
+  cacheTag("team");
+
   try {
     const members = await prisma.teamMember.findMany({
       where: { isActive: true },
@@ -119,6 +126,7 @@ export async function createTeamMember(data: {
     });
 
     revalidatePath("/about");
+    updateTag("team");
     revalidatePath("/profile");
 
     await audit({
@@ -175,6 +183,7 @@ export async function updateTeamMember(
     }
 
     revalidatePath("/about");
+    updateTag("team");
     revalidatePath("/profile");
 
     return { success: true, member };
@@ -200,6 +209,7 @@ export async function deleteTeamMember(id: string) {
     });
 
     revalidatePath("/about");
+    updateTag("team");
     revalidatePath("/profile");
 
     return { success: true };
@@ -232,6 +242,7 @@ export async function toggleTeamMemberActive(id: string) {
     });
 
     revalidatePath("/about");
+    updateTag("team");
     revalidatePath("/profile");
 
     return { success: true, member: updated };
@@ -266,6 +277,7 @@ export async function reorderTeamMembers(
     });
 
     revalidatePath("/about");
+    updateTag("team");
     revalidatePath("/profile");
 
     return { success: true };
