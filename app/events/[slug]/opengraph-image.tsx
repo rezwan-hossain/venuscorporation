@@ -1,11 +1,34 @@
 // app/events/[slug]/opengraph-image.tsx
+//
+// The picture shown when an event link is shared (Facebook, WhatsApp,
+// LinkedIn, X, Messenger …). Next.js adds the <meta og:image> tag for it.
+//
+//   ┌──────────────────────────────────────────────┐
+//   │ [CONFERENCE / SUMMIT]            event photo │
+//   │ Narsingdi Business Summit 2026               │
+//   │ 📅 Sun, 13 Dec 2026   📍 Narsingdi Sadar      │
+//   │ Tickets from Tk 3,000                        │
+//   │ [logo] venuscorporation.org                  │
+//   └──────────────────────────────────────────────┘
+//
+// Drawn as PNG, then saved as JPEG with sharp: a photo as PNG is ~800 KB,
+// and WhatsApp skips preview images that big. As JPEG it's ~60 KB.
+// Prices say "Tk": the font has no ৳ sign (it would show as a box).
+
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
+import sharp from "sharp";
 import { loadGoogleFont } from "@/lib/og-fonts";
 import { prisma } from "@/lib/prisma";
+import { getEventCategory } from "@/lib/event-checkout-form";
 
-export const alt = "Event";
+export const alt = "Venus Corporation event";
 export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
+export const contentType = "image/jpeg";
+
+const NAVY = "#14245a";
+const GOLD = "#dcb45c";
 
 export default async function EventOGImage({
   params,
@@ -14,89 +37,59 @@ export default async function EventOGImage({
 }) {
   const { slug } = await params;
 
-  const [event, titleFont, bodyFont] = await Promise.all([
+  const [event, regular, bold, logo] = await Promise.all([
     prisma.event.findUnique({
       where: { slug },
       select: {
         name: true,
-        thumbImage: true,
         bannerImage: true,
+        thumbImage: true,
         date: true,
         address: true,
-        eventType: true,
-        shortDesc: true,
+        category: true,
         minPackagePrice: true,
-        organizer: {
-          select: { name: true },
-        },
       },
     }),
-    loadGoogleFont("Bebas Neue", 400),
     loadGoogleFont("Inter", 400),
+    loadGoogleFont("Inter", 700),
+    readFile(join(process.cwd(), "public/venuscorporation-logo.png")),
   ]);
 
-  if (!event) {
-    return new ImageResponse(
-      <div
-        style={{
-          width: 1200,
-          height: 630,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#c49a3c",
-          color: "#fff",
-          fontSize: 48,
-          fontFamily: "Bebas Neue",
-        }}
-      >
-        Event Not Found
-      </div>,
-      {
-        width: 1200,
-        height: 630,
-        fonts: [
-          {
-            name: "Bebas Neue",
-            data: titleFont,
-            weight: 400,
-            style: "normal",
-          },
-        ],
-      },
-    );
-  }
+  const logoSrc = `data:image/png;base64,${logo.toString("base64")}`;
 
-  const eventImage = event.thumbImage || event.bannerImage || null;
+  // The banner is the big photo; the thumbnail is only 600px wide.
+  const photo = event ? event.bannerImage || event.thumbImage : null;
 
-  const formattedDateEn = new Date(event.date).toLocaleDateString("en-US", {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-
-  // Truncate address to prevent overflow
-  const truncatedAddress = event.address
-    ? event.address.length > 45
-      ? event.address.substring(0, 45) + "..."
-      : event.address
+  const date = event
+    ? new Date(event.date).toLocaleDateString("en-GB", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Dhaka",
+      })
     : "";
+  const place = event?.address?.split(",")[0]?.trim() ?? "";
+  const price =
+    event?.minPackagePrice != null && event.minPackagePrice > 0
+      ? `Tickets from Tk ${Math.round(event.minPackagePrice).toLocaleString("en-IN")}`
+      : null;
 
-  return new ImageResponse(
+  const png = new ImageResponse(
     <div
       style={{
         width: 1200,
         height: 630,
         display: "flex",
         position: "relative",
-        background: "#1a1a1a",
+        background: NAVY,
+        fontFamily: "Inter",
       }}
     >
-      {/* Background Image */}
-      {eventImage ? (
+      {/* Photo on the right, fading into navy on the left */}
+      {photo && (
         <img
-          src={eventImage}
+          src={photo}
           width={1200}
           height={630}
           alt=""
@@ -109,193 +102,175 @@ export default async function EventOGImage({
             objectFit: "cover",
           }}
         />
-      ) : (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: 1200,
-            height: 630,
-            background: "linear-gradient(135deg, #c49a3c 0%, #8a6a22 100%)",
-            display: "flex",
-          }}
-        />
       )}
-
-      {/* Simplified Gradient Overlay */}
       <div
         style={{
           position: "absolute",
-          bottom: 0,
+          top: 0,
           left: 0,
           width: 1200,
-          height: 280,
-          background:
-            "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 60%, transparent 100%)",
+          height: 630,
           display: "flex",
+          background: `linear-gradient(90deg, ${NAVY} 0%, rgba(20,36,90,0.92) 45%, rgba(20,36,90,0.35) 100%)`,
         }}
       />
 
-      {/* Bottom Content */}
+      {/* Gold strip down the left edge */}
       <div
         style={{
           position: "absolute",
-          bottom: 0,
+          top: 0,
           left: 0,
-          width: 1200,
-          padding: "40px 50px",
+          width: 12,
+          height: 630,
+          display: "flex",
+          background: GOLD,
+        }}
+      />
+
+      {/* Text */}
+      <div
+        style={{
+          position: "relative",
           display: "flex",
           flexDirection: "column",
-          gap: 16,
+          justifyContent: "space-between",
+          width: 1200,
+          height: 630,
+          padding: "64px 72px 56px 84px",
         }}
       >
-        {/* Event Name - using loaded font "Inter" */}
-        <div
-          style={{
-            fontSize: 52,
-            fontFamily: "Inter",
-            fontWeight: 700,
-            color: "#ffffff",
-            lineHeight: 1.2,
-            display: "flex",
-            flexWrap: "wrap",
-          }}
-        >
-          {event.name}
-        </div>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {event && (
+            <div style={{ display: "flex" }}>
+              <div
+                style={{
+                  display: "flex",
+                  padding: "8px 18px",
+                  borderRadius: 999,
+                  background: "rgba(220,180,92,0.18)",
+                  border: "1px solid rgba(220,180,92,0.5)",
+                  color: GOLD,
+                  fontSize: 20,
+                  fontWeight: 700,
+                  letterSpacing: 3,
+                  textTransform: "uppercase",
+                }}
+              >
+                {getEventCategory(event.category).label}
+              </div>
+            </div>
+          )}
 
-        {/* Accent Line - removed boxShadow */}
-        <div
-          style={{
-            width: 100,
-            height: 4,
-            background: "#c49a3c",
-            borderRadius: 2,
-            display: "flex",
-          }}
-        />
-
-        {/* Date & Location Row */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 40,
-            marginTop: 8,
-          }}
-        >
-          {/* Date */}
           <div
             style={{
               display: "flex",
-              alignItems: "center",
-              gap: 12,
+              marginTop: 28,
+              maxWidth: 820,
+              color: "#ffffff",
+              fontSize: event && event.name.length > 40 ? 58 : 70,
+              fontWeight: 700,
+              lineHeight: 1.1,
             }}
           >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              style={{ display: "flex" }}
-            >
-              <rect
-                x="3"
-                y="4"
-                width="18"
-                height="18"
-                rx="2"
-                stroke="#c49a3c"
-                strokeWidth="2"
-              />
-              <path d="M3 10H21" stroke="#c49a3c" strokeWidth="2" />
-              <path d="M8 2V6" stroke="#c49a3c" strokeWidth="2" />
-              <path d="M16 2V6" stroke="#c49a3c" strokeWidth="2" />
-            </svg>
-            <div
-              style={{
-                fontSize: 22,
-                fontFamily: "Inter",
-                color: "rgba(255,255,255,0.9)",
-                fontWeight: 400,
-                display: "flex",
-              }}
-            >
-              {formattedDateEn}
-            </div>
+            {event?.name ?? "Event not found"}
           </div>
 
-          {/* Divider */}
-          <div
-            style={{
-              width: 2,
-              height: 30,
-              background: "rgba(255,255,255,0.3)",
-              display: "flex",
-            }}
-          />
+          {event && (
+            <div
+              style={{
+                display: "flex",
+                gap: 36,
+                marginTop: 30,
+                color: "rgba(255,255,255,0.88)",
+                fontSize: 28,
+              }}
+            >
+              <Fact icon="calendar" text={date} />
+              {place && <Fact icon="pin" text={place} />}
+            </div>
+          )}
 
-          {/* Location */}
+          {price && (
+            <div
+              style={{
+                display: "flex",
+                marginTop: 22,
+                color: GOLD,
+                fontSize: 28,
+                fontWeight: 700,
+              }}
+            >
+              {price}
+            </div>
+          )}
+        </div>
+
+        {/* Brand */}
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
           <div
             style={{
               display: "flex",
-              alignItems: "center",
-              gap: 12,
+              padding: "8px 14px",
+              borderRadius: 14,
+              background: "#ffffff",
             }}
           >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              style={{ display: "flex" }}
-            >
-              <path
-                d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2Z"
-                stroke="#c49a3c"
-                strokeWidth="2"
-              />
-              <circle cx="12" cy="9" r="2.5" fill="#c49a3c" />
-            </svg>
-            <div
-              style={{
-                fontSize: 20,
-                fontFamily: "Inter",
-                color: "rgba(255,255,255,0.8)",
-                fontWeight: 400,
-                display: "flex",
-              }}
-            >
-              {truncatedAddress}
-            </div>
+            <img src={logoSrc} width={116} height={56} alt="" />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              color: "rgba(255,255,255,0.75)",
+              fontSize: 22,
+              letterSpacing: 2,
+            }}
+          >
+            venuscorporation.org
           </div>
         </div>
-      </div>
-
-      {/* Brand watermark */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 30,
-          right: 40,
-          fontSize: 14,
-          fontFamily: "Inter",
-          color: "rgba(255,255,255,0.4)",
-          letterSpacing: 2,
-          display: "flex",
-        }}
-      >
-        venuscorporation.org
       </div>
     </div>,
     {
-      width: 1200,
-      height: 630,
+      ...size,
       fonts: [
-        { name: "Bebas Neue", data: titleFont, weight: 400, style: "normal" },
-        { name: "Inter", data: bodyFont, weight: 400, style: "normal" },
+        { name: "Inter", data: regular, weight: 400, style: "normal" },
+        { name: "Inter", data: bold, weight: 700, style: "normal" },
       ],
     },
+  );
+
+  const jpeg = await sharp(Buffer.from(await png.arrayBuffer()))
+    .jpeg({ quality: 82, mozjpeg: true })
+    .toBuffer();
+
+  return new Response(new Uint8Array(jpeg), {
+    headers: { "Content-Type": "image/jpeg" },
+  });
+}
+
+/** A gold icon + text, e.g. 📅 Sun, 13 Dec 2026 */
+function Fact({ icon, text }: { icon: "calendar" | "pin"; text: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        {icon === "calendar" ? (
+          <>
+            <rect x="3" y="4" width="18" height="18" rx="2" stroke={GOLD} strokeWidth="2" />
+            <path d="M3 10H21M8 2V6M16 2V6" stroke={GOLD} strokeWidth="2" />
+          </>
+        ) : (
+          <>
+            <path
+              d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2Z"
+              stroke={GOLD}
+              strokeWidth="2"
+            />
+            <circle cx="12" cy="9" r="2.5" fill={GOLD} />
+          </>
+        )}
+      </svg>
+      <div style={{ display: "flex" }}>{text}</div>
+    </div>
   );
 }

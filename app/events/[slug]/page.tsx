@@ -12,6 +12,13 @@ type Props = {
 };
 
 // ── Dynamic Metadata ─────────────────────────
+// What Facebook, WhatsApp, LinkedIn, X … show when someone shares the link:
+//   title        → event name
+//   description  → "Sun, 13 Dec 2026 · Narsingdi — <short description>"
+//   image        → NOT set here on purpose. ./opengraph-image.tsx draws a
+//                  branded card (photo + name + date + place) and Next.js
+//                  adds it automatically. Setting `images` here would replace
+//                  it with the plain thumbnail.
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const { event } = await getEventBySlug(slug);
@@ -20,49 +27,45 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Event Not Found" };
   }
 
-  const eventImage = event.thumbImage || event.bannerImage;
-  const formattedDate = new Date(event.date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
+  const date = new Date(event.date).toLocaleDateString("en-GB", {
+    weekday: "short",
     day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Asia/Dhaka",
   });
+  const place = event.address?.split(",")[0]?.trim(); // "Narsingdi Sadar"
+  const facts = [date, place].filter(Boolean).join(" · ");
+  const about = event.shortDesc?.trim() || `Join us for ${event.name}.`;
+  const description = shorten(`${facts} — ${about}`, 200);
   const url = `${process.env.NEXT_PUBLIC_SITE_URL}/events/${slug}`;
 
   return {
     title: event.name,
-    description:
-      event.shortDesc || `${event.name} — ${formattedDate} at ${event.address}`,
-
+    description,
     openGraph: {
       title: event.name,
-      description:
-        event.shortDesc || `Join us for ${event.name} on ${formattedDate}`,
-      type: "article",
+      description,
+      type: "website",
       url,
-      siteName: "merchsports.com",
+      siteName: "Venus Corporation",
       locale: "en_US",
-      ...(eventImage && {
-        images: [
-          {
-            url: eventImage,
-            width: 1200,
-            height: 630,
-            alt: event.name,
-          },
-        ],
-      }),
     },
-
     twitter: {
       card: "summary_large_image",
       title: event.name,
-      description: event.shortDesc || `${event.name} — ${formattedDate}`,
+      description,
     },
-
     alternates: {
       canonical: url,
     },
   };
+}
+
+/** Cut long text at a word boundary and add "…". */
+function shorten(text: string, max: number) {
+  if (text.length <= max) return text;
+  return text.slice(0, text.lastIndexOf(" ", max - 1)) + "…";
 }
 
 // ── Page Component ───────────────────────────
