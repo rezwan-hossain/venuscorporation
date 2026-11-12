@@ -56,38 +56,59 @@ export const services: Service[] = [
     name: "Corporate Events",
     text: "Annual meetings, launches, award nights and team events that reflect your brand.",
     includes: ["Venue & production", "Branding & staging", "Guest management"],
-    image: photo("1540575467063-178a50c2df87", 900),
+    image:
+      "https://res.cloudinary.com/s8zandym/image/upload/v1794473610/venuscorporation/gallery/k7gmrqonpcix1j1155nj.jpg",
   },
   {
     name: "Sports Events",
     text: "City marathons, trail runs and tournaments — routes, timing, registration and race day.",
-    includes: ["Online registration", "Race-day operations", "Medals & merchandise"],
+    includes: [
+      "Online registration",
+      "Race-day operations",
+      "Medals & merchandise",
+    ],
     image: photo("1513593771513-7b58b6c4af38", 900),
     href: "/events",
   },
   {
     name: "Weddings",
     text: "Elegant, stress-free weddings — from the first concept to the final dance.",
-    includes: ["Décor & theme design", "Catering & venue", "Day-of coordination"],
-    image: photo("1511285560929-80b456fea0bc", 900),
+    includes: [
+      "Décor & theme design",
+      "Catering & venue",
+      "Day-of coordination",
+    ],
+    image:
+      "https://res.cloudinary.com/s8zandym/image/upload/v1794473062/venuscorporation/gallery/hwyvt5kqsvqgtt5v87b9.jpg",
   },
   {
     name: "Conferences & Seminars",
     text: "Professional programmes with speakers, AV, registration and hospitality handled.",
-    includes: ["Speaker & agenda management", "Audio-visual & streaming", "Delegate registration"],
-    image: photo("1475721027785-f74eccf877e2", 900),
+    includes: [
+      "Speaker & agenda management",
+      "Audio-visual & streaming",
+      "Delegate registration",
+    ],
+    image:
+      "https://res.cloudinary.com/s8zandym/image/upload/v1794472938/venuscorporation/gallery/hs4gfftu46td0z8v92se.jpg",
   },
   {
     name: "Exhibitions & Trade Shows",
     text: "Stands, floor plans and visitor flow that turn footfall into business.",
-    includes: ["Stand design & build", "Exhibitor coordination", "Visitor registration"],
-    image: photo("1560439514-4e9645039924", 900),
+    includes: [
+      "Stand design & build",
+      "Exhibitor coordination",
+      "Visitor registration",
+    ],
+    image:
+      "https://res.cloudinary.com/s8zandym/image/upload/v1794473527/venuscorporation/gallery/cqozbiex0hblzogqmad3.jpg",
   },
   {
     name: "Private & Social Events",
     text: "Birthdays, anniversaries, family gatherings and celebrations, beautifully hosted.",
     includes: ["Themes & décor", "Entertainment", "Catering & hospitality"],
-    image: photo("1511795409834-ef04bbd61622", 900),
+    image:
+      "https://res.cloudinary.com/s8zandym/image/upload/v1794473883/venuscorporation/gallery/sp8fqjdedtxomr5jgtzx.jpg",
   },
 ];
 
@@ -103,20 +124,44 @@ export const stats = [
 // ─── How we plan your event ───────────────────────────
 
 export const steps = [
-  { title: "Consultation", text: "We listen to your vision, guests, budget and date." },
-  { title: "Concept & design", text: "A theme, layout and plan built around your goals." },
-  { title: "Planning & logistics", text: "Venue, vendors, permits and timelines — all handled." },
-  { title: "Event day", text: "Our on-site team runs everything so you can enjoy it." },
+  {
+    title: "Consultation",
+    text: "We listen to your vision, guests, budget and date.",
+  },
+  {
+    title: "Concept & design",
+    text: "A theme, layout and plan built around your goals.",
+  },
+  {
+    title: "Planning & logistics",
+    text: "Venue, vendors, permits and timelines — all handled.",
+  },
+  {
+    title: "Event day",
+    text: "Our on-site team runs everything so you can enjoy it.",
+  },
   { title: "Wrap-up", text: "Teardown, photos, feedback and a full report." },
 ];
 
 // ─── Why choose us ────────────────────────────────────
 
 export const reasons = [
-  { title: "One team, start to finish", text: "A dedicated planner is your single point of contact." },
-  { title: "Trusted vendor network", text: "Venues, caterers, AV and décor partners we've worked with for years." },
-  { title: "Transparent budgets", text: "Clear quotes up front, with no surprise costs later." },
-  { title: "Calm on the day", text: "Rehearsed plans and backup options for every detail." },
+  {
+    title: "One team, start to finish",
+    text: "A dedicated planner is your single point of contact.",
+  },
+  {
+    title: "Trusted vendor network",
+    text: "Venues, caterers, AV and décor partners we've worked with for years.",
+  },
+  {
+    title: "Transparent budgets",
+    text: "Clear quotes up front, with no surprise costs later.",
+  },
+  {
+    title: "Calm on the day",
+    text: "Rehearsed plans and backup options for every detail.",
+  },
 ];
 
 // ─── Gallery ──────────────────────────────────────────
@@ -134,17 +179,20 @@ export const gallery = [
 
 export const testimonials = [
   {
-    quote: "Our wedding was exactly how we imagined it — and we didn't have to worry about a single thing on the day.",
+    quote:
+      "Our wedding was exactly how we imagined it — and we didn't have to worry about a single thing on the day.",
     name: "Nusrat & Arif",
     role: "Wedding, Dhaka",
   },
   {
-    quote: "1,200 delegates, three halls, live streaming — and it all ran to the minute. We've booked them again for next year.",
+    quote:
+      "1,200 delegates, three halls, live streaming — and it all ran to the minute. We've booked them again for next year.",
     name: "Farhana Rahman",
     role: "Head of Marketing, Harbor Bank",
   },
   {
-    quote: "They handled registration, the route and race day for our marathon. Runners are still talking about it.",
+    quote:
+      "They handled registration, the route and race day for our marathon. Runners are still talking about it.",
     name: "Sakib Hasan",
     role: "Founder, Dhaka Runners Club",
   },
@@ -160,6 +208,10 @@ export const cta = {
   // Used by the homepage's closing section (contact details: config/contact.ts)
   phone: contactDetails.phones[0].label,
   email: contactDetails.email,
-  promises: ["Free first consultation", "Reply within one working day", "Clear, itemised quote"],
+  promises: [
+    "Free first consultation",
+    "Reply within one working day",
+    "Clear, itemised quote",
+  ],
   background: photo("1464366400600-7168b8af9bc3", 2000), // decorated reception hall
 };
