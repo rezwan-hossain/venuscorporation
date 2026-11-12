@@ -7,7 +7,7 @@ import { EventForm } from "./EventForm";
 import { Plus, ArrowLeft } from "lucide-react";
 import { EventsList } from "./EventsList";
 import { EventStatsBar } from "./EventStatsBar";
-import { EventFilters } from "./EventFilters";
+import { EventFilters, sortByUpcoming } from "./EventFilters";
 import { EventOrdersModal } from "./EventOrdersModal";
 import { EventActivityModal } from "./EventActivityModal";
 import { PaymentIssuesBanner } from "./PaymentIssuesBanner";
@@ -29,7 +29,10 @@ export function AdminEventsPanel({
   const [view, setView] = useState<View>("list");
   const [events, setEvents] = useState(initialEvents);
   const [editingEvent, setEditingEvent] = useState<AdminEvent | null>(null);
-  const [filteredEvents, setFilteredEvents] = useState(initialEvents);
+  // Shown upcoming-first until the admin picks another sort in the filters
+  const [filteredEvents, setFilteredEvents] = useState(() =>
+    sortByUpcoming(initialEvents),
+  );
   const [viewOrdersEvent, setViewOrdersEvent] = useState<AdminEvent | null>(
     null,
   );
@@ -72,7 +75,7 @@ export function AdminEventsPanel({
     setEvents(updatedEvents);
     setView("list");
     setEditingEvent(null);
-    setFilteredEvents(updatedEvents);
+    setFilteredEvents(sortByUpcoming(updatedEvents));
   };
 
   return (

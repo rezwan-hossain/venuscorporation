@@ -18,13 +18,37 @@ type Props = {
   onFilter: (filtered: AdminEvent[]) => void;
 };
 
+/**
+ * The default order of the admin event list:
+ *   1. upcoming events (today or later) — soonest first
+ *   2. then past events — most recent first
+ */
+export function sortByUpcoming(events: AdminEvent[]): AdminEvent[] {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const today = startOfToday.getTime();
+
+  return [...events].sort((a, b) => {
+    const aTime = new Date(a.date).getTime();
+    const bTime = new Date(b.date).getTime();
+    const aUpcoming = aTime >= today;
+    const bUpcoming = bTime >= today;
+
+    // Upcoming events always come before past ones
+    if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
+
+    // Both upcoming: soonest first. Both past: most recent first.
+    return aUpcoming ? aTime - bTime : bTime - aTime;
+  });
+}
+
 export function EventFilters({ events, onFilter }: Props) {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     status: "all",
     eventType: "all",
-    sortBy: "date",
+    sortBy: "upcoming",
     sortOrder: "desc",
   });
 
@@ -58,6 +82,10 @@ export function EventFilters({ events, onFilter }: Props) {
     }
 
     // Sort
+    if (newFilters.sortBy === "upcoming") {
+      onFilter(sortByUpcoming(result));
+      return;
+    }
     result.sort((a, b) => {
       let compare = 0;
       switch (newFilters.sortBy) {
@@ -91,7 +119,7 @@ export function EventFilters({ events, onFilter }: Props) {
       search: "",
       status: "all",
       eventType: "all",
-      sortBy: "date",
+      sortBy: "upcoming",
       sortOrder: "desc",
     };
     setFilters(reset);
@@ -191,6 +219,7 @@ export function EventFilters({ events, onFilter }: Props) {
               onChange={(e) => updateFilter("sortBy", e.target.value)}
               className="h-9 px-3 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none cursor-pointer"
             >
+              <option value="upcoming">Upcoming first</option>
               <option value="date">Date</option>
               <option value="name">Name</option>
               <option value="orders">Orders</option>
@@ -206,7 +235,9 @@ export function EventFilters({ events, onFilter }: Props) {
             <select
               value={filters.sortOrder}
               onChange={(e) => updateFilter("sortOrder", e.target.value)}
-              className="h-9 px-3 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none cursor-pointer"
+              // "Upcoming first" has its own fixed order
+              disabled={filters.sortBy === "upcoming"}
+              className="h-9 px-3 disabled:cursor-not-allowed disabled:opacity-50 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none cursor-pointer"
             >
               <option value="desc">Newest First</option>
               <option value="asc">Oldest First</option>

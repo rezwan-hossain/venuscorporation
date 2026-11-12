@@ -58,6 +58,7 @@ export const services: Service[] = [
     includes: ["Venue & production", "Branding & staging", "Guest management"],
     image:
       "https://res.cloudinary.com/s8zandym/image/upload/v1794473610/venuscorporation/gallery/k7gmrqonpcix1j1155nj.jpg",
+    href: "/events",
   },
   {
     name: "Sports Events",
@@ -67,7 +68,8 @@ export const services: Service[] = [
       "Race-day operations",
       "Medals & merchandise",
     ],
-    image: photo("1513593771513-7b58b6c4af38", 900),
+    image:
+      "https://res.cloudinary.com/s8zandym/image/upload/v1794482820/venuscorporation/gallery/psm8ntfsepoqomodvfje.jpg",
     href: "/events",
   },
   {
@@ -91,6 +93,7 @@ export const services: Service[] = [
     ],
     image:
       "https://res.cloudinary.com/s8zandym/image/upload/v1794472938/venuscorporation/gallery/hs4gfftu46td0z8v92se.jpg",
+    href: "/events",
   },
   {
     name: "Exhibitions & Trade Shows",
@@ -102,6 +105,7 @@ export const services: Service[] = [
     ],
     image:
       "https://res.cloudinary.com/s8zandym/image/upload/v1794473527/venuscorporation/gallery/cqozbiex0hblzogqmad3.jpg",
+    href: "/events",
   },
   {
     name: "Private & Social Events",
