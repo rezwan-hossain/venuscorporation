@@ -9,6 +9,10 @@
 //   • Add photo / Edit opens the form at the top (and scrolls to it)
 //   • Each photo: click it or the pencil to edit, the bin to delete
 //     (asks first). Buttons are always visible — phones can't hover.
+//   • Service: which service the photo shows (Weddings, Sports Events …).
+//     The Gallery page uses it for its filter chips. Pick it in the form, or
+//     change it straight from the dropdown on each photo. The form remembers
+//     the last service picked, so adding a batch of wedding photos is quick.
 // Data: app/actions/gallery.ts
 
 import { useRef, useState, useTransition } from "react";
@@ -31,8 +35,10 @@ import type { GalleryImage } from "@/types/gallery";
 import {
   createGalleryImage,
   deleteGalleryImage,
+  setGalleryImageService,
   updateGalleryImage,
 } from "@/app/actions/gallery";
+import { GALLERY_SERVICES } from "@/lib/gallery-services";
 
 type Props = {
   initialImages: GalleryImage[];
@@ -41,9 +47,10 @@ type Props = {
 type FormData = {
   src: string;
   alt: string;
+  service: string; // "" = no service
 };
 
-const emptyForm: FormData = { src: "", alt: "" };
+const emptyForm: FormData = { src: "", alt: "", service: "" };
 
 // ════════════════════════════════════════════════════════════════════════
 //  Photos | Event films switch
@@ -104,6 +111,8 @@ function GalleryPhotos({ initialImages }: Props) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLDivElement>(null);
+  // The service picked last time, so the next "Add photo" starts with it
+  const [lastService, setLastService] = useState("");
   const [toast, setToast] = useState<{
     type: "success" | "error";
     message: string;
@@ -124,7 +133,7 @@ function GalleryPhotos({ initialImages }: Props) {
   // ─── Open Create Form ─────────────────────────────
   const handleOpenCreate = () => {
     setEditingId(null);
-    setFormData(emptyForm);
+    setFormData({ ...emptyForm, service: lastService });
     setShowForm(true);
     scrollToForm();
   };
@@ -135,6 +144,7 @@ function GalleryPhotos({ initialImages }: Props) {
     setFormData({
       src: image.src,
       alt: image.alt ?? "",
+      service: image.service ?? "",
     });
     setShowForm(true);
     scrollToForm();
@@ -154,12 +164,16 @@ function GalleryPhotos({ initialImages }: Props) {
       return;
     }
 
+    setLastService(formData.service);
+    const service = formData.service || null;
+
     startTransition(async () => {
       if (editingId) {
         const result = await updateGalleryImage({
           id: editingId,
           src: formData.src,
           alt: formData.alt || undefined,
+          service,
         });
 
         if (result.success) {
@@ -170,6 +184,7 @@ function GalleryPhotos({ initialImages }: Props) {
                     ...img,
                     src: formData.src,
                     alt: formData.alt.trim() || null,
+                    service,
                   }
                 : img,
             ),
@@ -183,6 +198,7 @@ function GalleryPhotos({ initialImages }: Props) {
         const result = await createGalleryImage({
           src: formData.src,
           alt: formData.alt || undefined,
+          service,
         });
 
         if (result.success) {
@@ -190,6 +206,7 @@ function GalleryPhotos({ initialImages }: Props) {
             id: result.data.id,
             src: formData.src,
             alt: formData.alt.trim() || null,
+            service,
             createdAt: new Date(),
             updatedAt: new Date(),
           };
@@ -202,6 +219,27 @@ function GalleryPhotos({ initialImages }: Props) {
       }
     });
   };
+
+  // ─── Change a photo's service (dropdown on the card) ─
+  const handleServiceChange = (id: string, service: string) => {
+    const value = service || null;
+    const previous = images.find((img) => img.id === id)?.service ?? null;
+    const setService = (to: string | null) =>
+      setImages((prev) =>
+        prev.map((img) => (img.id === id ? { ...img, service: to } : img)),
+      );
+
+    setService(value); // show it straight away
+    startTransition(async () => {
+      const result = await setGalleryImageService(id, value);
+      if (!result.success) {
+        showToast("error", result.error);
+        setService(previous); // put it back
+      }
+    });
+  };
+
+  const untagged = images.filter((img) => !img.service).length;
 
   // ─── Delete ───────────────────────────────────────
   const handleDelete = (id: string) => {
@@ -231,6 +269,12 @@ function GalleryPhotos({ initialImages }: Props) {
           <p className="mt-1 text-sm text-slate-500">
             {images.length} {images.length === 1 ? "photo" : "photos"} on the
             Gallery page and the homepage.
+            {untagged > 0 && images.length > 0 && (
+              <span className="text-amber-700">
+                {" "}
+                {untagged} without a service.
+              </span>
+            )}
           </p>
         </div>
         <button
@@ -318,6 +362,26 @@ function GalleryPhotos({ initialImages }: Props) {
                 placeholder="e.g. Guests at the Narsingdi Business Summit 2026"
                 className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15"
               />
+              {/* Service */}
+              <label htmlFor="gallery-service" className={`${labelClass} mt-4`}>
+                Service
+              </label>
+              <select
+                id="gallery-service"
+                value={formData.service}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, service: e.target.value }))
+                }
+                className={selectClass}
+              >
+                <option value="">No service (shows under “All” only)</option>
+                {GALLERY_SERVICES.map((s) => (
+                  <option key={s.slug} value={s.slug}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+
               <p className="mt-2 rounded-xl bg-[#faf8f3] p-3 text-xs leading-relaxed text-slate-500 ring-1 ring-[#c49a3c]/20">
                 A short description helps people using screen readers, and helps
                 Google show the photo in search.
@@ -378,6 +442,7 @@ function GalleryPhotos({ initialImages }: Props) {
               onAskDelete={() => setDeletingId(image.id)}
               onCancelDelete={() => setDeletingId(null)}
               onDelete={() => handleDelete(image.id)}
+              onService={(service) => handleServiceChange(image.id, service)}
             />
           ))}
         </div>
@@ -393,6 +458,9 @@ function GalleryPhotos({ initialImages }: Props) {
 const labelClass =
   "mb-1.5 block text-[11px] font-semibold tracking-[0.15em] text-[#14245a] uppercase";
 
+const selectClass =
+  "w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-[#14245a] outline-none transition focus:border-[#c49a3c] focus:ring-4 focus:ring-[#c49a3c]/15";
+
 function PhotoCard({
   image,
   editing,
@@ -402,6 +470,7 @@ function PhotoCard({
   onAskDelete,
   onCancelDelete,
   onDelete,
+  onService,
 }: {
   image: GalleryImage;
   editing: boolean;
@@ -411,6 +480,7 @@ function PhotoCard({
   onAskDelete: () => void;
   onCancelDelete: () => void;
   onDelete: () => void;
+  onService: (service: string) => void;
 }) {
   // The photo's link doesn't load (moved or deleted somewhere else)
   const [broken, setBroken] = useState(false);
@@ -469,7 +539,24 @@ function PhotoCard({
               + Add a description
             </button>
           )}
-          <p className="mt-0.5 text-[11px] text-slate-400">
+          <select
+            value={image.service ?? ""}
+            onChange={(e) => onService(e.target.value)}
+            aria-label="Service"
+            className={`mt-1.5 w-full cursor-pointer rounded-lg border px-2 py-1 text-xs outline-none transition focus:border-[#c49a3c] ${
+              image.service
+                ? "border-[#c49a3c]/40 bg-[#faf8f3] font-semibold text-[#a8852f]"
+                : "border-dashed border-slate-300 bg-white text-slate-400"
+            }`}
+          >
+            <option value="">No service</option>
+            {GALLERY_SERVICES.map((s) => (
+              <option key={s.slug} value={s.slug}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-[11px] text-slate-400">
             Added{" "}
             {new Date(image.createdAt).toLocaleDateString("en-GB", {
               day: "numeric",

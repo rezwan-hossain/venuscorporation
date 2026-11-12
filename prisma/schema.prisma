@@ -238,6 +238,9 @@ model GalleryImage {
   id        String   @id @default(cuid())
   src       String
   alt       String?
+  // Which service the photo shows, e.g. "weddings" (lib/gallery-services.ts).
+  // Optional: untagged photos only show under "All" on the Gallery page.
+  service   String?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

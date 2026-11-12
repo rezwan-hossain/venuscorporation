@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { cacheLife, cacheTag, revalidatePath, updateTag } from "next/cache";
 import { audit, diff } from "@/lib/audit";
 import { isAdminRole } from "@/lib/auth/roles";
+import { isGalleryService, serviceLabel } from "@/lib/gallery-services";
 import type {
   CreateGalleryImageInput,
   UpdateGalleryImageInput,
@@ -38,6 +39,16 @@ async function requireAdmin() {
   }
 
   return dbUser.id;
+}
+
+/** A known service slug, or null (anything else is dropped). */
+const toService = (value: unknown) => (isGalleryService(value) ? value : null);
+
+/** After any photo change: refresh the pages and the cached photo list. */
+function refreshGallery() {
+  revalidatePath("/gallery");
+  revalidatePath("/profile");
+  updateTag("gallery");
 }
 
 type ActionResult<T = unknown> =
@@ -95,6 +106,7 @@ export async function createGalleryImage(
       data: {
         src: input.src.trim(),
         alt: input.alt?.trim() || null,
+        service: toService(input.service),
       },
     });
 
@@ -105,9 +117,7 @@ export async function createGalleryImage(
       summary: `Added gallery photo${image.alt ? ` "${image.alt}"` : ""}`,
     });
 
-    revalidatePath("/gallery");
-    revalidatePath("/profile");
-    updateTag("gallery"); // refresh the cached photo list
+    refreshGallery();
 
     return { success: true, data: { id: image.id } };
   } catch (err) {
@@ -150,10 +160,11 @@ export async function updateGalleryImage(
       data: {
         src: input.src.trim(),
         alt: input.alt?.trim() || null,
+        service: toService(input.service),
       },
     });
 
-    const changes = diff(existing, image, ["src", "alt"]);
+    const changes = diff(existing, image, ["src", "alt", "service"]);
     if (Object.keys(changes).length > 0) {
       await audit({
         action: "gallery.updated",
@@ -164,9 +175,7 @@ export async function updateGalleryImage(
       });
     }
 
-    revalidatePath("/gallery");
-    revalidatePath("/profile");
-    updateTag("gallery"); // refresh the cached photo list
+    refreshGallery();
 
     return { success: true, data: { id: image.id } };
   } catch (err) {
@@ -212,9 +221,7 @@ export async function deleteGalleryImage(
       changes: { src: [existing.src, null] },
     });
 
-    revalidatePath("/gallery");
-    revalidatePath("/profile");
-    updateTag("gallery"); // refresh the cached photo list
+    refreshGallery();
 
     return { success: true, data: null };
   } catch (err) {
@@ -226,5 +233,37 @@ export async function deleteGalleryImage(
           ? err.message
           : "Failed to delete image",
     };
+  }
+}
+
+// ─── Change only the service tag ────────────────────
+// Used by the dropdown on each photo card in Manage Gallery.
+export async function setGalleryImageService(
+  id: string,
+  service: string | null,
+): Promise<ActionResult<null>> {
+  try {
+    await requireAdmin();
+
+    const existing = await prisma.galleryImage.findUnique({ where: { id } });
+    if (!existing) return { success: false, error: "Image not found" };
+
+    const next = toService(service);
+    if (existing.service === next) return { success: true, data: null };
+
+    await prisma.galleryImage.update({ where: { id }, data: { service: next } });
+    await audit({
+      action: "gallery.updated",
+      entityType: "gallery",
+      entityId: id,
+      summary: `Tagged gallery photo${existing.alt ? ` "${existing.alt}"` : ""} as ${serviceLabel(next) ?? "no service"}`,
+      changes: { service: [existing.service, next] },
+    });
+
+    refreshGallery();
+    return { success: true, data: null };
+  } catch (err) {
+    console.error("setGalleryImageService error:", err);
+    return { success: false, error: "Failed to change the service" };
   }
 }
