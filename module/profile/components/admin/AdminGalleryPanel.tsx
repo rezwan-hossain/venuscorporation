@@ -28,7 +28,8 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
-import { ImageUpload } from "./ImageUpload";
+// import { ImageUpload } from "./ImageUpload";
+import { ImageUploadCloudinary } from "./ImageUploadCloudinary";
 import { AdminGalleryVideos } from "./AdminGalleryVideos";
 
 import type { GalleryImage } from "@/types/gallery";
@@ -331,6 +332,7 @@ function GalleryPhotos({ initialImages }: Props) {
               <p className={labelClass}>
                 Photo <span className="text-[#c49a3c]">*</span>
               </p>
+              {/* Supabase storage — the "gallery-images" bucket doesn't exist yet:
               <ImageUpload
                 value={formData.src}
                 onChange={(url) =>
@@ -341,6 +343,17 @@ function GalleryPhotos({ initialImages }: Props) {
                 label="Upload photo"
                 aspectRatio="aspect-[4/3]"
                 maxSizeMB={10}
+              /> */}
+              <ImageUploadCloudinary
+                value={formData.src}
+                onChange={(url) =>
+                  setFormData((prev) => ({ ...prev, src: url }))
+                }
+                bucket="gallery-images"
+                folder="gallery"
+                label="Upload photo"
+                aspectRatio="aspect-[4/3]"
+                maxSizeMB={2}
               />
             </div>
 
