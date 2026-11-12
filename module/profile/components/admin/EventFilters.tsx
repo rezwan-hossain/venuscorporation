@@ -18,21 +18,24 @@ type Props = {
   onFilter: (filtered: AdminEvent[]) => void;
 };
 
+/** True if the event is today or later; false once its day has passed. */
+export function isUpcoming(event: AdminEvent): boolean {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  return new Date(event.date).getTime() >= startOfToday.getTime();
+}
+
 /**
  * The default order of the admin event list:
  *   1. upcoming events (today or later) — soonest first
  *   2. then past events — most recent first
  */
 export function sortByUpcoming(events: AdminEvent[]): AdminEvent[] {
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const today = startOfToday.getTime();
-
   return [...events].sort((a, b) => {
     const aTime = new Date(a.date).getTime();
     const bTime = new Date(b.date).getTime();
-    const aUpcoming = aTime >= today;
-    const bUpcoming = bTime >= today;
+    const aUpcoming = isUpcoming(a);
+    const bUpcoming = isUpcoming(b);
 
     // Upcoming events always come before past ones
     if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
