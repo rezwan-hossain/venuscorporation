@@ -18,6 +18,7 @@ import { Cormorant_Garamond } from "next/font/google";
 import { Facebook, Github, Instagram, Linkedin, Star, Twitter, Users } from "lucide-react";
 
 import ContactCta from "@/module/home/components/ContactCta";
+import MemberBio from "../components/MemberBio";
 import { stats } from "@/module/home/business/data-v3";
 import type { TeamMember } from "@/types/team";
 import { aboutHero, milestones, missionVision, story, teamGroups, values } from "../data";
@@ -126,7 +127,7 @@ function MemberCard({ member, compact = false, tag }: { member: TeamMember; comp
           {member.role}
         </p>
       )}
-      {member.bio && !compact && <p className="mt-3 hidden line-clamp-3 text-sm leading-relaxed sm:block">{member.bio}</p>}
+      {member.bio && !compact && <MemberBio bio={member.bio} />}
     </article>
   );
 }
