@@ -79,12 +79,16 @@ export const clients: { name: string; logo?: string }[] = [
 export const about = {
   eyebrow: "Who we are",
   // The title is split at ". " — the second half shows in gold italic.
-  title: "One team. Every kind of event.",
+  title: "From ballrooms to race tracks. We run it all.",
   paragraphs: [
-    "Venus Corporation is an event-management company from Dhaka. We plan and run corporate summits, conferences, exhibitions, race days, weddings and private celebrations — from the first idea to the final applause.",
-    "One dedicated team handles it all: concept, venue, vendors, guests and the day itself, so you can focus on your guests and the moment.",
+    "Venus Corporation is an event-management company from Dhaka. For over twelve years we've produced corporate galas, dealer conferences, award nights, brand launches, car expos, exhibitions, marathons and motorsport shows across Bangladesh.",
+    "Stage and LED screens, sound and lighting, décor, guests and the run of the show — one team plans it all and stays on the floor until the last guest leaves.",
   ],
-  points: ["One planner, one point of contact", "Venues, vendors and production in-house", "Trusted by companies and families across Bangladesh"],
+  points: [
+    "One planner, from first brief to final applause",
+    "Stage, screens, sound and décor — handled by us",
+    "Trusted by brands and families across Bangladesh",
+  ],
   // Our own photo: guests at a Venus corporate gala in Dhaka (from the gallery)
   image:
     "https://res.cloudinary.com/s8zandym/image/upload/v1794473610/venuscorporation/gallery/k7gmrqonpcix1j1155nj.jpg",
