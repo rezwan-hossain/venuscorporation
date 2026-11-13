@@ -85,7 +85,9 @@ export const about = {
     "One dedicated team handles it all: concept, venue, vendors, guests and the day itself, so you can focus on your guests and the moment.",
   ],
   points: ["One planner, one point of contact", "Venues, vendors and production in-house", "Trusted by companies and families across Bangladesh"],
-  image: photo("1556761175-5973dc0f32e7", 1100), // team meeting
+  // Our own photo: guests at a Venus corporate gala in Dhaka (from the gallery)
+  image:
+    "https://res.cloudinary.com/s8zandym/image/upload/v1794473610/venuscorporation/gallery/k7gmrqonpcix1j1155nj.jpg",
   badge: { value: "12+", label: "Years of experience" },
 };
 

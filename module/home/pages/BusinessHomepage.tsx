@@ -79,7 +79,7 @@ export default function BusinessHomepage() {
       </Suspense>
       <Stats />
       <PlanningPath />
-      <VenuePartners />
+      {/* <VenuePartners /> */}
       <SignatureMoments />
       <FeaturedWork />
       <Testimonials />

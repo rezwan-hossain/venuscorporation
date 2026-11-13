@@ -61,13 +61,15 @@ export const signature = [
     title: "Leadership summit, three halls",
     category: "Corporate",
     caption: "Live streaming, translation and 1,200 delegates on schedule.",
-    image: photo("1505373877841-8d25f7d46678", 900),
+    // Our own photo: a full hall with three LED screens (from the gallery)
+    image:
+      "https://res.cloudinary.com/s8zandym/image/upload/v1794473644/venuscorporation/gallery/dgsi0rk0uleiyb5dcypm.jpg",
   },
   {
-    title: "City marathon race day",
-    category: "Sports",
-    caption: "Routes, timing, 8,000 runners and a finish-line festival.",
-    image: photo("1530143311094-34d807799e8f", 900),
+    title: "Car drift show",
+    category: "Motorsport",
+    caption: "Drift arena, crowd control and a night-long show.",
+    image: "/images/car-drift-show.jpg", // our own photo, in public/images
   },
 ];
 

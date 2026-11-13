@@ -56,7 +56,7 @@ export default function WhoWeAre() {
         <div className="relative aspect-[4/3.4] overflow-hidden sm:aspect-[4/3] lg:aspect-auto lg:min-h-[34rem]">
           <Image
             src={about.image}
-            alt="Venus Corporation team in a meeting"
+            alt="Guests at a corporate gala organised by Venus Corporation"
             fill
             sizes="(min-width: 1024px) 45vw, 92vw"
             className="object-cover transition duration-[1500ms] ease-out group-hover/panel:scale-105"
