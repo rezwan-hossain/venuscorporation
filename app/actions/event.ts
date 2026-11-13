@@ -50,6 +50,9 @@ export async function getEventBySlug(slug: string) {
       },
     });
 
+    // A hidden (or deleted) event's page shows "not found" to the public
+    if (!event || !event.isActive || event.isArchived) return { event: null };
+
     return { event };
   } catch (error) {
     console.error("Failed to fetch event:", error);
@@ -146,8 +149,8 @@ export async function getPreviousEvents(limit: number = 3) {
   try {
     const events = await prisma.event.findMany({
       where: {
-        // isActive: false,
-        // isArchived: false,
+        isActive: true, // hidden events stay hidden here too
+        isArchived: false,
         status: "COMPLETED",
         // ✅ Only fetch events where the date is in the past
         date: { lt: new Date() },

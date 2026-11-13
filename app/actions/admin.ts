@@ -4,7 +4,7 @@
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { audit, diff } from "@/lib/audit";
 import { isEventCategory } from "@/lib/event-checkout-form";
 
@@ -25,6 +25,17 @@ const EVENT_AUDIT_FIELDS = [
 ] as const;
 
 // ─── Auth helper ────────────────────────────────────
+
+// ─── Refresh the public site after an event change ──
+// Every cached public event query (events page, event detail page, homepage
+// hero and lists) is tagged "events". updateTag clears it right away, so the
+// admin's very next page view already shows the change — e.g. a hidden event
+// disappears at once. (updateTag only works inside Server Actions like these.)
+function refreshPublicEvents() {
+  updateTag("events");
+  revalidatePath("/events");
+  revalidatePath("/");
+}
 
 // ─── Get All Events (Admin) ─────────────────────────
 export async function getAdminEvents() {
@@ -157,6 +168,7 @@ export async function createEvent(formData: {
       summary: `Created event "${event.name}" (${event.slug})`,
     });
 
+    refreshPublicEvents();
     return { success: true, error: "", eventId: String(event.id) };
   } catch (err: any) {
     console.error("Create event error:", err?.message);
@@ -244,17 +256,7 @@ export async function updateEvent(
       });
     }
 
-    // Purge the cache for the NEW slug (Updates the Detail Page & Metadata)
-    revalidateTag(`event-${formData.slug}`, "max");
-
-    // If the admin changed the slug, purge the OLD slug's cache too!
-    if (currentEvent && currentEvent.slug !== formData.slug) {
-      revalidateTag(`event-${currentEvent.slug}`, "max");
-    }
-
-    // Purge global lists so the new details (name/date/image) update on the Homepage
-    revalidateTag("events", "max");
-    revalidateTag("upcoming-events", "max");
+    refreshPublicEvents();
 
     return { success: true, error: "" };
   } catch (err: any) {
@@ -283,6 +285,8 @@ export async function toggleEventActive(eventId: string, isActive: boolean) {
       changes: { isActive: [!isActive, isActive] },
     });
 
+    // Without this the public pages keep showing the cached (old) list
+    refreshPublicEvents();
     return { success: true, error: "" };
   } catch (err: any) {
     return { success: false, error: "Failed to update event" };
@@ -308,6 +312,7 @@ export async function deleteEvent(eventId: string) {
       summary: `Deleted (archived) event "${ev.name}"`,
     });
 
+    refreshPublicEvents();
     return { success: true, error: "" };
   } catch (err: any) {
     return { success: false, error: "Failed to delete event" };
@@ -346,6 +351,7 @@ export async function addPackage(
       summary: `Added package "${pkg.name}" (${pkg.distance}) · ৳${pkg.price} · ${pkg.availableSlots} slots`,
     });
 
+    refreshPublicEvents(); // ticket prices show on public pages
     return { success: true, error: "" };
   } catch (err: any) {
     return { success: false, error: "Failed to add package" };
@@ -389,6 +395,7 @@ export async function updatePackage(
       });
     }
 
+    refreshPublicEvents(); // ticket prices show on public pages
     return { success: true, error: "" };
   } catch (err: any) {
     return { success: false, error: "Failed to update package" };
@@ -414,6 +421,7 @@ export async function deletePackage(packageId: number) {
       summary: `Deleted (archived) package "${pkg.name}"`,
     });
 
+    refreshPublicEvents(); // ticket prices show on public pages
     return { success: true, error: "" };
   } catch (err: any) {
     return { success: false, error: "Failed to delete package" };
