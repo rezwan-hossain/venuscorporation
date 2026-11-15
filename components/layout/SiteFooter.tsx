@@ -3,14 +3,14 @@
 // Site-wide footer, in the brand colours (deep navy + gold, elegant serif).
 //   1. Brand — logo card, tagline, social links
 //   2. Link columns — Explore (main pages), Services, Help, Account, Contact
-//   3. Bottom bar — copyright + motto
+//   3. Bottom bar — copyright (left), developer credit (right)
 // (Small screens: brand block first, then the columns two by two.)
 //
 // The "Explore" links come from navigation.ts and the "Services" links from
 // the homepage service list, so they stay in sync with the header and
 // /services page.
 
-import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, ArrowUpRight } from "lucide-react";
+import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, ArrowUpRight, Heart } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Cormorant_Garamond } from "next/font/google";
@@ -34,6 +34,10 @@ const NAVY_DEEP = "#0b1433";
 const GOLD = "#c49a3c";
 const GOLD_LIGHT = "#dcb45c"; // brighter gold for text on navy
 const SERIF = { fontFamily: "var(--font-footer-serif)" } as const;
+
+// Developer credit in the bottom bar
+const DEVELOPER_NAME = "Rezwan Hossain";
+const DEVELOPER_URL = "https://www.linkedin.com/in/rezwan-hossain/";
 
 // Social links: config/contact.ts (`social`). Icon per label.
 const SOCIAL_ICON = { Facebook, Instagram, X: Twitter, YouTube: Youtube } as const;
@@ -213,8 +217,20 @@ const SiteFooter = () => {
           <p className="text-xs text-white/45 sm:text-sm">
             © <CurrentYear /> {brand.name}. All rights reserved.
           </p>
-          <p className="text-lg italic text-white/70" style={SERIF}>
-            {brand.motto.left} <span style={{ color: GOLD_LIGHT }}>|</span> {brand.motto.right}
+          {/* Developer credit — the heart beats (see .animate-heartbeat in globals.css) */}
+          <p className="inline-flex items-center gap-1.5 text-xs text-white/45 sm:text-sm">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: GOLD_LIGHT }} aria-hidden />
+            Made with
+            <Heart className="h-3.5 w-3.5 animate-heartbeat fill-red-500 text-red-500" aria-label="love" />
+            by
+            <a
+              href={DEVELOPER_URL}
+              target="_blank"
+              rel="noopener"
+              className="font-medium text-white/70 transition-colors hover:text-[#dcb45c]"
+            >
+              {DEVELOPER_NAME}
+            </a>
           </p>
         </div>
       </div>
