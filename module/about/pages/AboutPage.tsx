@@ -156,7 +156,7 @@ export default function AboutPage({ members }: { members: TeamMember[] }) {
             <p className="text-lg leading-relaxed lg:col-span-4 lg:pb-3">{aboutHero.text}</p>
           </div>
           <div className="relative mt-14 aspect-[16/9] overflow-hidden rounded-[2rem] shadow-2xl shadow-[#14245a]/15 sm:aspect-[21/9]" style={{ background: NAVY }}>
-            <Image src={aboutHero.image} alt="An event hall set up by Venus Corporation" fill priority sizes="(min-width: 1280px) 1216px, 92vw" className="object-cover" />
+            <Image src={aboutHero.image} alt="Confetti over the opening ceremony of a car expo run by Venus Corporation" fill priority sizes="(min-width: 1280px) 1216px, 92vw" className="object-cover" />
             <div aria-hidden className="absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-white/10" />
           </div>
         </div>
@@ -166,7 +166,7 @@ export default function AboutPage({ members }: { members: TeamMember[] }) {
       <section className={`${container} grid items-center gap-14 py-24 lg:grid-cols-12 lg:gap-16 lg:py-32`}>
         <div className="relative pr-6 pb-6 lg:col-span-5">
           <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem]" style={{ background: NAVY }}>
-            <Image src={story.image} alt="The Venus Corporation team planning an event" fill sizes="(min-width: 1024px) 38vw, 92vw" className="object-cover" />
+            <Image src={story.image} alt="The Venus Corporation crew at a brand roadshow" fill sizes="(min-width: 1024px) 38vw, 92vw" className="object-cover" />
           </div>
           <div
             className="absolute right-0 bottom-0 flex h-36 w-36 flex-col items-center justify-center rounded-full text-center shadow-xl"

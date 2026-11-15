@@ -4,16 +4,14 @@
 // dates and photos here. The team section uses the real team members from
 // the database (admin → Team).
 
-/** Unsplash photo (allowed in next.config.ts) at a given width. */
-const photo = (id: string, w = 1200) =>
-  `https://images.unsplash.com/photo-${id}?w=${w}&q=80&auto=format&fit=crop`;
-
 export const aboutHero = {
   label: "About us",
   title: "We turn your vision into",
   italic: "unforgettable events.",
   text: "Venus Corporation is an event-management company from Dhaka. For more than twelve years we've planned and run summits, weddings, race days and celebrations across Bangladesh — with one team, from the first call to the final applause.",
-  image: photo("1511578314322-379afb476865", 1400), // event hall set up
+  // Our own photo: confetti over the opening ceremony at a car expo
+  image:
+    "https://res.cloudinary.com/s8zandym/image/upload/v1794484455/venuscorporation/gallery/grk65fdypl3w7dinkb8s.jpg",
 };
 
 export const story = {
@@ -24,7 +22,9 @@ export const story = {
     "Venus Corporation began in 2014 with a small team and a single corporate conference in Dhaka. The client came back the next year — and brought two friends.",
     "Since then we've grown into a full event-management company: corporate events and summits, city marathons, weddings, exhibitions and private celebrations. What hasn't changed is how we work — we listen first, plan every detail, and stay on site until the last guest leaves.",
   ],
-  image: photo("1556761175-5973dc0f32e7", 1100), // team meeting
+  // Our own photo: the Venus crew with the client at an early brand roadshow
+  image:
+    "https://res.cloudinary.com/s8zandym/image/upload/v1794473491/venuscorporation/gallery/tdiqmonc7a6kolhjqu5f.jpg",
   badge: { value: "2014", label: "Founded in Dhaka" },
 };
 
