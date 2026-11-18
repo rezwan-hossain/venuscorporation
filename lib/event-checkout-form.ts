@@ -9,7 +9,10 @@
 //
 // Two kinds of question:
 //   - label only    (Name, Gender, T-shirt size …) — handled by the fixed
-//                   contact / race fields in module/checkout/components/BillingForm.tsx
+//                   contact / race fields in module/checkout/components/BillingForm.tsx.
+//                   ⚠ Those race fields only show for MARATHON. In any other
+//                   category a label-only line shows nothing — give it a key
+//                   and a type instead (see TSHIRT_QUESTION below).
 //   - with a `key`  (company, guests …) — an "extra" question. Checkout draws it
 //                   automatically (EventQuestions.tsx) and the answer is saved
 //                   in Registration.details under that key.
@@ -29,6 +32,7 @@
 // The admin form reads this list, so it updates by itself.
 
 import type { EventCategory, EventType } from "@/lib/generated/prisma/enums";
+import { tshirtSizes } from "@/module/checkout/data/tshirtSizes";
 
 export type { EventCategory };
 
@@ -74,6 +78,20 @@ const CONTACT_QUESTIONS: CheckoutQuestion[] = [
   { label: "Email" },
 ];
 
+// T-shirt size as an extra question, for categories other than marathon.
+// (Marathons use the fixed race field instead.) Adult sizes only — the
+// children's sizes ("3-4 Years" …) are for family fun runs.
+const TSHIRT_QUESTION: CheckoutQuestion = {
+  key: "tshirtSize",
+  label: "T-shirt size",
+  type: "select",
+  options: tshirtSizes
+    .map((size) => size.value)
+    .filter((size) => !size.includes("Years")),
+  required: true,
+  onlyFor: "LIVE", // no T-shirt for virtual events
+};
+
 export const EVENT_CATEGORIES: EventCategoryInfo[] = [
   {
     value: "MARATHON",
@@ -106,15 +124,17 @@ export const EVENT_CATEGORIES: EventCategoryInfo[] = [
         key: "jobTitle",
         label: "Job title",
         type: "text",
+        required: true,
         placeholder: "e.g. Head of Marketing",
       },
-      {
-        key: "dietary",
-        label: "Dietary needs",
-        type: "select",
-        options: ["None", "Vegetarian", "Halal", "Other"],
-        onlyFor: "LIVE",
-      },
+      TSHIRT_QUESTION,
+      // {
+      //   key: "dietary",
+      //   label: "Dietary needs",
+      //   type: "select",
+      //   options: ["None", "Vegetarian", "Halal", "Other"],
+      //   onlyFor: "LIVE",
+      // },
     ],
   },
   {
