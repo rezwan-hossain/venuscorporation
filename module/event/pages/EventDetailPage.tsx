@@ -190,7 +190,9 @@ const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
                     <ChevronDown size={18} className="shrink-0 text-slate-400 transition-transform duration-300 group-open:rotate-180" aria-hidden />
                   </summary>
                   <div
-                    className="prose prose-sm prose-slate max-w-none border-t px-5 pt-4 pb-6 sm:px-6"
+                    // .rich-text (globals.css) = the editor's own styles: numbered
+                    // and bulleted lists, headings, quotes, links …
+                    className="rich-text border-t px-5 pt-3 pb-5 sm:px-6"
                     style={{ borderColor: `${GOLD}26` }}
                     dangerouslySetInnerHTML={{ __html: event.terms }}
                   />

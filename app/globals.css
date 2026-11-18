@@ -188,84 +188,104 @@ h6 {
   animation: sponsor-scroll 60s linear infinite;
 }
 
-/* ─── Rich-text editor content (admin event description) ───────────────
+/* ─── Rich-text editor content (admin event description / terms) ─────────
    Tiptap puts the class "tiptap" on the editable area. Everything about how
    text looks while writing lives here; the editor itself is
-   module/profile/components/admin/RichTextEditor.tsx. */
+   module/profile/components/admin/RichTextEditor.tsx.
+   The same rules apply to ".rich-text" — put that class on any page element
+   that shows saved editor HTML (e.g. event terms), so it looks exactly like
+   it did in the editor: numbered and bulleted lists, quotes, links … */
 
-.tiptap {
+.tiptap,
+.rich-text {
   outline: none;
   color: #334155;
   font-size: 15px;
   line-height: 1.65;
 }
 
-.tiptap p {
+.tiptap p,
+.rich-text p {
   margin: 0.5em 0;
 }
 
 /* Headings use the body font (the global h1–h6 rule above sets the display font) */
 .tiptap h1,
+.rich-text h1,
 .tiptap h2,
-.tiptap h3 {
+.rich-text h2,
+.tiptap h3,
+.rich-text h3 {
   font-family: var(--font-body);
   font-weight: 600;
   color: #14245a;
   line-height: 1.3;
 }
 
-.tiptap h1 {
+.tiptap h1,
+.rich-text h1 {
   font-size: 1.6rem;
   margin: 0.9em 0 0.4em;
 }
 
-.tiptap h2 {
+.tiptap h2,
+.rich-text h2 {
   font-size: 1.3rem;
   margin: 0.9em 0 0.4em;
 }
 
-.tiptap h3 {
+.tiptap h3,
+.rich-text h3 {
   font-size: 1.1rem;
   margin: 0.8em 0 0.3em;
 }
 
-.tiptap strong {
+.tiptap strong,
+.rich-text strong {
   font-weight: 700;
 }
 
-.tiptap em {
+.tiptap em,
+.rich-text em {
   font-style: italic;
 }
 
-.tiptap u {
+.tiptap u,
+.rich-text u {
   text-decoration: underline;
 }
 
-.tiptap s {
+.tiptap s,
+.rich-text s {
   text-decoration: line-through;
 }
 
-.tiptap ul {
+.tiptap ul,
+.rich-text ul {
   list-style: disc;
   padding-left: 1.5em;
   margin: 0.5em 0;
 }
 
-.tiptap ol {
+.tiptap ol,
+.rich-text ol {
   list-style: decimal;
   padding-left: 1.5em;
   margin: 0.5em 0;
 }
 
-.tiptap li {
+.tiptap li,
+.rich-text li {
   margin: 0.2em 0;
 }
 
-.tiptap li::marker {
+.tiptap li::marker,
+.rich-text li::marker {
   color: #c49a3c;
 }
 
-.tiptap blockquote {
+.tiptap blockquote,
+.rich-text blockquote {
   border-left: 4px solid #c49a3c;
   background: #faf8f3;
   padding: 0.5em 1em;
@@ -274,13 +294,15 @@ h6 {
   font-style: italic;
 }
 
-.tiptap hr {
+.tiptap hr,
+.rich-text hr {
   border: none;
   border-top: 1px solid rgb(196 154 60 / 0.35);
   margin: 1.25em 0;
 }
 
-.tiptap code {
+.tiptap code,
+.rich-text code {
   background: #f1f5f9;
   padding: 0.15em 0.4em;
   border-radius: 4px;
@@ -288,7 +310,8 @@ h6 {
   font-family: ui-monospace, monospace;
 }
 
-.tiptap pre {
+.tiptap pre,
+.rich-text pre {
   background: #0d1840;
   color: #e2e8f0;
   padding: 1em;
@@ -297,30 +320,35 @@ h6 {
   margin: 0.75em 0;
 }
 
-.tiptap pre code {
+.tiptap pre code,
+.rich-text pre code {
   background: none;
   padding: 0;
   color: inherit;
 }
 
-.tiptap a {
+.tiptap a,
+.rich-text a {
   color: #14245a;
   text-decoration: underline;
   text-decoration-color: #c49a3c;
   text-underline-offset: 2px;
 }
 
-.tiptap a:hover {
+.tiptap a:hover,
+.rich-text a:hover {
   color: #a8852f;
 }
 
-.tiptap mark {
+.tiptap mark,
+.rich-text mark {
   background: #f6e7bf;
   border-radius: 3px;
   padding: 0 0.15em;
 }
 
-.tiptap img {
+.tiptap img,
+.rich-text img {
   max-width: 100%;
   border-radius: 12px;
   margin: 1em 0;
