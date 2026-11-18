@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath, updateTag } from "next/cache";
 import { audit, diff } from "@/lib/audit";
 import { isEventCategory } from "@/lib/event-checkout-form";
+import { cleanPartners, type EventPartner } from "@/lib/event-partners";
+import { Prisma } from "@/lib/generated/prisma/client";
 
 const EVENT_AUDIT_FIELDS = [
   "name",
@@ -26,6 +28,22 @@ const EVENT_AUDIT_FIELDS = [
 
 // ─── Auth helper ────────────────────────────────────
 
+// ─── Terms & conditions ─────────────────────────────
+// The editor sends "<p></p>" when the box is empty — save that as null
+// so the event page knows there are no terms to show.
+function cleanTerms(html: string | undefined): string | null {
+  if (!html) return null;
+  const text = html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+  return text ? html : null;
+}
+
+// ─── Event partners ─────────────────────────────────
+// Clean the list from the form; an empty list is saved as NULL (no card).
+function partnersForDb(partners: unknown) {
+  const clean = cleanPartners(partners);
+  return clean.length > 0 ? clean : Prisma.DbNull;
+}
+
 // ─── Refresh the public site after an event change ──
 // Every cached public event query (events page, event detail page, homepage
 // hero and lists) is tagged "events". updateTag clears it right away, so the
@@ -44,9 +62,13 @@ export async function getAdminEvents() {
 
   try {
     const events = await prisma.event.findMany({
+      // "Delete" only archives an event (its orders must be kept),
+      // so leave archived events out of the admin list.
+      where: { isArchived: false },
       include: {
         organizer: { select: { id: true, name: true } },
         packages: {
+          where: { isArchived: false }, // deleted packages too
           orderBy: { price: "asc" },
         },
         _count: { select: { orders: true } },
@@ -71,7 +93,7 @@ export async function getAdminEvent(eventId: string) {
       where: { id: eventId },
       include: {
         organizer: true,
-        packages: { orderBy: { price: "asc" } },
+        packages: { where: { isArchived: false }, orderBy: { price: "asc" } },
         _count: { select: { orders: true } },
       },
     });
@@ -112,6 +134,8 @@ export async function createEvent(formData: {
   category: string;
   description: string;
   shortDesc: string;
+  terms?: string;
+  partners?: EventPartner[];
   bannerImage: string;
   thumbImage: string;
   minPackagePrice: string;
@@ -150,6 +174,8 @@ export async function createEvent(formData: {
         category: formData.category,
         description: formData.description,
         shortDesc: formData.shortDesc || null,
+        terms: cleanTerms(formData.terms),
+        partners: partnersForDb(formData.partners),
         bannerImage: formData.bannerImage,
         thumbImage: formData.thumbImage || null,
         minPackagePrice: formData.minPackagePrice
@@ -189,6 +215,8 @@ export async function updateEvent(
     category: string;
     description: string;
     shortDesc: string;
+    terms?: string;
+    partners?: EventPartner[];
     bannerImage: string;
     thumbImage: string;
     minPackagePrice: string;
@@ -231,6 +259,8 @@ export async function updateEvent(
         category: formData.category,
         description: formData.description,
         shortDesc: formData.shortDesc || null,
+        terms: cleanTerms(formData.terms),
+        partners: partnersForDb(formData.partners),
         bannerImage: formData.bannerImage,
         thumbImage: formData.thumbImage || null,
         minPackagePrice: formData.minPackagePrice
@@ -803,6 +833,8 @@ export async function duplicateEvent(eventId: string) {
         eventType: original.eventType,
         category: original.category,
         description: original.description,
+        terms: original.terms,
+        partners: original.partners ?? Prisma.DbNull,
         bannerImage: original.bannerImage,
         thumbImage: original.thumbImage,
         minPackagePrice: original.minPackagePrice,

@@ -26,6 +26,8 @@ import {
   getCheckoutQuestions,
 } from "@/lib/event-checkout-form";
 import { ImageUploadCloudinary } from "./ImageUploadCloudinary";
+import { EventPartnersEditor } from "./EventPartnersEditor";
+import { cleanPartners, type EventPartner } from "@/lib/event-partners";
 
 const RichTextEditor = dynamic(
   () =>
@@ -103,6 +105,7 @@ export function EventForm({
     category: event?.category || DEFAULT_EVENT_CATEGORY,
     description: event?.description || "",
     shortDesc: event?.shortDesc || "",
+    terms: event?.terms || "",
     bannerImage: event?.bannerImage || "",
     thumbImage: event?.thumbImage || "",
     minPackagePrice: event?.minPackagePrice?.toString() || "",
@@ -112,6 +115,11 @@ export function EventForm({
 
   // Packages
   const [packages, setPackages] = useState(event?.packages || []);
+
+  // Event partners (optional) — saved with the event
+  const [partners, setPartners] = useState<EventPartner[]>(() =>
+    cleanPartners(event?.partners),
+  );
   const [newPackage, setNewPackage] = useState<PackageFormData>({
     name: "",
     distance: "",
@@ -181,7 +189,7 @@ export function EventForm({
 
     setLoading(true);
 
-    const safeForm = JSON.parse(JSON.stringify(form));
+    const safeForm = JSON.parse(JSON.stringify({ ...form, partners }));
 
     let result;
     if (isEditing && event) {
@@ -492,8 +500,25 @@ export function EventForm({
         </div>
       </FormSection>
 
-      {/* ─── 4. Images ─── */}
-      <FormSection number={4} title="Images">
+      {/* ─── 4. Terms & conditions ─── */}
+      <FormSection number={4} title="Terms & conditions">
+        <div>
+          <p className={labelClass}>Terms for this event</p>
+          <p className="-mt-1 mb-2 text-xs text-slate-500">
+            Optional. Shown on the event page under &ldquo;Terms &amp;
+            conditions&rdquo; — e.g. refund rules, age limits, what to bring.
+            Leave empty to hide the section.
+          </p>
+          <RichTextEditor
+            value={form.terms}
+            onChange={(html) => updateField("terms", html)}
+            placeholder="Write the terms & conditions for this event..."
+          />
+        </div>
+      </FormSection>
+
+      {/* ─── 5. Images ─── */}
+      <FormSection number={5} title="Images">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-[1fr_13rem]">
           <div>
             <p className={labelClass}>
@@ -543,8 +568,23 @@ export function EventForm({
         </div>
       </FormSection>
 
-      {/* ─── 5. Publishing ─── */}
-      <FormSection number={5} title="Publishing">
+      {/* ─── 6. Event partners (optional) ─── */}
+      <FormSection number={6} title={`Event partners (${partners.length})`}>
+        <p className="-mt-1 text-xs text-slate-500">
+          Optional. Sponsors, organisers and supporting bodies, shown as a
+          scrolling logo card on the event page — in this order.
+        </p>
+        <EventPartnersEditor
+          partners={partners}
+          onChange={(next) => {
+            setPartners(next);
+            setSuccess(false);
+          }}
+        />
+      </FormSection>
+
+      {/* ─── 7. Publishing ─── */}
+      <FormSection number={7} title="Publishing">
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           {STATUS_OPTIONS.map((option) => (
             <ChoiceCard
@@ -572,14 +612,14 @@ export function EventForm({
         </div>
       </FormSection>
 
-      {/* ─── 6. Packages (after the event exists) ─── */}
+      {/* ─── 8. Packages (after the event exists) ─── */}
       {!isEditing ? (
         <p className="rounded-2xl border border-dashed border-[#c49a3c]/40 bg-[#faf8f3] p-5 text-center text-sm text-slate-500">
           Packages (tickets, prices, slots) are added after the event is
           created.
         </p>
       ) : (
-        <FormSection number={6} title={`Packages (${packages.length})`}>
+        <FormSection number={8} title={`Packages (${packages.length})`}>
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-slate-500">
               The tickets people can buy. Edit a row with the pencil.

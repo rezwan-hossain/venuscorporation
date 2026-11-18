@@ -61,7 +61,7 @@ export default function TicketOptions({
           className="text-3xl font-semibold text-[#14245a] lg:text-4xl"
           style={{ fontFamily: "var(--font-event-serif)" }}
         >
-          Tickets
+          Registration Here
         </h3>
         {fromPrice !== null && !isClosed && tickets.length > 1 && (
           <p className="text-xs text-gray-500 pb-1">
@@ -75,7 +75,7 @@ export default function TicketOptions({
 
       {tickets.length === 0 ? (
         <p className="text-sm text-gray-500">
-          Tickets for this event aren&apos;t on sale yet.
+          Registration for this event isn&apos;t open yet.
         </p>
       ) : (
         <PlayWhenVisible playClassName={styles.play}>
@@ -98,7 +98,7 @@ export default function TicketOptions({
         <p className="text-center text-xs text-gray-500 mt-5">
           {isClosed
             ? "Registration for this event is closed."
-            : "1 ticket per transaction · Tap a ticket to register"}
+            : "1 registration per transaction · Tap an option to register"}
         </p>
       )}
     </section>

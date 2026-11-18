@@ -44,8 +44,9 @@ type UploadState = "idle" | "uploading" | "success" | "error";
 /**
  * Send one file to Cloudinary. Resolves with the photo's URL.
  * Uses XMLHttpRequest (not fetch) because only it reports upload progress.
+ * Also used by the small logo tile in EventPartnersEditor.tsx.
  */
-function sendToCloudinary(
+export function sendToCloudinary(
   file: File,
   auth: CloudinarySignature,
   onProgress: (percent: number) => void,

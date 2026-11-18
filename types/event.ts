@@ -32,6 +32,8 @@ export type EventData = {
   eventType: "LIVE" | "VIRTUAL";
   description: string;
   shortDesc: string | null;
+  terms: string | null; // event terms & conditions (HTML)
+  partners: unknown; // JSON — read with cleanPartners() (lib/event-partners.ts)
   bannerImage: string;
   thumbImage: string | null;
   minPackagePrice: number | null;

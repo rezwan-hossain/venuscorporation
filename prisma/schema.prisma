@@ -60,6 +60,11 @@ model Event {
   organizerId             Int
   description             String
   shortDesc               String?        @db.VarChar(255)
+  // Event-specific terms & conditions (HTML from the admin editor); null = none.
+  terms                   String?
+  // Optional "Event partners" logos: [{ name, role, logo?, short? }].
+  // Shape + checks: lib/event-partners.ts. null = no partners card.
+  partners                Json?
   bannerImage             String
   thumbImage              String?
   minPackagePrice         Float?

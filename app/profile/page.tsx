@@ -43,6 +43,7 @@ async function loadAdminData(): Promise<AdminData> {
     getAllTeamMembers(),
     // Simple event list for the coupon dropdown
     prisma.event.findMany({
+      where: { isArchived: false }, // no deleted events
       select: { id: true, name: true },
       orderBy: { name: "desc" },
     }),

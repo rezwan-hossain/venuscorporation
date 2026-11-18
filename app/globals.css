@@ -459,3 +459,38 @@ h6 {
     animation: none;
   }
 }
+
+/* Event partners card (module/event/components/EventPartners.tsx):
+   each row holds its logos twice and slides left by half its width, forever.
+   The second row runs the other way. Hover or the Pause button stops it. */
+@keyframes partners-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-partners {
+  animation: partners-scroll 40s linear infinite; /* duration set per row */
+}
+.animate-partners.reverse-row {
+  animation-direction: reverse;
+}
+.animate-partners.is-paused,
+.partners-marquee:hover .animate-partners {
+  animation-play-state: paused;
+}
+/* Reduced motion: still rows the visitor can swipe, without the copies. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-partners {
+    animation: none;
+  }
+  .animate-partners [data-copy] {
+    display: none;
+  }
+  .partners-track {
+    overflow-x: auto;
+    mask-image: none;
+  }
+}

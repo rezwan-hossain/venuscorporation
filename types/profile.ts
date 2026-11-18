@@ -42,6 +42,8 @@ export type AdminEvent = {
   category: string; // MARATHON | CONFERENCE | … (see lib/event-checkout-form.ts)
   description: string;
   shortDesc: string | null;
+  terms: string | null; // event terms & conditions (HTML)
+  partners: unknown; // JSON — read with cleanPartners() (lib/event-partners.ts)
   bannerImage: string;
   thumbImage: string | null;
   minPackagePrice: number | null;
@@ -87,6 +89,7 @@ export type EventFormData = {
   category: string; // MARATHON | CONFERENCE | … (see lib/event-checkout-form.ts)
   description: string;
   shortDesc: string;
+  terms: string; // HTML from the editor; "" = no terms
   bannerImage: string;
   thumbImage: string;
   minPackagePrice: string;

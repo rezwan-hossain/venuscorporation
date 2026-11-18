@@ -4,12 +4,14 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { Cormorant_Garamond } from "next/font/google";
-import { Building2, CalendarDays, ChevronRight, Clock, Globe, MapPin, Ticket, type LucideIcon } from "lucide-react";
+import { Building2, CalendarDays, ChevronDown, ChevronRight, Clock, Globe, MapPin, ScrollText, Ticket, type LucideIcon } from "lucide-react";
 
 import type { EventData } from "@/types/event";
 import EventDescription3 from "../components/EventDescription3";
 import ShareButtons from "../components/ShareButtons";
 import TicketOptions from "../components/TicketOptions";
+import EventPartners from "../components/EventPartners";
+import { cleanPartners } from "@/lib/event-partners";
 import { ViewContentTracker } from "@/components/tracking/ViewContentTracker";
 
 const CountdownTimer = dynamic(() => import("../components/CountdownTimer"), {
@@ -75,6 +77,7 @@ const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
   const styledDescription = searchParams?.view === "styled";
   const isOpen = event.status === "ACTIVE";
   const packages = event.packages.filter((p) => !p.isArchived);
+  const partners = cleanPartners(event.partners); // [] when none
 
   const formattedDate = formatDate(event.date);
   const formattedTime = formatTime(event.time);
@@ -167,6 +170,33 @@ const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
                 )}
               </div>
             </section>
+
+            {/* Event partners (optional; admin → event → Event partners) */}
+            {partners.length > 0 && <EventPartners partners={partners} />}
+
+            {/* Terms & conditions (admin → event → Terms & conditions).
+                Folded by default so long legal text doesn't push the page
+                down; <details> opens and closes without any JavaScript. */}
+            {event.terms && (
+              <section id="terms" className="scroll-mt-28">
+                <details className="group rounded-2xl border bg-white" style={{ borderColor: `${GOLD}40` }}>
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 sm:px-6 [&::-webkit-details-marker]:hidden">
+                    <span className="flex items-center gap-3">
+                      <ScrollText size={20} className="shrink-0" style={{ color: GOLD }} aria-hidden />
+                      <span className="text-2xl font-semibold" style={{ ...SERIF, color: NAVY }}>
+                        Terms &amp; <em className="font-medium" style={{ color: GOLD }}>conditions</em>
+                      </span>
+                    </span>
+                    <ChevronDown size={18} className="shrink-0 text-slate-400 transition-transform duration-300 group-open:rotate-180" aria-hidden />
+                  </summary>
+                  <div
+                    className="prose prose-sm prose-slate max-w-none border-t px-5 pt-4 pb-6 sm:px-6"
+                    style={{ borderColor: `${GOLD}26` }}
+                    dangerouslySetInnerHTML={{ __html: event.terms }}
+                  />
+                </details>
+              </section>
+            )}
           </div>
 
           {/* Buy column */}
