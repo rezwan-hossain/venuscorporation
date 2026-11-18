@@ -1,25 +1,24 @@
 // module/legal/pages/PrivacyPolicyPage.tsx
-import React from "react";
-import { HeroText } from "@/components/ui/HeroText";
+//
+// /privacy-policy — cream header, then the policy with a contents list.
+// Wording: ../components/PrivacyPolicyContent.tsx
+// Shared look (also Terms & Conditions): ../components/legal-ui.tsx
+
+import { LegalHeader, LegalPage } from "../components/legal-ui";
 import PrivacyPolicyContent from "../components/PrivacyPolicyContent";
 
 const PrivacyPolicyPage = () => {
   return (
-    <div className="min-h-screen bg-background font-body">
-      <div className="mt-42">
-        <HeroText title="Privacy Policy" />
-      </div>
-
-      <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <p className="mb-10 sm:mb-14 text-center text-3xl sm:text-4xl lg:text-5xl tracking-tight font-extrabold text-zinc-800 font-heading leading-tight">
-          Your Privacy
-          <br />
-          Matters to Us
-        </p>
-
-        <PrivacyPolicyContent />
-      </div>
-    </div>
+    <LegalPage>
+      <LegalHeader
+        crumb="Privacy Policy"
+        title="Privacy"
+        italic="policy"
+        intro="Your privacy matters to us. Here's what we collect when you register for an event, why, and how we keep it safe."
+        lastUpdated="January 15, 2026"
+      />
+      <PrivacyPolicyContent />
+    </LegalPage>
   );
 };
 

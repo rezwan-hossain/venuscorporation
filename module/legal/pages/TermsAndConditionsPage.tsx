@@ -1,25 +1,24 @@
 // module/legal/pages/TermsAndConditionsPage.tsx
-import React from "react";
-import { HeroText } from "@/components/ui/HeroText";
+//
+// /terms-and-conditions — cream header, then the terms with a contents list.
+// Wording: ../components/TermsAndConditionsContent.tsx
+// Shared look (also the Privacy Policy): ../components/legal-ui.tsx
+
+import { LegalHeader, LegalPage } from "../components/legal-ui";
 import TermsAndConditionsContent from "../components/TermsAndConditionsContent";
 
 const TermsAndConditionsPage = () => {
   return (
-    <div className="min-h-screen bg-background font-body">
-      <div className="mt-42">
-        <HeroText title="Terms & Conditions" />
-      </div>
-
-      <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <p className="mb-10 sm:mb-14 text-center text-3xl sm:text-4xl lg:text-5xl tracking-tight font-extrabold text-zinc-800 font-heading leading-tight">
-          Marathon Event
-          <br />
-          Terms & Conditions
-        </p>
-
-        <TermsAndConditionsContent />
-      </div>
-    </div>
+    <LegalPage>
+      <LegalHeader
+        crumb="Terms & Conditions"
+        title="Terms &"
+        italic="conditions"
+        intro="The rules for registering for and taking part in our marathon events — please read them before you buy a ticket."
+        lastUpdated="January 15, 2026"
+      />
+      <TermsAndConditionsContent />
+    </LegalPage>
   );
 };
 

@@ -522,3 +522,60 @@ h6 {
     mask-image: none;
   }
 }
+
+/* ─── Event page "About the event" (module/event/pages/EventDetailPage.tsx) ─
+   Used together with .rich-text: the description is written in the admin
+   editor; this only changes how it reads on the public page:
+     first paragraph  → a slightly larger lead
+     H2 headings      → small gold labels with a hairline ("WHO SHOULD COME ———")
+     lists            → soft cream cards with gold bullets / numbers */
+.event-about {
+  font-size: 16px;
+  line-height: 1.75;
+}
+.event-about > p:first-child {
+  font-size: 1.125rem;
+  color: #1e293b;
+}
+.event-about > p {
+  margin: 0 0 0.9em;
+}
+/* Blank lines left in the editor (<p></p>) shouldn't leave gaps */
+.event-about > p:empty {
+  display: none;
+}
+.event-about h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 2.4em 0 1em;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #a8852f;
+}
+.event-about h2::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgb(196 154 60 / 0.3);
+}
+.event-about > ul,
+.event-about > ol {
+  margin: 0 0 1em;
+  padding: 0.85em 1.25em 0.85em 2.6em;
+  border: 1px solid rgb(196 154 60 / 0.18);
+  border-radius: 16px;
+  background: #faf8f3;
+}
+.event-about li {
+  margin: 0.4em 0;
+  padding-left: 0.2em;
+}
+.event-about li p {
+  margin: 0;
+}
+.event-about strong {
+  color: #14245a;
+}

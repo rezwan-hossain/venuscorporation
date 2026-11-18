@@ -163,10 +163,10 @@ const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
                 {styledDescription ? (
                   <EventDescription3 description={event.description} />
                 ) : (
-                  <div
-                    className="prose prose-slate max-w-none [&>h2]:mt-10 [&>h2]:flex [&>h2]:items-center [&>h2]:font-mono [&>h2]:text-sm/7 [&>h2]:font-medium [&>h2]:text-slate-900 [&>h2]:before:mr-3 [&>h2]:before:h-3 [&>h2]:before:w-1.5 [&>h2]:before:rounded-r-full [&>h2]:before:bg-neon-lime [&>ul]:mt-6 [&>ul]:list-['\2013\20'] [&>ul]:pl-5"
-                    dangerouslySetInnerHTML={{ __html: event.description }}
-                  />
+                  // .rich-text = the editor's own styles; .event-about adds the
+                  // page look (lead paragraph, gold section labels, list cards).
+                  // Both in globals.css.
+                  <div className="rich-text event-about" dangerouslySetInnerHTML={{ __html: event.description }} />
                 )}
               </div>
             </section>
