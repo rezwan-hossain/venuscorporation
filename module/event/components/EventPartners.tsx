@@ -3,10 +3,11 @@
 // "Event partners" card on the event page: partner logos with their role
 // and name, e.g.  [BAF] In association with · Bangladesh Athletics Federation
 //
-//   5+ partners → two rows that scroll slowly in opposite directions, with a
-//                 Pause button (hovering also pauses). Visitors who prefer
-//                 reduced motion get still rows they can swipe instead.
-//   1–4         → one still row.
+//   10+ partners → two rows that scroll slowly in opposite directions
+//   5–9         → one scrolling row
+//   1–4         → one still row (no scrolling)
+// Scrolling rows have a Pause button (hovering also pauses). Visitors who
+// prefer reduced motion get still rows they can swipe instead.
 //
 // Data: Event.partners (edited in admin → event → Event partners).
 // Shape: lib/event-partners.ts. Scroll CSS: .animate-partners in globals.css.
@@ -24,8 +25,21 @@ const GOLD = "#c49a3c";
 const GOLD_DARK = "#a8852f"; // readable gold for small text on white
 const SERIF = { fontFamily: "var(--font-event-serif)" } as const;
 
-// From this many partners on, the rows scroll.
+// From this many partners on, the logos scroll…
 const SCROLL_FROM = 5;
+// …and from this many on, they're split into two rows. (With fewer, two
+// short rows would show the same logos side by side.)
+const TWO_ROWS_FROM = 10;
+// A scrolling row repeats its logos until it has at least this many cards,
+// so it's always wider than the screen and never shows a gap.
+const MIN_CARDS_PER_LOOP = 8;
+
+/** Repeat a short row (A B C → A B C A B C A B C) up to MIN_CARDS_PER_LOOP. */
+function fillRow(row: EventPartner[]): EventPartner[] {
+  const filled = [...row];
+  while (filled.length < MIN_CARDS_PER_LOOP) filled.push(...row);
+  return filled;
+}
 
 // Still layout (1–4 partners): columns on larger screens, so the cards fill
 // the width without an empty gap (written out in full for Tailwind).
@@ -42,10 +56,11 @@ export default function EventPartners({ partners }: { partners: EventPartner[] }
   if (partners.length === 0) return null;
 
   const scrolls = partners.length >= SCROLL_FROM;
-  // Scrolling: split into two rows (1st, 3rd, 5th … on top; 2nd, 4th … below).
-  const rows = scrolls
-    ? [partners.filter((_, i) => i % 2 === 0), partners.filter((_, i) => i % 2 === 1)]
-    : [partners];
+  // Many partners: two rows (1st, 3rd, 5th … on top; 2nd, 4th … below)
+  const rows =
+    partners.length >= TWO_ROWS_FROM
+      ? [partners.filter((_, i) => i % 2 === 0), partners.filter((_, i) => i % 2 === 1)]
+      : [partners];
 
   return (
     <section aria-labelledby="partners-heading" className="rounded-2xl border bg-white p-5 sm:p-6" style={{ borderColor: `${GOLD}40` }}>
@@ -63,36 +78,50 @@ export default function EventPartners({ partners }: { partners: EventPartner[] }
             type="button"
             onClick={() => setPaused(!paused)}
             aria-pressed={paused}
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-1.5 text-xs font-medium text-slate-600 transition hover:border-[#c49a3c] hover:text-[#14245a] motion-reduce:hidden"
+            aria-label={paused ? "Play partner logos" : "Pause partner logos"}
+            // Cream pill with a navy round icon; the icon turns gold on hover
+            className="group inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-full border bg-[#faf8f3] py-1 pr-3.5 pl-1 text-xs font-semibold tracking-wide text-[#14245a] transition hover:bg-white hover:shadow-sm motion-reduce:hidden"
+            style={{ borderColor: `${GOLD}55` }}
           >
-            {paused ? <Play size={13} aria-hidden /> : <Pause size={13} aria-hidden />}
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#14245a] text-white transition group-hover:bg-[#c49a3c]">
+              {paused ? (
+                <Play size={11} fill="currentColor" className="ml-px" aria-hidden />
+              ) : (
+                <Pause size={11} fill="currentColor" aria-hidden />
+              )}
+            </span>
             {paused ? "Play" : "Pause"}
           </button>
         )}
       </div>
 
       <div className="partners-marquee space-y-3">
-        {rows.map((row, r) =>
-          scrolls ? (
-            // Scrolling row: the list twice, side by side, moved left by half
-            // its width on a loop — so it never runs out. The copy is hidden
-            // from screen readers.
-            <div
-              key={r}
-              className="partners-track overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]"
-            >
-              <ul
-                className={`animate-partners flex w-max ${r === 1 ? "reverse-row" : ""} ${paused ? "is-paused" : ""}`}
-                style={{ animationDuration: `${Math.max(20, row.length * 6)}s` }}
+        {rows.map((row, r) => {
+          if (scrolls) {
+            // Scrolling row: the (filled) list twice, side by side, moved left
+            // by half its width on a loop — so it never runs out. Only the
+            // first copy of each partner is read by screen readers.
+            const loop = fillRow(row);
+            return (
+              <div
+                key={r}
+                // py-1: room for the hover lift and shadow, so they aren't cut off
+                className="partners-track overflow-hidden py-1 [mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)]"
               >
-                {[...row, ...row].map((partner, i) => (
-                  <li key={i} className="pr-3" aria-hidden={i >= row.length || undefined} data-copy={i >= row.length || undefined}>
-                    <PartnerCard partner={partner} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : (
+                <ul
+                  className={`animate-partners flex w-max ${r === 1 ? "reverse-row" : ""} ${paused ? "is-paused" : ""}`}
+                  style={{ animationDuration: `${loop.length * 5}s` }} // ~5 s per card
+                >
+                  {[...loop, ...loop].map((partner, i) => (
+                    <li key={i} className="pr-3" aria-hidden={i >= row.length || undefined} data-copy={i >= row.length || undefined}>
+                      <PartnerCard partner={partner} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          }
+          return (
             <ul key={r} className={`grid grid-cols-2 gap-3 ${STILL_COLUMNS[row.length] ?? "sm:grid-cols-4"}`}>
               {row.map((partner, i) => (
                 <li key={i}>
@@ -100,8 +129,8 @@ export default function EventPartners({ partners }: { partners: EventPartner[] }
                 </li>
               ))}
             </ul>
-          ),
-        )}
+          );
+        })}
       </div>
     </section>
   );
@@ -112,28 +141,29 @@ export default function EventPartners({ partners }: { partners: EventPartner[] }
  *   ┌──────────────────┐
  *   │   logo / BAF     │  ← fixed-height logo zone, centred
  *   │       ──         │  ← short gold rule
- *   │ IN ASSOCIATION…  │  ← role (small caps, gold)
  *   │ Bangladesh Ath…  │  ← name (2 lines max)
+ *   │ IN ASSOCIATION…  │  ← role, if set (small caps, gold)
  *   └──────────────────┘
- * Fixed heights keep every card's text on the same line in a row.
+ * No fixed height: the card is as tall as its content, and every card in a
+ * row stretches to the tallest one (h-full), with the content centred.
  * `fill`: stretch to the grid cell (still layout) instead of a fixed width.
  */
 function PartnerCard({ partner, fill = false }: { partner: EventPartner; fill?: boolean }) {
   return (
     <div
-      className={`group flex h-44 flex-col items-center rounded-xl border border-slate-200 bg-white px-3 pt-4 pb-3 text-center transition duration-300 hover:-translate-y-0.5 hover:border-[#c49a3c]/60 hover:shadow-lg hover:shadow-[#14245a]/8 ${
-        fill ? "w-full" : "w-44 sm:w-48"
+      className={`group flex h-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-5 text-center transition duration-300 hover:-translate-y-0.5 hover:border-[#c49a3c]/60 hover:shadow-md hover:shadow-[#14245a]/8 ${
+        fill ? "w-full" : "w-40 sm:w-48"
       }`}
     >
       {/* Logo zone */}
-      <div className="flex h-14 w-full items-center justify-center">
+      <div className="flex h-16 w-full items-center justify-center">
         {partner.logo ? (
           <Image
             src={partner.logo}
             alt={partner.name}
-            width={150}
-            height={56}
-            className="h-auto max-h-14 w-auto max-w-[9rem] object-contain transition duration-300 group-hover:scale-105"
+            width={160}
+            height={64}
+            className="h-auto max-h-16 w-auto max-w-[8.5rem] object-contain transition duration-300 group-hover:scale-105"
           />
         ) : (
           <span
@@ -146,17 +176,17 @@ function PartnerCard({ partner, fill = false }: { partner: EventPartner; fill?: 
         )}
       </div>
 
-      <span className="my-2.5 h-px w-8 shrink-0" style={{ background: `${GOLD}66` }} aria-hidden />
+      <span className="my-3 h-px w-8 shrink-0" style={{ background: `${GOLD}66` }} aria-hidden />
 
-      {/* Role + name */}
+      {/* Name, then role (only if one is set — no empty space otherwise) */}
+      <p className="line-clamp-2 text-sm leading-snug font-semibold" style={{ color: NAVY }}>
+        {partner.name}
+      </p>
       {partner.role && (
-        <p className="line-clamp-2 text-[10px] leading-snug font-semibold tracking-[0.1em] uppercase" style={{ color: GOLD_DARK }}>
+        <p className="mt-1 line-clamp-2 text-[10px] leading-snug font-semibold tracking-[0.1em] uppercase" style={{ color: GOLD_DARK }}>
           {partner.role}
         </p>
       )}
-      <p className="mt-1 line-clamp-2 text-[13px] leading-snug font-semibold" style={{ color: NAVY }}>
-        {partner.name}
-      </p>
     </div>
   );
 }
