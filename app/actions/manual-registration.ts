@@ -24,6 +24,7 @@ import {
   asksQuestion,
   checkExtraAnswer,
   getExtraQuestions,
+  isPhotoQuestion,
   usesRaceFields,
 } from "@/lib/event-checkout-form";
 import type { ManualRegistrationInput, ManualPackage } from "@/types/profile";
@@ -206,6 +207,9 @@ export async function createManualRegistration(input: ManualRegistrationInput) {
     // Other events: check each extra question, keep only known answers
     const details: Record<string, string> = {};
     for (const question of getExtraQuestions(category, eventType)) {
+      // Photos are only collected at online checkout — the admin form skips them
+      if (isPhotoQuestion(question)) continue;
+
       const answer = input.details?.[question.key]?.trim() ?? "";
       const problem = checkExtraAnswer(question, answer);
       if (problem) return { success: false, error: problem, orderId: null };

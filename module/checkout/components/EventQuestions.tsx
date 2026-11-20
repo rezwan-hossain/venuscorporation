@@ -12,9 +12,15 @@
 //   answers    — current answers, by question key
 //   errors     — error message per key ("" = no error)
 //   onChange   — called with (key, value) when an answer changes
+//   photos        — chosen photos, by question key (type "image" questions)
+//   onPhotoChange — called with (key, file) when a photo is chosen / removed
 
 import Input from "@/components/ui/input";
 import type { ExtraAnswers, ExtraQuestion } from "@/lib/event-checkout-form";
+import { PhotoPicker } from "./PhotoPicker";
+
+/** Today as "2026-11-20" — the latest day a date of birth can be. */
+const today = () => new Date().toISOString().slice(0, 10);
 
 type EventQuestionsProps = {
   title: string;
@@ -22,6 +28,8 @@ type EventQuestionsProps = {
   answers: ExtraAnswers;
   errors: Record<string, string>;
   onChange: (key: string, value: string) => void;
+  photos: Record<string, File | null>;
+  onPhotoChange: (key: string, file: File | null) => void;
 };
 
 const fieldClass =
@@ -33,6 +41,8 @@ export function EventQuestions({
   answers,
   errors,
   onChange,
+  photos,
+  onPhotoChange,
 }: EventQuestionsProps) {
   if (questions.length === 0) return null;
 
@@ -58,10 +68,12 @@ export function EventQuestions({
           const border = error ? "border-red-400" : "border-slate-200";
 
           return (
-            // Long-text questions take the full width.
+            // Long text and the photo take the full width.
             <div
               key={q.key}
-              className={q.type === "textarea" ? "sm:col-span-2" : ""}
+              className={
+                q.type === "textarea" || q.type === "image" ? "sm:col-span-2" : ""
+              }
             >
               <label
                 htmlFor={id}
@@ -74,7 +86,16 @@ export function EventQuestions({
               </label>
 
               {/* One input per question type */}
-              {q.type === "select" ? (
+              {q.type === "image" ? (
+                // Photo: picked and previewed here, uploaded after the order
+                // is created (see PhotoPicker). It shows its own error.
+                <PhotoPicker
+                  id={id}
+                  file={photos[q.key] ?? null}
+                  error={error}
+                  onChange={(file) => onPhotoChange(q.key, file)}
+                />
+              ) : q.type === "select" ? (
                 <select
                   id={id}
                   value={value}
@@ -100,8 +121,12 @@ export function EventQuestions({
               ) : (
                 <Input
                   id={id}
-                  type={q.type === "number" ? "number" : "text"}
+                  // "date" → the browser's date picker (no future dates)
+                  type={
+                    q.type === "date" ? "date" : q.type === "number" ? "number" : "text"
+                  }
                   min={q.type === "number" ? 1 : undefined}
+                  max={q.type === "date" ? today() : undefined}
                   value={value}
                   placeholder={q.placeholder}
                   onChange={(e) => onChange(q.key, e.target.value)}
@@ -109,7 +134,9 @@ export function EventQuestions({
                 />
               )}
 
-              {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+              {error && q.type !== "image" && (
+                <p className="mt-1 text-xs text-red-500">{error}</p>
+              )}
             </div>
           );
         })}

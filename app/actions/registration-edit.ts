@@ -20,6 +20,7 @@ import {
   isValidEmail,
 } from "@/lib/registration-options";
 import { tshirtSizes } from "@/module/checkout/data/tshirtSizes";
+import { usesRaceFields } from "@/lib/event-checkout-form";
 import type { RegistrationEditInput } from "@/types/profile";
 
 const clean = (v: string | null | undefined) => {
@@ -27,6 +28,10 @@ const clean = (v: string | null | undefined) => {
   return t ? t : null;
 };
 const stripPhone = (v: string) => v.replace(/[\s-]/g, "");
+
+// The fields every registration has. Marathons also have the race fields
+// (gender, T-shirt, emergency contact …); other events only have these.
+const CONTACT_FIELDS: (keyof RegistrationEditInput)[] = ["fullName", "email", "phone", "bibNumber"];
 
 const LABELS: Record<keyof RegistrationEditInput, string> = {
   fullName: "Name",
@@ -63,12 +68,21 @@ export async function updateRegistrationDetails(
   try {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      select: { adminNote: true, eventId: true, registration: true },
+      select: {
+        adminNote: true,
+        eventId: true,
+        registration: true,
+        event: { select: { category: true } },
+      },
     });
     const current = order?.registration;
     if (!order || !current) {
       return { success: false, error: "This order has no registration to edit." };
     }
+
+    // Marathon → race fields are checked and saved too.
+    // Other events (conference …) → only name, email, phone and BIB.
+    const raceFields = usesRaceFields(order.event.category);
 
     // ─── Validate (never trust the form) ──────────
     // A dropdown value must be a real option — or the value already stored,
@@ -92,26 +106,30 @@ export async function updateRegistrationDetails(
     if (emergencyNumber && !isValidBDPhone(emergencyNumber))
       return fail("Emergency number must be a Bangladeshi mobile number.");
 
-    if (!oneOf(input.gender, GENDERS, current.gender)) return fail("Select a gender.");
-    if (!oneOf(input.ageCategory, AGE_CATEGORIES, current.ageCategory))
-      return fail("Select an age category.");
-    if (!oneOf(input.bloodGroup, BLOOD_GROUPS, current.bloodGroup))
-      return fail("Select a blood group.");
-    if (!oneOf(input.runnerCategory, RUNNER_CATEGORIES, current.runnerCategory))
-      return fail("Select a runner category.");
-    if (
-      !oneOf(
-        input.tshirtSize,
-        tshirtSizes.map((s) => s.value),
-        current.tshirtSize,
+    // Race fields: marathons only
+    let birthDate: Date | null = current.birthDate;
+    if (raceFields) {
+      if (!oneOf(input.gender, GENDERS, current.gender)) return fail("Select a gender.");
+      if (!oneOf(input.ageCategory, AGE_CATEGORIES, current.ageCategory))
+        return fail("Select an age category.");
+      if (!oneOf(input.bloodGroup, BLOOD_GROUPS, current.bloodGroup))
+        return fail("Select a blood group.");
+      if (!oneOf(input.runnerCategory, RUNNER_CATEGORIES, current.runnerCategory))
+        return fail("Select a runner category.");
+      if (
+        !oneOf(
+          input.tshirtSize,
+          tshirtSizes.map((s) => s.value),
+          current.tshirtSize,
+        )
       )
-    )
-      return fail("Select a t-shirt size.");
+        return fail("Select a t-shirt size.");
 
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(input.birthDate)) return fail("Enter a date of birth.");
-    const birthDate = new Date(`${input.birthDate}T00:00:00.000Z`);
-    if (Number.isNaN(birthDate.getTime()) || birthDate >= new Date())
-      return fail("Date of birth must be a real date in the past.");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(input.birthDate)) return fail("Enter a date of birth.");
+      birthDate = new Date(`${input.birthDate}T00:00:00.000Z`);
+      if (Number.isNaN(birthDate.getTime()) || birthDate >= new Date())
+        return fail("Date of birth must be a real date in the past.");
+    }
 
     const bibNumber = clean(input.bibNumber);
     if (bibNumber && bibNumber.length > 20) return fail("BIB number is too long.");
@@ -138,7 +156,11 @@ export async function updateRegistrationDetails(
 
     const changes: string[] = [];
     const data: Prisma.RegistrationUpdateInput = {};
-    for (const key of Object.keys(next) as (keyof typeof next)[]) {
+    // Non-marathon events: compare and save only the contact fields
+    const editable = (Object.keys(next) as (keyof typeof next)[]).filter(
+      (key) => raceFields || CONTACT_FIELDS.includes(key),
+    );
+    for (const key of editable) {
       const before = show(current[key]);
       const after = show(next[key]);
       if (before !== after) {

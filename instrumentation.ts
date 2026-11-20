@@ -31,6 +31,7 @@ export async function register() {
 
   const { releaseExpiredHolds } = await import("./lib/payment/slot-hold");
   const { purgeOldVisitors } = await import("./lib/page-views");
+  const { deleteUnpaidRegistrationPhotos } = await import("./lib/registration-photo-cleanup");
   const { logger } = await import("./lib/logger");
   const { reconcilePendingPayments } = await import("./lib/payment/reconcile");
   const { checkPaymentConfig } = await import("./lib/payment/shurjopay/config");
@@ -99,6 +100,16 @@ export async function register() {
         // Paid at the gateway but the callback never arrived. The slot stays
         // held; an admin must confirm the order and notify the customer.
         log.error({ orderId }, "payment:RECONCILE_REQUIRED — paid, no callback");
+      }
+
+      // Checkout photos (conference passport photo) of orders that were
+      // never paid: delete them from Cloudinary to save storage.
+      const photosDeleted = await deleteUnpaidRegistrationPhotos().catch((err) => {
+        log.error({ err }, "photos:cleanup_failed");
+        return 0;
+      });
+      if (photosDeleted > 0) {
+        log.info({ photosDeleted }, "photos:unpaid_photos_deleted");
       }
     } catch (err) {
       log.error({ err }, "slots:sweep_failed");

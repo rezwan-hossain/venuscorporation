@@ -22,6 +22,9 @@ type Props = {
   orderId: string;
   onCancel: () => void;
   onSaved: (changes: string[]) => void;
+  /** Marathon → also show the race fields (gender, T-shirt …).
+   *  Other events (conference …) don't have them: only name, BIB, phone, email. */
+  raceFields?: boolean;
 };
 
 const inputCls =
@@ -43,16 +46,18 @@ const LABELS: Record<keyof RegistrationEditInput, string> = {
   bibNumber: "BIB",
 };
 
+// Race fields are empty (null) for non-marathon registrations, so every
+// value falls back to "" — the form works with plain strings only.
 const toForm = (r: Registration): RegistrationEditInput => ({
   fullName: r.fullName,
   email: r.email ?? "",
   phone: r.phone,
-  gender: r.gender,
+  gender: r.gender ?? "",
   birthDate: r.birthDate ? r.birthDate.slice(0, 10) : "",
-  ageCategory: r.ageCategory,
-  bloodGroup: r.bloodGroup,
-  tshirtSize: r.tshirtSize,
-  runnerCategory: r.runnerCategory,
+  ageCategory: r.ageCategory ?? "",
+  bloodGroup: r.bloodGroup ?? "",
+  tshirtSize: r.tshirtSize ?? "",
+  runnerCategory: r.runnerCategory ?? "",
   communityName: r.communityName ?? "",
   emergencyContactName: r.emergencyContactName ?? "",
   emergencyContactNumber: r.emergencyContactNumber ?? "",
@@ -93,6 +98,7 @@ export function EditRegistrationForm({
   orderId,
   onCancel,
   onSaved,
+  raceFields = true,
 }: Props) {
   const original = useMemo(() => toForm(registration), [registration]);
   const [form, setForm] = useState(original);
@@ -165,6 +171,9 @@ export function EditRegistrationForm({
           <input id={id("email")} className={inputCls} value={form.email} onChange={set("email")} type="email" placeholder="Optional" />
         </Field>
 
+        {/* Race fields — marathons only */}
+        {raceFields && (
+          <>
         <Field label="T-shirt size" htmlFor={id("tshirt")}>
           <select id={id("tshirt")} className={inputCls} value={form.tshirtSize} onChange={set("tshirtSize")}>
             {withCurrent(tshirtSizes.map((s) => s.value), original.tshirtSize).map((v) => (
@@ -213,6 +222,8 @@ export function EditRegistrationForm({
         <Field label="Emergency contact number" htmlFor={id("ecnum")} error={fieldError.emergencyContactNumber}>
           <input id={id("ecnum")} className={inputCls} value={form.emergencyContactNumber} onChange={set("emergencyContactNumber")} inputMode="tel" placeholder="Optional" />
         </Field>
+          </>
+        )}
       </div>
 
       {changes.length > 0 && (

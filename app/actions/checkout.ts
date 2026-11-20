@@ -15,7 +15,7 @@
 "use server";
 
 import { syncUser } from "@/lib/auth/syncUser"; // ← NEW
-import { checkExtraAnswer, getExtraQuestions, usesRaceFields } from "@/lib/event-checkout-form";
+import { checkExtraAnswer, getExtraQuestions, isPhotoQuestion, usesRaceFields } from "@/lib/event-checkout-form";
 import { Prisma } from "@/lib/generated/prisma/client"; // ← NEW: for the P2002 race check
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
@@ -437,6 +437,10 @@ export async function placeOrder(formData: {
     // answers, and check each one.
     const details: Record<string, string> = {};
     for (const question of getExtraQuestions(eventInfo.category, eventInfo.eventType)) {
+      // The photo isn't part of the order form: the browser uploads it right
+      // after this order is created (app/actions/registration-photo.ts).
+      if (isPhotoQuestion(question)) continue;
+
       const answer = formData.details?.[question.key]?.trim() ?? "";
       const problem = checkExtraAnswer(question, answer);
       if (problem) return { error: problem };

@@ -16,7 +16,7 @@ import {
   type SampleEvent,
   type SmsVars,
 } from "@/lib/sms-template";
-import { getExtraQuestions, usesRaceFields } from "@/lib/event-checkout-form";
+import { getExtraQuestions, isPhotoQuestion, usesRaceFields } from "@/lib/event-checkout-form";
 import type { PaymentConfirmationEmailProps } from "@/lib/email/templates/payment-confirmation";
 
 export type EmailContent = {
@@ -207,7 +207,7 @@ export function sampleEmailBooking(
   const answers = isMarathon
     ? []
     : getExtraQuestions(category, event.eventType ?? "LIVE")
-        .filter((q) => q.type !== "textarea")
+        .filter((q) => q.type !== "textarea" && !isPhotoQuestion(q))
         .map((q) => ({
           label: q.label,
           value: SAMPLE_ANSWERS[q.key] ?? q.options?.[0] ?? "—",
@@ -247,6 +247,7 @@ export function answersForEmail(
 ): { label: string; value: string }[] {
   const saved = (details ?? {}) as Record<string, unknown>;
   return getExtraQuestions(category, eventType)
-    .filter((q) => q.type !== "textarea" && saved[q.key])
+    // Long text and photos don't fit an email row — skip them
+    .filter((q) => q.type !== "textarea" && !isPhotoQuestion(q) && saved[q.key])
     .map((q) => ({ label: q.label, value: String(saved[q.key]) }));
 }

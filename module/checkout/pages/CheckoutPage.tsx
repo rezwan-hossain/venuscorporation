@@ -11,12 +11,14 @@ import { BillingFormData, CheckoutItem, AppliedCoupon } from "@/types/checkout";
 import { useRouter } from "next/navigation";
 import { placeOrder } from "@/app/actions/checkout";
 import { initiateShurjoPayPayment } from "@/app/actions/payment";
+import { uploadRegistrationPhoto } from "@/app/actions/registration-photo";
 import { EventQuestions } from "../components/EventQuestions";
 import {
   asksQuestion,
   checkExtraAnswer,
   getEventCategory,
   getExtraQuestions,
+  isPhotoQuestion,
   usesRaceFields,
   type ExtraAnswers,
 } from "@/lib/event-checkout-form";
@@ -77,6 +79,18 @@ const CheckoutPage = ({
         ...prev,
         [key]: checkExtraAnswer(question, value),
       }));
+  };
+
+  // Photo questions (conference: passport-size photo).
+  // The chosen file is kept here, in the browser, until the order exists.
+  const [photos, setPhotos] = useState<Record<string, File | null>>({});
+
+  const updatePhoto = (key: string, file: File | null) => {
+    setPhotos((prev) => ({ ...prev, [key]: file }));
+    // Also put the file name in the answers, so "required" checks see that a
+    // photo was chosen. (The name itself is never saved — the server skips
+    // photo questions in the order and saves the uploaded photo instead.)
+    updateExtraAnswer(key, file ? file.name : "");
   };
 
   /** Check every extra question; shows the errors. Returns true if all are fine. */
@@ -253,8 +267,11 @@ const CheckoutPage = ({
           emergencyContactNumber: formData.emergencyContactNumber || "",
           communityName: formData.communityName || "",
           runnerCategory: formData.runnerCategory,
-          // Answers to the extra questions (non-marathon events)
-          details: extraAnswers,
+          // Answers to the extra questions (non-marathon events).
+          // Photos are left out: they're uploaded below, after the order exists.
+          details: Object.fromEntries(
+            Object.entries(extraAnswers).filter(([key]) => !photos[key]),
+          ),
           paymentMethod,
           couponCode: appliedCoupon?.code || undefined,
         }),
@@ -283,6 +300,27 @@ const CheckoutPage = ({
 
         orderId = orderResult.orderId;
         orderIdRef.current = orderId;
+      }
+
+      // ✅ Step 1b: Upload the photo(s), now that the order exists.
+      // Uploading only at this point means a visitor who picks a photo and
+      // leaves never uses any Cloudinary space. (On a retry the server keeps
+      // the photo it already has and doesn't upload again.)
+      for (const question of extraQuestions.filter(isPhotoQuestion)) {
+        const photo = photos[question.key];
+        if (!photo) continue;
+
+        const upload = new FormData();
+        upload.append("orderId", orderId);
+        upload.append("photo", photo);
+
+        const photoResult = await uploadRegistrationPhoto(upload);
+        if (photoResult.error) {
+          setError(photoResult.error);
+          setLoading(false);
+          submittingRef.current = false;
+          return;
+        }
       }
 
       // ✅ Step 2: If ShurjoPay → initiate payment & redirect
@@ -385,6 +423,8 @@ const CheckoutPage = ({
               answers={extraAnswers}
               errors={extraErrors}
               onChange={updateExtraAnswer}
+              photos={photos}
+              onPhotoChange={updatePhoto}
             />
           </div>
 

@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { EditRegistrationForm } from "./EditRegistrationForm";
 import { OrderDeliveries } from "./OrderDeliveries";
-import { getAnswerLabel } from "@/lib/event-checkout-form";
+import { PHOTO_QUESTION_KEY, getAnswerLabel } from "@/lib/event-checkout-form";
 
 type Props = {
   order: EventOrder;
@@ -39,6 +39,8 @@ type Props = {
   ) => void;
   /** Called after registration details were edited, so the list can reload. */
   onDetailsSaved?: () => void;
+  /** Marathon event? Then the edit form also shows the race fields. */
+  raceFields?: boolean;
 };
 
 // ─── Status Configs ─────────────────────────────────
@@ -86,6 +88,7 @@ export function OrderCard({
   onToggle,
   onStatusChange,
   onDetailsSaved,
+  raceFields = true,
 }: Props) {
   const [showActions, setShowActions] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -124,9 +127,11 @@ export function OrderCard({
     : "ring-slate-200/70 hover:ring-slate-300";
 
   // Answers to the extra checkout questions (conference, gala, …).
+  // The photo (a web address) is shown as a picture instead, above the grid.
   const answers = Object.entries(order.registration?.details ?? {}).filter(
-    ([, value]) => value,
+    ([key, value]) => value && key !== PHOTO_QUESTION_KEY,
   );
+  const photoUrl = order.registration?.details?.[PHOTO_QUESTION_KEY];
 
   const [editing, setEditing] = useState(false);
 
@@ -329,6 +334,7 @@ export function OrderCard({
             <EditRegistrationForm
               registration={order.registration}
               orderId={order.id}
+              raceFields={raceFields}
               onCancel={() => setEditing(false)}
               onSaved={() => {
                 setEditing(false);
@@ -359,6 +365,29 @@ export function OrderCard({
                   Edit
                 </button>
               </div>
+
+              {/* Passport-size photo from checkout (conference) — opens full size */}
+              {photoUrl && (
+                <a
+                  href={photoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="mb-2 inline-flex items-center gap-3 rounded-lg bg-white p-2 pr-4 ring-1 ring-slate-200/70 hover:ring-[#c49a3c]"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- small thumbnail */}
+                  <img
+                    src={photoUrl}
+                    alt={`Photo of ${order.registration.fullName}`}
+                    className="h-16 w-12 rounded object-cover"
+                  />
+                  <span className="text-xs font-medium text-[#14245a]">
+                    {getAnswerLabel(PHOTO_QUESTION_KEY)}
+                    <span className="block text-[10px] text-slate-400">Click to open</span>
+                  </span>
+                </a>
+              )}
+
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {[
                   {

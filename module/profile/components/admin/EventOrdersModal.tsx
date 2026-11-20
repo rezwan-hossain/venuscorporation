@@ -17,6 +17,7 @@ import { OrderFilters } from "./OrderFilters";
 import { OrderCard } from "./OrderCard";
 import { ManualRegistrationForm } from "./ManualRegistrationForm";
 import { buildOrdersCsv, downloadCsv } from "@/lib/orders-csv";
+import { usesRaceFields } from "@/lib/event-checkout-form";
 import {
   X,
   Loader2,
@@ -386,6 +387,7 @@ export function EventOrdersModal({ event, onClose, initialView }: Props) {
                       key={order.id}
                       order={order}
                       onDetailsSaved={() => void loadPage()}
+                      raceFields={usesRaceFields(event.category)}
                       expanded={expandedOrder === order.id}
                       onToggle={() =>
                         setExpandedOrder(

@@ -34,6 +34,7 @@ import {
   checkExtraAnswer,
   getEventCategory,
   getExtraQuestions,
+  isPhotoQuestion,
   usesRaceFields,
   type ExtraQuestion,
 } from "@/lib/event-checkout-form";
@@ -110,7 +111,10 @@ export function ManualRegistrationForm({ event, onCancel, onSuccess }: Props) {
     event.eventType,
     "T-shirt size",
   );
-  const extraQuestions = getExtraQuestions(event.category, event.eventType);
+  // Photos are only collected at online checkout, so they're left out here
+  const extraQuestions = getExtraQuestions(event.category, event.eventType).filter(
+    (q) => !isPhotoQuestion(q),
+  );
   const categoryName = getEventCategory(event.category).label.split(" /")[0];
 
   /** Change one field of the form. */
@@ -648,9 +652,12 @@ function QuestionInput({
       />
     );
   }
+  // "date" → the browser's date picker; "number" → number box; else text
+  const inputType =
+    question.type === "date" ? "date" : question.type === "number" ? "number" : "text";
   return (
     <input
-      type={question.type === "number" ? "number" : "text"}
+      type={inputType}
       min={question.type === "number" ? 1 : undefined}
       value={value}
       onChange={(e) => onChange(e.target.value)}

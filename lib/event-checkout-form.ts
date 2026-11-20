@@ -19,6 +19,13 @@
 //
 // Adding an extra question = adding one line with a key, label and type.
 //
+// Question types:
+//   "text" · "number" · "textarea" · "select" (needs `options`)
+//   "date"   — a date picker; the answer is saved as "2001-05-31"
+//   "image"  — a photo (e.g. passport-size). Different from the others: the
+//              photo is uploaded AFTER the order is created, and its web
+//              address is saved under the key. See PHOTO_QUESTION below.
+//
 // A question can depend on the event's format (Event.eventType):
 //   onlyFor: "LIVE"     → asked only for in-person events
 //   onlyFor: "VIRTUAL"  → asked only for virtual events
@@ -45,8 +52,9 @@ export type CheckoutQuestion = {
   // ── Only for extra questions (saved in Registration.details) ──
   /** Name of the answer in `details`, e.g. "company". */
   key?: string;
-  /** "text" box, "number" box, "select" (pick one) or "textarea" (long text). */
-  type?: "text" | "number" | "select" | "textarea";
+  /** "text" box, "number" box, "select" (pick one), "textarea" (long text),
+   *  "date" (date picker) or "image" (photo upload — see PHOTO_QUESTION). */
+  type?: "text" | "number" | "select" | "textarea" | "date" | "image";
   /** Choices for type "select". */
   options?: string[];
   /** Must be answered before paying. */
@@ -92,6 +100,78 @@ const TSHIRT_QUESTION: CheckoutQuestion = {
   onlyFor: "LIVE", // no T-shirt for virtual events
 };
 
+// ── Personal details asked at a conference / summit ──
+// (Full name, mobile number and email are already asked by the fixed contact
+// fields at the top of checkout, so they aren't repeated here.)
+
+export const GENDERS = ["Male", "Female", "Other"];
+export const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
+// The photo question. Its key ("photo") is also used by the clean-up job that
+// deletes photos of orders that were never paid (lib/registration-photo-cleanup.ts),
+// so every category that wants a photo should use this same question.
+export const PHOTO_QUESTION_KEY = "photo";
+const PHOTO_QUESTION: CheckoutQuestion = {
+  key: PHOTO_QUESTION_KEY,
+  label: "Recent passport-size photo",
+  type: "image",
+  required: true,
+};
+
+const PERSONAL_DETAILS_QUESTIONS: CheckoutQuestion[] = [
+  {
+    key: "fatherName",
+    label: "Father's name",
+    type: "text",
+    required: true,
+    placeholder: "Father's full name",
+  },
+  {
+    key: "motherName",
+    label: "Mother's name",
+    type: "text",
+    required: true,
+    placeholder: "Mother's full name",
+  },
+  { key: "dateOfBirth", label: "Date of birth", type: "date", required: true },
+  {
+    key: "gender",
+    label: "Gender",
+    type: "select",
+    options: GENDERS,
+    required: true,
+  },
+  {
+    key: "bloodGroup",
+    label: "Blood group",
+    type: "select",
+    options: BLOOD_GROUPS,
+    required: true,
+  },
+  {
+    key: "nationality",
+    label: "Nationality",
+    type: "text",
+    required: true,
+    placeholder: "e.g. Bangladeshi",
+  },
+  PHOTO_QUESTION,
+  {
+    key: "presentAddress",
+    label: "Present address",
+    type: "textarea",
+    required: true,
+    placeholder: "House, road, area, city",
+  },
+  {
+    key: "permanentAddress",
+    label: "Permanent address",
+    type: "textarea",
+    required: true,
+    placeholder: "Village / house, upazila, district",
+  },
+];
+
 export const EVENT_CATEGORIES: EventCategoryInfo[] = [
   {
     value: "MARATHON",
@@ -113,6 +193,7 @@ export const EVENT_CATEGORIES: EventCategoryInfo[] = [
     description: "Summits, seminars, corporate conferences",
     questions: [
       ...CONTACT_QUESTIONS,
+      ...PERSONAL_DETAILS_QUESTIONS, // father's name … photo … addresses
       {
         key: "company",
         label: "Company",
@@ -266,6 +347,13 @@ export function getExtraQuestions(
   );
 }
 
+/** True for a photo question (type "image"). Photos are uploaded separately,
+ *  after the order exists — so the order form and the admin's manual
+ *  registration skip them. */
+export function isPhotoQuestion(question: CheckoutQuestion): boolean {
+  return question.type === "image";
+}
+
 /**
  * Check one answer. Returns an error message, or "" if it's fine.
  * Used by the checkout form (as you type) AND the server (before saving).
@@ -285,6 +373,13 @@ export function checkExtraAnswer(
   }
   if (question.type === "select" && !question.options?.includes(answer)) {
     return `Choose a ${question.label.toLowerCase()}`;
+  }
+  if (question.type === "date") {
+    // Must look like "2001-05-31" and be a real day in the past
+    const day = new Date(answer);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(answer) || Number.isNaN(day.getTime()))
+      return `Enter a valid ${question.label.toLowerCase()}`;
+    if (day >= new Date()) return `${question.label} must be in the past`;
   }
   if (answer.length > 500) return `${question.label} is too long`;
 
