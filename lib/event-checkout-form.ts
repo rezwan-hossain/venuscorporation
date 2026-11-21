@@ -155,7 +155,7 @@ const PERSONAL_DETAILS_QUESTIONS: CheckoutQuestion[] = [
     required: true,
     placeholder: "e.g. Bangladeshi",
   },
-  PHOTO_QUESTION,
+  // PHOTO_QUESTION,
   {
     key: "presentAddress",
     label: "Present address",
