@@ -33,6 +33,29 @@ export async function getAllEvents() {
   }
 }
 
+/**
+ * The slug of every public event (active, not deleted), e.g.
+ * ["narsingdi-business-summit-2026", …]. Used by generateStaticParams in
+ * app/events/[slug]/page.tsx so each event page is built ahead of time and
+ * served from cache. Tagged "events", so admin changes refresh it.
+ */
+export async function getPublicEventSlugs(): Promise<string[]> {
+  "use cache";
+  cacheLife("days");
+  cacheTag("events");
+
+  try {
+    const events = await prisma.event.findMany({
+      where: { isActive: true, isArchived: false },
+      select: { slug: true },
+    });
+    return events.map((e) => e.slug);
+  } catch (error) {
+    console.error("Failed to fetch event slugs:", error);
+    return [];
+  }
+}
+
 export async function getEventBySlug(slug: string) {
   "use cache";
   cacheLife("hours");

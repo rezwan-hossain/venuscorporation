@@ -1,15 +1,31 @@
 // app/events/[slug]/page.tsx
 import type { Metadata } from "next";
-import { getEventBySlug } from "@/app/actions/event";
+import { getEventBySlug, getPublicEventSlugs } from "@/app/actions/event";
 import EventDetailPage from "@/module/event/pages/EventDetailPage";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import EventDetailSkeleton from "@/module/event/components/EventDetailSkeleton";
 
+// ⚠️ Caching: this page is built ahead of time for every public event and
+// served from cache (refreshed when an admin edits an event, or slots change
+// — see the cache tags in app/actions/event.ts). Don't read `searchParams`,
+// cookies() or headers() here: any of them makes the page render again on
+// every visit instead.
+
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ view?: string }>;
 };
+
+// ── Which event pages to build ahead of time ─────────────
+// Every public event. An event created after the last deploy still works:
+// it's rendered when first visited (just not prebuilt).
+export async function generateStaticParams() {
+  const slugs = await getPublicEventSlugs();
+  // Next.js needs at least one entry. With no events yet, a placeholder
+  // slug is used — it isn't a real event, so it simply shows "not found".
+  if (slugs.length === 0) return [{ slug: "__no-events-yet__" }];
+  return slugs.map((slug) => ({ slug }));
+}
 
 // ── Dynamic Metadata ─────────────────────────
 // What Facebook, WhatsApp, LinkedIn, X … show when someone shares the link:
@@ -69,30 +85,28 @@ function shorten(text: string, max: number) {
 }
 
 // ── Page Component ───────────────────────────
-export default async function Page({ params, searchParams }: Props) {
-  // Move data fetching into a suspended component
+// The event is loaded inside <Suspense>: listed events come fully built from
+// the cache; a brand-new event shows the skeleton while it's rendered.
+export default async function Page({ params }: Props) {
   return (
     <Suspense fallback={<EventDetailSkeleton />}>
-      <EventPageContent paramsPromise={params} searchParams={searchParams} />
+      <EventPageContent paramsPromise={params} />
     </Suspense>
   );
 }
 
-// This component handles the data fetching and will be suspended
+/** Loads the event (cached in getEventBySlug) and shows it, or "not found". */
 async function EventPageContent({
   paramsPromise,
-  searchParams,
 }: {
   paramsPromise: Promise<{ slug: string }>;
-  searchParams: Promise<{ view?: string }>;
 }) {
   const { slug } = await paramsPromise;
   const { event, error } = await getEventBySlug(slug);
-  const resolvedSearchParams = await searchParams;
 
   if (!event || error) {
     notFound();
   }
 
-  return <EventDetailPage event={event} searchParams={resolvedSearchParams} />;
+  return <EventDetailPage event={event} />;
 }

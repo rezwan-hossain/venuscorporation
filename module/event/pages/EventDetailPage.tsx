@@ -7,7 +7,6 @@ import { Cormorant_Garamond } from "next/font/google";
 import { Building2, CalendarDays, ChevronDown, ChevronRight, Clock, Globe, MapPin, ScrollText, Ticket, type LucideIcon } from "lucide-react";
 
 import type { EventData } from "@/types/event";
-import EventDescription3 from "../components/EventDescription3";
 import ShareButtons from "../components/ShareButtons";
 import TicketOptions from "../components/TicketOptions";
 import EventPartners from "../components/EventPartners";
@@ -33,7 +32,6 @@ const GOLD = "#c49a3c";
 
 type EventDetailPageProps = {
   event: EventData;
-  searchParams?: { view?: string };
 };
 
 // Event dates are stored as UTC midnight and times as the Dhaka wall-clock
@@ -72,9 +70,7 @@ function startsAt(date: Date, time: Date): Date {
 const BLUR =
   "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDAwUBAAAAAAAAAAAAAQIDBAURAAYhEiIxQVFh/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAYEQEBAQEBAAAAAAAAAAAAAAABAgADEf/aAAwDAQACEQMRAD8Aw+3bdu9ru1BXQ26eSGnqIpZFRVZmVXBIAHknGmG/rjPuC4Uu4J6SajgqIPTjp8qV7Y0H3A5Azk8f2mms0Bui5NdXe//Z";
 
-const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
-  // ?view=styled switches the description renderer (kept for previewing).
-  const styledDescription = searchParams?.view === "styled";
+const EventDetailPage = ({ event }: EventDetailPageProps) => {
   const isOpen = event.status === "ACTIVE";
   const packages = event.packages.filter((p) => !p.isArchived);
   const partners = cleanPartners(event.partners); // [] when none
@@ -160,14 +156,10 @@ const EventDetailPage = ({ event, searchParams }: EventDetailPageProps) => {
                 About the <em className="font-medium" style={{ color: GOLD }}>event</em>
               </h2>
               <div className="mt-5">
-                {styledDescription ? (
-                  <EventDescription3 description={event.description} />
-                ) : (
-                  // .rich-text = the editor's own styles; .event-about adds the
-                  // page look (lead paragraph, gold section labels, list cards).
-                  // Both in globals.css.
-                  <div className="rich-text event-about" dangerouslySetInnerHTML={{ __html: event.description }} />
-                )}
+                {/* .rich-text = the editor's own styles; .event-about adds the
+                    page look (lead paragraph, gold section labels, list cards).
+                    Both in globals.css. */}
+                <div className="rich-text event-about" dangerouslySetInnerHTML={{ __html: event.description }} />
               </div>
             </section>
 
