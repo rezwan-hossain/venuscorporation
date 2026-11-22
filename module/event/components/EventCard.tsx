@@ -3,12 +3,16 @@
 // Event listing card (events page, home page). Takes the event as loaded from
 // the database and formats it here, so callers just render <EventCard event={e} />.
 
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, MapPin } from "lucide-react";
 import type { EventData } from "@/types/event";
 
 interface EventCardProps {
   event: EventData;
+  /** true for the first card on screen: its photo loads right away
+   *  (all other card photos wait until they're scrolled near). */
+  priority?: boolean;
 }
 
 // Event dates are stored as UTC midnight and times as UTC wall-clock
@@ -18,7 +22,7 @@ const fmt = (date: Date, options: Intl.DateTimeFormatOptions) =>
 
 const formatPrice = (price: number) => `৳${price.toLocaleString("en-IN")}`;
 
-export default function EventCard({ event }: EventCardProps) {
+export default function EventCard({ event, priority = false }: EventCardProps) {
   const isCompleted = event.status === "COMPLETED";
   const href = `/events/${event.slug}`;
 
@@ -48,10 +52,15 @@ export default function EventCard({ event }: EventCardProps) {
         aria-hidden
         className="relative block min-h-56 overflow-hidden sm:min-h-72 lg:order-2 lg:col-span-3 lg:min-h-full"
       >
-        <img
+        {/* next/image: sends a phone-sized photo to phones (not the full
+            1600 px banner) and lazy-loads cards further down the page. */}
+        <Image
           src={event.bannerImage}
           alt=""
-          className={`absolute inset-0 h-full w-full object-cover transition duration-500 ${
+          fill
+          sizes="(min-width: 1024px) 60vw, 100vw"
+          priority={priority}
+          className={`object-cover transition duration-500 ${
             isCompleted ? "grayscale opacity-80" : "group-hover:scale-[1.03]"
           }`}
         />

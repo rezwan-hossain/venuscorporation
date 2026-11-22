@@ -12,7 +12,7 @@
 // the database; admins read it under admin → Contact Messages. The checks
 // live in lib/contact-form.ts, shared with the server.
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import {
   ArrowRight,
   Briefcase,
@@ -428,11 +428,20 @@ const ContactForm = () => {
                   Event date{" "}
                   <span className="font-normal text-slate-400">(optional)</span>
                 </p>
-                <DatePicker
-                  name="date"
-                  value={form.date}
-                  onChange={(date) => setForm((prev) => ({ ...prev, date }))}
-                />
+                {/* Own <Suspense>: the calendar reads today's date, which can't
+                    be cached. This way only this field waits — the rest of
+                    the contact page still comes ready-made in the HTML. */}
+                <Suspense
+                  fallback={
+                    <div className="h-[52px] rounded-xl border border-slate-200 bg-white" aria-hidden />
+                  }
+                >
+                  <DatePicker
+                    name="date"
+                    value={form.date}
+                    onChange={(date) => setForm((prev) => ({ ...prev, date }))}
+                  />
+                </Suspense>
               </div>
               <div>
                 <p

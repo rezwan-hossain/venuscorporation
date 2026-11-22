@@ -96,8 +96,9 @@ const EventsPage = ({ upcomingEvents, previousEvents }: EventsPageProps) => {
         <SectionHeading label="On the calendar" title="Upcoming" italic="events." />
         {upcoming.length > 0 ? (
           <div className="space-y-8 lg:space-y-10">
-            {upcoming.map((event) => (
-              <EventCard key={event.id} event={event} />
+            {upcoming.map((event, i) => (
+              // The first card is the first big photo visitors see → load it right away
+              <EventCard key={event.id} event={event} priority={i === 0} />
             ))}
           </div>
         ) : (

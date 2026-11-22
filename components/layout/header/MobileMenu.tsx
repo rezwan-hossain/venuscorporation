@@ -6,7 +6,6 @@ import { Plus, ArrowRight, LayoutDashboard, User, LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import type { AuthUser } from "@/hooks/useAuth";
 
 interface MobileMenuProps {
@@ -29,6 +28,8 @@ export default function MobileMenu({
   const router = useRouter();
 
   const handleLogout = useCallback(async () => {
+    // Supabase is loaded only now, when someone actually signs out
+    const { createClient } = await import("@/lib/supabase/client");
     const supabase = createClient();
     await supabase.auth.signOut();
     onLogout();

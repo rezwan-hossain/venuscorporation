@@ -6,7 +6,6 @@ import { ChevronDown, LayoutDashboard, User, LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import type { AuthUser } from "@/hooks/useAuth";
 
 interface DesktopUserMenuProps {
@@ -40,6 +39,8 @@ export default function DesktopUserMenu({
   }, [userMenuOpen]);
 
   const handleLogout = useCallback(async () => {
+    // Supabase is loaded only now, when someone actually signs out
+    const { createClient } = await import("@/lib/supabase/client");
     const supabase = createClient();
     await supabase.auth.signOut();
     setUserMenuOpen(false);
