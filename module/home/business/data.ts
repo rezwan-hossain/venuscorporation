@@ -155,35 +155,45 @@ export const steps = [
 ];
 
 // ─── Featured work ────────────────────────────────────
+// Real Venus events — every photo is from our own gallery (Cloudinary).
+// `result` is the highlight on the right; " · " splits it into two lines.
 
 export const projects = [
   {
-    title: "Annual leadership summit",
-    client: "Harbor Bank",
+    title: "Textile technology seminar",
+    client: "S&D Chemicals",
     category: "Corporate event",
-    image: photo("1505373877841-8d25f7d46678", 1000), // conference hall
-    result: "1,200 delegates · 3 halls",
+    // Speaker on stage in front of the LED wall and product banners
+    image:
+      "https://res.cloudinary.com/s8zandym/image/upload/v1794472879/venuscorporation/gallery/guylfpj7aulopssiaxp7.jpg",
+    result: "LED stage · Speaker sessions",
   },
   {
-    title: "Garden wedding & reception",
+    title: "First birthday celebration",
     client: "Private client",
-    category: "Wedding",
-    image: photo("1519741497674-611481863552", 1000), // wedding
-    result: "400 guests · 2 days",
+    category: "Social event",
+    // Pink floral stage and themed hall décor
+    image:
+      "https://res.cloudinary.com/s8zandym/image/upload/v1794473062/venuscorporation/gallery/hwyvt5kqsvqgtt5v87b9.jpg",
+    result: "Themed stage · Floral décor",
   },
   {
-    title: "Bangladesh Trade Expo",
-    client: "Orbit Telecom",
+    title: "Car Expo 2026 opening",
+    client: "Car expo organisers",
     category: "Exhibition",
-    image: photo("1560439514-4e9645039924", 1000), // expo floor
-    result: "120 stalls · 15,000 visitors",
+    // Opening ceremony on stage, confetti and moving-head lights
+    image:
+      "https://res.cloudinary.com/s8zandym/image/upload/v1794484753/venuscorporation/gallery/hur8xdnhxc40iawjzgf0.jpg",
+    result: "Opening ceremony · Stage & lighting",
   },
   {
-    title: "Dhaka City Marathon",
-    client: "Merch Sports",
+    title: "Tiger Pace Half Marathon",
+    client: "Tiger Pace · Season 1",
     category: "Sports event",
-    image: photo("1530143311094-34d807799e8f", 1000), // marathon
-    result: "8,000 runners · 4 distances",
+    // Runners lined up under the start arch
+    image:
+      "https://res.cloudinary.com/s8zandym/image/upload/v1794482677/venuscorporation/gallery/zow7dwyoqa5z21nameyj.jpg",
+    result: "Start arch · Race-day crew",
   },
 ];
 
