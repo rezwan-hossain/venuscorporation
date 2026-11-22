@@ -1,6 +1,9 @@
+// app/events/(list)/page.tsx — the events list at /events.
+// In the (list) folder group so its loading.tsx doesn't cover /events/<slug>.
+
 import EventPage from "@/module/event/pages/EventPage";
-import { getAllEvents } from "../actions/event";
-import { getUpcomingEvents, getPreviousEvents } from "../actions/event";
+import { getAllEvents } from "@/app/actions/event";
+import { getUpcomingEvents, getPreviousEvents } from "@/app/actions/event";
 
 export default async function page() {
   // const { events, error } = await getAllEvents();

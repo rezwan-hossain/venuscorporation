@@ -1,4 +1,9 @@
-// app/events/loading.tsx (or wherever your page.tsx is located)
+// app/events/(list)/loading.tsx
+//
+// Skeleton for the events LIST (/events) only. It lives in the (list) folder
+// group so it does NOT also show when opening one event (/events/<slug>):
+// a loading.tsx covers its own folder and every page inside it.
+// (The group name in brackets is not part of the URL.)
 
 import { HeroText } from "@/components/ui/HeroText";
 
